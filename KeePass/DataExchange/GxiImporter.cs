@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;
-using System.IO;
-using System.Diagnostics;
 
 using KeePass.Resources;
 using KeePass.Util;
@@ -129,15 +129,19 @@ namespace KeePass.DataExchange
 
 			strDoc = Preprocess(strDoc, p);
 
-			StringReader srDoc = new StringReader(strDoc);
-			XPathDocument xd = new XPathDocument(srDoc);
+			using(StringReader srDoc = new StringReader(strDoc))
+			{
+				using(XmlReader xr = XmlReader.Create(srDoc,
+					XmlUtilEx.CreateXmlReaderSettings()))
+				{
+					XPathDocument xd = new XPathDocument(xr);
 
-			GxiContext c = new GxiContext(p, pdContext, pgStorage, null);
+					GxiContext c = new GxiContext(p, pdContext, pgStorage, null);
 
-			XPathNavigator xpDoc = xd.CreateNavigator();
-			ImportObject(xpDoc, p, p.RootXPath, "/*", GxiImporter.ImportRoot, c);
-
-			srDoc.Close();
+					XPathNavigator xpDoc = xd.CreateNavigator();
+					ImportObject(xpDoc, p, p.RootXPath, "/*", GxiImporter.ImportRoot, c);
+				}
+			}
 		}
 
 		private static string Preprocess(string strDoc, GxiProfile p)

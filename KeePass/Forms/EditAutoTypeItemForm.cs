@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -120,7 +120,15 @@ namespace KeePass.Forms
 			// m_clrOriginalBackground = m_cmbWindow.BackColor;
 			// m_strOriginalWindowHint = m_lblTargetWindowInfo.Text;
 
-			InitPlaceholdersBox();
+			bool bRtl = Program.Translation.Properties.RightToLeft;
+			if(bRtl)
+			{
+				// https://sourceforge.net/p/keepass/discussion/329220/thread/f98dece5/
+				m_rbKeySeq.RightToLeft = RightToLeft.No;
+				m_rtbPlaceholders.RightToLeft = RightToLeft.No;
+			}
+
+			InitPlaceholdersBox(bRtl);
 
 			string strInitSeq = m_atConfig.DefaultSequence;
 			if(m_iAssocIndex >= 0)
@@ -157,7 +165,7 @@ namespace KeePass.Forms
 			EnableControlsEx();
 		}
 
-		private void InitPlaceholdersBox()
+		private void InitPlaceholdersBox(bool bRtl)
 		{
 			const string VkcBreak = @"<break />";
 
@@ -185,13 +193,18 @@ namespace KeePass.Forms
 				"URL:RMVSCM", "URL:SCM", "URL:HOST", "URL:PORT", "URL:PATH",
 				"URL:QUERY", "URL:USERINFO", "URL:USERNAME", "URL:PASSWORD",
 				// "BASE",
+				"UUID",
 				"T-REPLACE-RX:/T/S/R/", "T-CONV:/T/C/",
 				"C:Comment", VkcBreak,
 
-				"DELAY 1000", "DELAY=200", "VKEY 13", "VKEY-NX 13", "VKEY-EX 13",
+				"DELAY 1000", "DELAY=200", "VKEY 13", "VKEY 13 E",
+				// "VKEY-NX 13", "VKEY-EX 13",
 				"PICKCHARS", "PICKCHARS:Password:C=3", "PICKFIELD",
-				"NEWPASSWORD", "NEWPASSWORD:/Profile/", "HMACOTP", "CLEARFIELD",
-				"APPACTIVATE " + KPRes.Title, "BEEP 800 200",
+				"NEWPASSWORD", "NEWPASSWORD:/Profile/",
+				"HMACOTP", "TIMEOTP", "CLEARFIELD",
+				// https://sourceforge.net/p/keepass/discussion/329220/thread/f98dece5/
+				"APPACTIVATE " + (bRtl ? "Title" : KPRes.Title),
+				"BEEP 800 200", "CLIPBOARD", "CLIPBOARD-SET:/T/",
 				"CMD:/C/O/", VkcBreak,
 
 				"APPDIR", "DB_PATH", "DB_DIR", "DB_NAME", "DB_BASENAME", "DB_EXT",
@@ -205,8 +218,10 @@ namespace KeePass.Forms
 				"DT_UTC_DAY", "DT_UTC_HOUR", "DT_UTC_MINUTE", "DT_UTC_SECOND"
 			};
 
+			string strSfx = (bRtl ? string.Empty : ":");
+
 			RichTextBuilder rb = new RichTextBuilder();
-			rb.AppendLine(KPRes.StandardFields, FontStyle.Bold, null, null, ":", null);
+			rb.AppendLine(KPRes.StandardFields, FontStyle.Bold, null, null, strSfx, null);
 
 			rb.Append("{" + PwDefs.TitleField + "} ");
 			rb.Append("{" + PwDefs.UserNameField + "} ");
@@ -223,7 +238,8 @@ namespace KeePass.Forms
 					{
 						rb.AppendLine();
 						rb.AppendLine();
-						rb.AppendLine(KPRes.CustomFields, FontStyle.Bold, null, null, ":", null);
+						rb.AppendLine(KPRes.CustomFields, FontStyle.Bold,
+							null, null, strSfx, null);
 						bCustomInitialized = true;
 					}
 
@@ -235,14 +251,14 @@ namespace KeePass.Forms
 
 			rb.AppendLine();
 			rb.AppendLine();
-			rb.AppendLine(KPRes.KeyboardKeyModifiers, FontStyle.Bold, null, null, ":", null);
+			rb.AppendLine(KPRes.KeyboardKeyModifiers, FontStyle.Bold, null, null, strSfx, null);
 			rb.Append(KPRes.KeyboardKeyShift + @": +, ");
 			rb.Append(KPRes.KeyboardKeyCtrl + @": ^, ");
 			rb.Append(KPRes.KeyboardKeyAlt + @": %");
 
 			rb.AppendLine();
 			rb.AppendLine();
-			rb.AppendLine(KPRes.SpecialKeys, FontStyle.Bold, null, null, ":", null);
+			rb.AppendLine(KPRes.SpecialKeys, FontStyle.Bold, null, null, strSfx, null);
 			bFirst = true;
 			foreach(string strNav in vSpecialKeyCodes)
 			{
@@ -257,7 +273,7 @@ namespace KeePass.Forms
 
 			rb.AppendLine();
 			rb.AppendLine();
-			rb.AppendLine(KPRes.OtherPlaceholders, FontStyle.Bold, null, null, ":", null);
+			rb.AppendLine(KPRes.OtherPlaceholders, FontStyle.Bold, null, null, strSfx, null);
 			bFirst = true;
 			foreach(string strPH in vSpecialPlaceholders)
 			{
@@ -274,7 +290,7 @@ namespace KeePass.Forms
 			{
 				rb.AppendLine();
 				rb.AppendLine();
-				rb.AppendLine(KPRes.PluginProvided, FontStyle.Bold, null, null, ":", null);
+				rb.AppendLine(KPRes.PluginProvided, FontStyle.Bold, null, null, strSfx, null);
 				bFirst = true;
 				foreach(string strP in SprEngine.FilterPlaceholderHints)
 				{
@@ -295,10 +311,10 @@ namespace KeePass.Forms
 		{
 			// Focusing doesn't work in OnFormLoad
 			if(m_cmbWindow.Enabled)
-				UIUtil.SetFocus(m_cmbWindow, this);
+				UIUtil.SetFocus(m_cmbWindow, this, true);
 			else if(m_rbKeySeq.Enabled)
-				UIUtil.SetFocus(m_rbKeySeq, this);
-			else UIUtil.SetFocus(m_btnOK, this);
+				UIUtil.SetFocus(m_rbKeySeq, this, true);
+			else UIUtil.SetFocus(m_btnOK, this, true);
 		}
 
 		private void CleanUpEx()
@@ -665,7 +681,7 @@ namespace KeePass.Forms
 			if(string.IsNullOrEmpty(strWindows)) return;
 
 			strWindows = StrUtil.NormalizeNewLines(strWindows, false);
-			string[] vWindows = strWindows.Split(new char[]{ '\n' });
+			string[] vWindows = strWindows.Split(new char[] { '\n' });
 
 			List<string> vListed = new List<string>();
 			for(int i = 0; i < vWindows.Length; ++i)

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
-using System.Diagnostics;
 
 using KeePass.Native;
 using KeePass.Resources;
@@ -58,7 +58,7 @@ namespace KeePass.Util
 				try { kExtInfo.CreateSubKey("DefaultIcon"); }
 				catch(Exception) { }
 				RegistryKey kIcon = kExtInfo.OpenSubKey("DefaultIcon", true);
-				if(strAppPath.IndexOfAny(new char[]{ ' ', '\t' }) < 0)
+				if(strAppPath.IndexOfAny(new char[] { ' ', '\t' }) < 0)
 					kIcon.SetValue(string.Empty, strAppPath + ",0", RegistryValueKind.String);
 				else
 					kIcon.SetValue(string.Empty, "\"" + strAppPath + "\",0", RegistryValueKind.String);
@@ -123,19 +123,23 @@ namespace KeePass.Util
 		public static void SetStartWithWindows(string strAppName, string strAppPath,
 			bool bAutoStart)
 		{
+			string strKey = "HKEY_CURRENT_USER\\" + AutoRunKey;
+
 			try
 			{
 				if(bAutoStart)
-					Registry.SetValue("HKEY_CURRENT_USER\\" + AutoRunKey, strAppName,
-						strAppPath, RegistryValueKind.String);
+					Registry.SetValue(strKey, strAppName, strAppPath,
+						RegistryValueKind.String);
 				else
 				{
-					RegistryKey kRun = Registry.CurrentUser.OpenSubKey(AutoRunKey, true);
-					kRun.DeleteValue(strAppName);
-					kRun.Close();
+					using(RegistryKey kRun = Registry.CurrentUser.OpenSubKey(
+						AutoRunKey, true))
+					{
+						kRun.DeleteValue(strAppName);
+					}
 				}
 			}
-			catch(Exception) { Debug.Assert(false); }
+			catch(Exception ex) { MessageService.ShowWarning(strKey, ex); }
 		}
 
 		public static bool GetStartWithWindows(string strAppName)
@@ -143,14 +147,10 @@ namespace KeePass.Util
 			try
 			{
 				string strNotFound = Guid.NewGuid().ToString();
-				string strResult = (Registry.GetValue("HKEY_CURRENT_USER\\" + AutoRunKey,
-					strAppName, strNotFound) as string);
+				string str = (Registry.GetValue("HKEY_CURRENT_USER\\" +
+					AutoRunKey, strAppName, strNotFound) as string);
 
-				if((strResult != null) && (strResult != strNotFound) &&
-					(strResult.Length > 0))
-				{
-					return true;
-				}
+				return (!string.IsNullOrEmpty(str) && (str != strNotFound));
 			}
 			catch(Exception) { Debug.Assert(false); }
 

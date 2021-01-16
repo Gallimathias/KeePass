@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -111,30 +111,37 @@ namespace KeePass.Forms
 			FontUtil.AssignDefaultMono(m_tbPreview, true);
 
 			UIUtil.ConfigureToolTip(m_ttMain);
-			m_ttMain.SetToolTip(m_btnProfileAdd, KPRes.GenProfileSaveDesc);
-			m_ttMain.SetToolTip(m_btnProfileRemove, KPRes.GenProfileRemoveDesc);
+			m_ttMain.SetToolTip(m_btnProfileAdd, KPRes.ProfileSaveDesc);
+			m_ttMain.SetToolTip(m_btnProfileRemove, KPRes.ProfileDeleteDesc);
 
 			m_bBlockUIUpdate = true;
 
 			using(RtlAwareResizeScope r = new RtlAwareResizeScope(
 				m_cbUpperCase, m_cbLowerCase, m_cbDigits, m_cbMinus,
 				m_cbUnderline, m_cbSpace, m_cbSpecial, m_cbBrackets,
-				m_cbNoRepeat, m_cbExcludeLookAlike, m_lblExcludeChars,
-				m_lblSecRedInfo))
+				m_cbLatin1S, m_cbNoRepeat, m_cbExcludeLookAlike,
+				m_lblExcludeChars, m_lblSecRedInfo))
 			{
-				m_cbUpperCase.Text += @" (A, B, C, ...)";
-				m_cbLowerCase.Text += @" (a, b, c, ...)";
-				m_cbDigits.Text += @" (0, 1, 2, ...)";
-				m_cbMinus.Text += @" (-)";
-				m_cbUnderline.Text += @" (_)";
-				m_cbSpace.Text += @" ( )";
+				m_cbUpperCase.Text += " (A, B, C, ...)";
+				m_cbLowerCase.Text += " (a, b, c, ...)";
+				m_cbDigits.Text += " (0, 1, 2, ...)";
+				m_cbMinus.Text += " (-)";
+				m_cbUnderline.Text += " (_)";
+				m_cbSpace.Text += " ( )";
 				m_cbSpecial.Text += @" (!, $, %, &&, ...)";
 				m_cbBrackets.Text += @" ([, ], {, }, (, ), <, >)";
-				m_cbNoRepeat.Text += @" *";
-				m_cbExcludeLookAlike.Text += @" (l|1I, O0) *";
-				m_lblExcludeChars.Text += @" *";
-				m_lblSecRedInfo.Text = @"* " + m_lblSecRedInfo.Text;
+				m_cbLatin1S.Text += " (\u00C4, \u00B5, \u00B6, ...)";
+				m_cbNoRepeat.Text += " *";
+				m_cbExcludeLookAlike.Text += " (l|1I, O0) *";
+				m_lblExcludeChars.Text += " *";
+				m_lblSecRedInfo.Text = "* " + m_lblSecRedInfo.Text;
 			}
+
+			SetCharSetTT(m_cbUpperCase, PwCharSet.UpperCase, 2);
+			SetCharSetTT(m_cbLowerCase, PwCharSet.LowerCase, 2);
+			SetCharSetTT(m_cbDigits, PwCharSet.Digits, 2);
+			SetCharSetTT(m_cbSpecial, PwCharSet.Special, 2);
+			SetCharSetTT(m_cbLatin1S, PwCharSet.Latin1S, 4);
 
 			m_cmbCustomAlgo.Items.Add(NoCustomAlgo);
 			foreach(CustomPwGenerator pwg in Program.PwGeneratorPool)
@@ -169,7 +176,7 @@ namespace KeePass.Forms
 			m_cbSpace.CheckedChanged += this.UpdateUIProc;
 			m_cbSpecial.CheckedChanged += this.UpdateUIProc;
 			m_cbBrackets.CheckedChanged += this.UpdateUIProc;
-			m_cbHighAnsi.CheckedChanged += this.UpdateUIProc;
+			m_cbLatin1S.CheckedChanged += this.UpdateUIProc;
 			m_tbCustomChars.TextChanged += this.UpdateUIProc;
 			m_tbPattern.TextChanged += this.UpdateUIProc;
 			m_cbPatternPermute.CheckedChanged += this.UpdateUIProc;
@@ -186,7 +193,8 @@ namespace KeePass.Forms
 			{
 				m_cmbProfiles.Items.Add(ppw.Name);
 
-				if(ppw.GeneratorType == PasswordGeneratorType.Custom)
+				if((ppw.GeneratorType == PasswordGeneratorType.Custom) &&
+					!string.IsNullOrEmpty(ppw.CustomAlgorithmUuid))
 				{
 					CustomPwGenerator pwg = Program.PwGeneratorPool.Find(new
 						PwUuid(Convert.FromBase64String(ppw.CustomAlgorithmUuid)));
@@ -201,10 +209,10 @@ namespace KeePass.Forms
 				SetGenerationOptions(Program.Config.PasswordGenerator.LastUsedProfile);
 			}
 
-			if(m_bCanAccept == false)
+			if(!m_bCanAccept)
 			{
 				m_btnOK.Visible = false;
-				m_btnCancel.Text = KPRes.CloseButton;
+				m_btnCancel.Text = KPRes.Close;
 
 				m_tabPreview.Text = KPRes.Generate;
 				m_lblPreview.Visible = false;
@@ -221,12 +229,28 @@ namespace KeePass.Forms
 			EnableControlsEx(false);
 		}
 
+		private void SetCharSetTT(CheckBox cb, string strCharSet, int cLines)
+		{
+			int ccLine = (int)Math.Ceiling((double)strCharSet.Length / cLines);
+			if(ccLine <= 1) { Debug.Assert(false); ccLine = int.MaxValue; }
+
+			StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < strCharSet.Length; ++i)
+			{
+				if(((i % ccLine) == 0) && (i != 0))
+					sb.Append(MessageService.NewLine);
+				sb.Append(strCharSet[i]);
+			}
+
+			m_ttMain.SetToolTip(cb, sb.ToString());
+		}
+
 		private void CustomizeForScreenReader()
 		{
 			if(!Program.Config.UI.OptimizeForScreenReader) return;
 
-			m_btnProfileAdd.Text = KPRes.GenProfileSave;
-			m_btnProfileRemove.Text = KPRes.GenProfileRemove;
+			m_btnProfileAdd.Text = KPRes.ProfileSave;
+			m_btnProfileRemove.Text = KPRes.ProfileDelete;
 			m_btnCustomOpt.Text = KPRes.Options;
 		}
 
@@ -242,7 +266,7 @@ namespace KeePass.Forms
 			m_lblNumGenChars.Enabled = m_numGenChars.Enabled = m_cbUpperCase.Enabled =
 				m_cbLowerCase.Enabled = m_cbDigits.Enabled = m_cbMinus.Enabled =
 				m_cbUnderline.Enabled = m_cbSpace.Enabled = m_cbSpecial.Enabled =
-				m_cbBrackets.Enabled = m_cbHighAnsi.Enabled = m_lblCustomChars.Enabled =
+				m_cbBrackets.Enabled = m_cbLatin1S.Enabled = m_lblCustomChars.Enabled =
 				m_tbCustomChars.Enabled = m_rbStandardCharSet.Checked;
 			m_tbPattern.Enabled = m_cbPatternPermute.Enabled =
 				m_rbPattern.Checked;
@@ -304,8 +328,8 @@ namespace KeePass.Forms
 			if(m_cbUpperCase.Checked) opt.CharSet.Add(PwCharSet.UpperCase);
 			if(m_cbLowerCase.Checked) opt.CharSet.Add(PwCharSet.LowerCase);
 			if(m_cbDigits.Checked) opt.CharSet.Add(PwCharSet.Digits);
-			if(m_cbSpecial.Checked) opt.CharSet.Add(PwCharSet.SpecialChars);
-			if(m_cbHighAnsi.Checked) opt.CharSet.Add(PwCharSet.HighAnsiChars);
+			if(m_cbSpecial.Checked) opt.CharSet.Add(PwCharSet.Special);
+			if(m_cbLatin1S.Checked) opt.CharSet.Add(PwCharSet.Latin1S);
 			if(m_cbMinus.Checked) opt.CharSet.Add('-');
 			if(m_cbUnderline.Checked) opt.CharSet.Add('_');
 			if(m_cbSpace.Checked) opt.CharSet.Add(' ');
@@ -347,8 +371,8 @@ namespace KeePass.Forms
 			m_cbUpperCase.Checked = pcs.RemoveIfAllExist(PwCharSet.UpperCase);
 			m_cbLowerCase.Checked = pcs.RemoveIfAllExist(PwCharSet.LowerCase);
 			m_cbDigits.Checked = pcs.RemoveIfAllExist(PwCharSet.Digits);
-			m_cbSpecial.Checked = pcs.RemoveIfAllExist(PwCharSet.SpecialChars);
-			m_cbHighAnsi.Checked = pcs.RemoveIfAllExist(PwCharSet.HighAnsiChars);
+			m_cbSpecial.Checked = pcs.RemoveIfAllExist(PwCharSet.Special);
+			m_cbLatin1S.Checked = pcs.RemoveIfAllExist(PwCharSet.Latin1S);
 			m_cbMinus.Checked = pcs.RemoveIfAllExist("-");
 			m_cbUnderline.Checked = pcs.RemoveIfAllExist("_");
 			m_cbSpace.Checked = pcs.RemoveIfAllExist(" ");
@@ -408,8 +432,8 @@ namespace KeePass.Forms
 				lNames.Add(pwExisting.Name);
 
 			SingleLineEditForm slef = new SingleLineEditForm();
-			slef.InitEx(KPRes.GenProfileSave, KPRes.GenProfileSaveDesc,
-				KPRes.GenProfileSaveDescLong, Properties.Resources.B48x48_KGPG_Gen,
+			slef.InitEx(KPRes.ProfileSave, KPRes.ProfileSaveDesc,
+				KPRes.ProfileSavePrompt, Properties.Resources.B48x48_KGPG_Gen,
 				string.Empty, lNames.ToArray());
 
 			if(slef.ShowDialog() == DialogResult.OK)
@@ -554,8 +578,18 @@ namespace KeePass.Forms
 			{
 				Application.DoEvents();
 
+				string strError;
 				ProtectedString psNew = PwGeneratorUtil.GenerateAcceptable(
-					pwOpt, null, peContext, pdContext, ref bAcceptAlways);
+					pwOpt, null, peContext, pdContext, false,
+					ref bAcceptAlways, out strError);
+
+				if(!string.IsNullOrEmpty(strError))
+				{
+					sbList.Remove(0, sbList.Length);
+					sbList.AppendLine(strError);
+					break;
+				}
+
 				sbList.AppendLine(psNew.ReadString());
 				m_pbPreview.Value = (int)((100 * i) / MaxPreviewPasswords);
 			}
@@ -576,32 +610,29 @@ namespace KeePass.Forms
 
 		private void SelectCustomGenerator(string strUuid, string strCustomOptions)
 		{
+			int iSel = 0;
 			try
 			{
-				if(string.IsNullOrEmpty(strUuid)) throw new ArgumentException();
+				if(string.IsNullOrEmpty(strUuid)) return;
 
 				PwUuid uuid = new PwUuid(Convert.FromBase64String(strUuid));
 				CustomPwGenerator pwg = Program.PwGeneratorPool.Find(uuid);
-				if(pwg == null) throw new ArgumentException();
+				if(pwg == null) return;
 
-				bool bSet = false;
 				for(int i = 0; i < m_cmbCustomAlgo.Items.Count; ++i)
 				{
 					if((m_cmbCustomAlgo.Items[i] as string) == pwg.Name)
 					{
-						m_cmbCustomAlgo.SelectedIndex = i;
+						iSel = i;
 
 						if(strCustomOptions != null)
 							m_dictCustomOptions[pwg] = strCustomOptions;
 
-						bSet = true;
 						break;
 					}
 				}
-
-				if(!bSet) throw new ArgumentException();
 			}
-			catch(Exception) { m_cmbCustomAlgo.SelectedIndex = 0; }
+			finally { m_cmbCustomAlgo.SelectedIndex = iSel; }
 		}
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)

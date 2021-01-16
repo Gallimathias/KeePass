@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,17 +20,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.IO;
-using System.Globalization;
-using System.Diagnostics;
 
 using KeePass.App.Configuration;
 using KeePass.Forms;
 
 using KeePassLib;
 using KeePassLib.Collections;
+using KeePassLib.Native;
 using KeePassLib.Security;
 using KeePassLib.Utility;
 
@@ -44,7 +45,6 @@ namespace KeePass.Util.Spr
 		private const uint MaxRecursionDepth = 12;
 		private const StringComparison ScMethod = StringComparison.OrdinalIgnoreCase;
 
-		private static string m_strAppExePath = string.Empty;
 		// private static readonly char[] m_vPlhEscapes = new char[] { '{', '}', '%' };
 
 		// Important notes for plugin developers subscribing to the following events:
@@ -71,11 +71,6 @@ namespace KeePass.Util.Spr
 			get { return m_lFilterPlh; }
 		}
 
-		private static void InitializeStatic()
-		{
-			m_strAppExePath = WinUtil.GetExecutable();
-		}
-
 		[Obsolete]
 		public static string Compile(string strText, bool bIsAutoTypeSequence,
 			PwEntry pwEntry, PwDatabase pwDatabase, bool bEscapeForAutoType,
@@ -90,8 +85,6 @@ namespace KeePass.Util.Spr
 		{
 			if(strText == null) { Debug.Assert(false); return string.Empty; }
 			if(strText.Length == 0) return string.Empty;
-
-			SprEngine.InitializeStatic();
 
 			if(ctx == null) ctx = new SprContext();
 			ctx.RefCache.Clear();
@@ -139,6 +132,18 @@ namespace KeePass.Util.Spr
 			if((ctx.Flags & SprCompileFlags.Run) != SprCompileFlags.None)
 				str = RunCommands(str, ctx, uRecursionLevel);
 
+			if((ctx.Flags & SprCompileFlags.DataActive) != SprCompileFlags.None)
+				str = PerformClipboardCopy(str, ctx, uRecursionLevel);
+
+			if(((ctx.Flags & SprCompileFlags.DataNonActive) != SprCompileFlags.None) &&
+				(str.IndexOf(@"{CLIPBOARD}", SprEngine.ScMethod) >= 0))
+			{
+				string strCb = null;
+				try { strCb = ClipboardUtil.GetText(); }
+				catch(Exception) { Debug.Assert(false); }
+				str = Fill(str, @"{CLIPBOARD}", strCb ?? string.Empty, ctx, null);
+			}
+
 			if((ctx.Flags & SprCompileFlags.AppPaths) != SprCompileFlags.None)
 				str = AppLocator.FillPlaceholders(str, ctx);
 
@@ -151,24 +156,19 @@ namespace KeePass.Util.Spr
 					str = FillEntryStrings(str, ctx, uRecursionLevel);
 
 				if((ctx.Flags & SprCompileFlags.EntryStringsSpecial) != SprCompileFlags.None)
-				{
-					// ctx.UrlRemoveSchemeOnce = true;
-					// str = SprEngine.FillIfExists(str, @"{URL:RMVSCM}",
-					//	ctx.Entry.Strings.GetSafe(PwDefs.UrlField), ctx, uRecursionLevel);
-					// Debug.Assert(!ctx.UrlRemoveSchemeOnce);
-
 					str = FillEntryStringsSpecial(str, ctx, uRecursionLevel);
-				}
+
+				if(((ctx.Flags & SprCompileFlags.EntryProperties) != SprCompileFlags.None) &&
+					(str.IndexOf(@"{UUID}", SprEngine.ScMethod) >= 0))
+					str = Fill(str, @"{UUID}", ctx.Entry.Uuid.ToHexString(), ctx, null);
 
 				if(((ctx.Flags & SprCompileFlags.PasswordEnc) != SprCompileFlags.None) &&
 					(str.IndexOf(@"{PASSWORD_ENC}", SprEngine.ScMethod) >= 0))
 				{
-					string strPwCmp = SprEngine.FillIfExists(@"{PASSWORD}",
-						@"{PASSWORD}", ctx.Entry.Strings.GetSafe(PwDefs.PasswordField),
-						ctx.WithoutContentTransformations(), uRecursionLevel);
-
-					str = SprEngine.FillPlaceholder(str, @"{PASSWORD_ENC}",
-						StrUtil.EncryptString(strPwCmp), ctx);
+					string strPwCmp = SprEngine.CompileInternal(@"{PASSWORD}",
+						ctx.WithoutContentTransformations(), uRecursionLevel + 1);
+					str = Fill(str, @"{PASSWORD_ENC}", StrUtil.EncryptString(
+						strPwCmp), ctx, null);
 				}
 
 				PwGroup pg = ctx.Entry.ParentGroup;
@@ -186,49 +186,36 @@ namespace KeePass.Util.Spr
 						str = FillGroupPlh(str, @"{GROUP_SEL", pgSel, ctx, uRecursionLevel);
 				}
 
-				str = SprEngine.FillIfExists(str, @"{APPDIR}", new ProtectedString(
-					false, UrlUtil.GetFileDirectory(m_strAppExePath, false, false)),
-					ctx, uRecursionLevel);
-			}
+				str = Fill(str, @"{APPDIR}", UrlUtil.GetFileDirectory(
+					WinUtil.GetExecutable(), false, false), ctx, uRecursionLevel);
 
-			if(ctx.Database != null)
-			{
-				if((ctx.Flags & SprCompileFlags.Paths) != SprCompileFlags.None)
-				{
-					// For backward compatibility only
-					str = SprEngine.FillIfExists(str, @"{DOCDIR}", new ProtectedString(
-						false, UrlUtil.GetFileDirectory(ctx.Database.IOConnectionInfo.Path,
-						false, false)), ctx, uRecursionLevel);
-
-					str = SprEngine.FillIfExists(str, @"{DB_PATH}", new ProtectedString(
-						false, ctx.Database.IOConnectionInfo.Path), ctx, uRecursionLevel);
-					str = SprEngine.FillIfExists(str, @"{DB_DIR}", new ProtectedString(
-						false, UrlUtil.GetFileDirectory(ctx.Database.IOConnectionInfo.Path,
-						false, false)), ctx, uRecursionLevel);
-					str = SprEngine.FillIfExists(str, @"{DB_NAME}", new ProtectedString(
-						false, UrlUtil.GetFileName(ctx.Database.IOConnectionInfo.Path)),
-						ctx, uRecursionLevel);
-					str = SprEngine.FillIfExists(str, @"{DB_BASENAME}", new ProtectedString(
-						false, UrlUtil.StripExtension(UrlUtil.GetFileName(
-						ctx.Database.IOConnectionInfo.Path))), ctx, uRecursionLevel);
-					str = SprEngine.FillIfExists(str, @"{DB_EXT}", new ProtectedString(
-						false, UrlUtil.GetExtension(ctx.Database.IOConnectionInfo.Path)),
-						ctx, uRecursionLevel);
-				}
-			}
-
-			if((ctx.Flags & SprCompileFlags.Paths) != SprCompileFlags.None)
-			{
-				str = SprEngine.FillIfExists(str, @"{ENV_DIRSEP}", new ProtectedString(
-					false, Path.DirectorySeparatorChar.ToString()), ctx, uRecursionLevel);
+				str = Fill(str, @"{ENV_DIRSEP}", Path.DirectorySeparatorChar.ToString(),
+					ctx, null);
 
 				string strPF86 = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
 				if(string.IsNullOrEmpty(strPF86))
 					strPF86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 				if(strPF86 != null)
-					str = SprEngine.FillIfExists(str, @"{ENV_PROGRAMFILES_X86}",
-						new ProtectedString(false, strPF86), ctx, uRecursionLevel);
+					str = Fill(str, @"{ENV_PROGRAMFILES_X86}", strPF86, ctx, uRecursionLevel);
 				else { Debug.Assert(false); }
+
+				if(ctx.Database != null)
+				{
+					string strPath = ctx.Database.IOConnectionInfo.Path;
+					string strDir = UrlUtil.GetFileDirectory(strPath, false, false);
+					string strName = UrlUtil.GetFileName(strPath);
+
+					// For backward compatibility only
+					str = Fill(str, @"{DOCDIR}", strDir, ctx, uRecursionLevel);
+
+					str = Fill(str, @"{DB_PATH}", strPath, ctx, uRecursionLevel);
+					str = Fill(str, @"{DB_DIR}", strDir, ctx, uRecursionLevel);
+					str = Fill(str, @"{DB_NAME}", strName, ctx, uRecursionLevel);
+					str = Fill(str, @"{DB_BASENAME}", UrlUtil.StripExtension(
+						strName), ctx, uRecursionLevel);
+					str = Fill(str, @"{DB_EXT}", UrlUtil.GetExtension(
+						strPath), ctx, uRecursionLevel);
+				}
 			}
 
 			if((ctx.Flags & SprCompileFlags.AutoType) != SprCompileFlags.None)
@@ -239,39 +226,40 @@ namespace KeePass.Util.Spr
 					@"{HOME}+({END}){BKSP}{DELAY 50}");
 			}
 
-			if((ctx.Flags & SprCompileFlags.DateTime) != SprCompileFlags.None)
+			if(((ctx.Flags & SprCompileFlags.DateTime) != SprCompileFlags.None) &&
+				(str.IndexOf(@"{DT_", SprEngine.ScMethod) >= 0))
 			{
 				DateTime dtNow = DateTime.UtcNow;
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_YEAR}", new ProtectedString(
-					false, dtNow.Year.ToString("D4")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_MONTH}", new ProtectedString(
-					false, dtNow.Month.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_DAY}", new ProtectedString(
-					false, dtNow.Day.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_HOUR}", new ProtectedString(
-					false, dtNow.Hour.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_MINUTE}", new ProtectedString(
-					false, dtNow.Minute.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_SECOND}", new ProtectedString(
-					false, dtNow.Second.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_UTC_SIMPLE}", new ProtectedString(
-					false, dtNow.ToString("yyyyMMddHHmmss")), ctx, uRecursionLevel);
+				str = Fill(str, @"{DT_UTC_YEAR}", dtNow.Year.ToString("D4"),
+					ctx, null);
+				str = Fill(str, @"{DT_UTC_MONTH}", dtNow.Month.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_UTC_DAY}", dtNow.Day.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_UTC_HOUR}", dtNow.Hour.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_UTC_MINUTE}", dtNow.Minute.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_UTC_SECOND}", dtNow.Second.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_UTC_SIMPLE}", dtNow.ToString("yyyyMMddHHmmss"),
+					ctx, null);
 
 				dtNow = dtNow.ToLocalTime();
-				str = SprEngine.FillIfExists(str, @"{DT_YEAR}", new ProtectedString(
-					false, dtNow.Year.ToString("D4")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_MONTH}", new ProtectedString(
-					false, dtNow.Month.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_DAY}", new ProtectedString(
-					false, dtNow.Day.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_HOUR}", new ProtectedString(
-					false, dtNow.Hour.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_MINUTE}", new ProtectedString(
-					false, dtNow.Minute.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_SECOND}", new ProtectedString(
-					false, dtNow.Second.ToString("D2")), ctx, uRecursionLevel);
-				str = SprEngine.FillIfExists(str, @"{DT_SIMPLE}", new ProtectedString(
-					false, dtNow.ToString("yyyyMMddHHmmss")), ctx, uRecursionLevel);
+				str = Fill(str, @"{DT_YEAR}", dtNow.Year.ToString("D4"),
+					ctx, null);
+				str = Fill(str, @"{DT_MONTH}", dtNow.Month.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_DAY}", dtNow.Day.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_HOUR}", dtNow.Hour.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_MINUTE}", dtNow.Minute.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_SECOND}", dtNow.Second.ToString("D2"),
+					ctx, null);
+				str = Fill(str, @"{DT_SIMPLE}", dtNow.ToString("yyyyMMddHHmmss"),
+					ctx, null);
 			}
 
 			if((ctx.Flags & SprCompileFlags.References) != SprCompileFlags.None)
@@ -280,16 +268,15 @@ namespace KeePass.Util.Spr
 			if(((ctx.Flags & SprCompileFlags.EnvVars) != SprCompileFlags.None) &&
 				(str.IndexOf('%') >= 0))
 			{
-				// Replace environment variables
 				foreach(DictionaryEntry de in Environment.GetEnvironmentVariables())
 				{
 					string strKey = (de.Key as string);
-					string strValue = (de.Value as string);
+					if(string.IsNullOrEmpty(strKey)) { Debug.Assert(false); continue; }
 
-					if((strKey != null) && (strValue != null))
-						str = SprEngine.FillIfExists(str, @"%" + strKey + @"%",
-							new ProtectedString(false, strValue), ctx, uRecursionLevel);
-					else { Debug.Assert(false); }
+					string strValue = (de.Value as string);
+					if(strValue == null) { Debug.Assert(false); strValue = string.Empty; }
+
+					str = Fill(str, @"%" + strKey + @"%", strValue, ctx, uRecursionLevel);
 				}
 			}
 
@@ -318,49 +305,36 @@ namespace KeePass.Util.Spr
 			return str;
 		}
 
-		private static string FillIfExists(string strData, string strPlaceholder,
-			ProtectedString psParsable, SprContext ctx, uint uRecursionLevel)
-		{
-			// // The UrlRemoveSchemeOnce property of ctx must be cleared
-			// // before this method returns and before any recursive call
-			// bool bRemoveScheme = false;
-			// if(ctx != null)
-			// {
-			//	bRemoveScheme = ctx.UrlRemoveSchemeOnce;
-			//	ctx.UrlRemoveSchemeOnce = false;
-			// }
-
-			if(strData == null) { Debug.Assert(false); return string.Empty; }
-			if(strPlaceholder == null) { Debug.Assert(false); return strData; }
-			if(strPlaceholder.Length == 0) { Debug.Assert(false); return strData; }
-			if(psParsable == null) { Debug.Assert(false); return strData; }
-
-			if(strData.IndexOf(strPlaceholder, SprEngine.ScMethod) >= 0)
-			{
-				string strReplacement = SprEngine.CompileInternal(
-					psParsable.ReadString(), ctx.WithoutContentTransformations(),
-					uRecursionLevel + 1);
-
-				// if(bRemoveScheme)
-				//	strReplacement = UrlUtil.RemoveScheme(strReplacement);
-
-				return SprEngine.FillPlaceholder(strData, strPlaceholder,
-					strReplacement, ctx);
-			}
-
-			return strData;
-		}
-
-		private static string FillPlaceholder(string strData, string strPlaceholder,
-			string strReplaceWith, SprContext ctx)
+		private static string Fill(string strData, string strPlaceholder,
+			string strReplacement, SprContext ctx, uint? ouRecursionLevel)
 		{
 			if(strData == null) { Debug.Assert(false); return string.Empty; }
-			if(strPlaceholder == null) { Debug.Assert(false); return strData; }
-			if(strPlaceholder.Length == 0) { Debug.Assert(false); return strData; }
-			if(strReplaceWith == null) { Debug.Assert(false); return strData; }
+			if(string.IsNullOrEmpty(strPlaceholder)) { Debug.Assert(false); return strData; }
+			if(strReplacement == null) { Debug.Assert(false); strReplacement = string.Empty; }
+
+			if(strData.IndexOf(strPlaceholder, SprEngine.ScMethod) < 0) return strData;
+
+			string strValue = strReplacement;
+			if(ouRecursionLevel.HasValue)
+				strValue = SprEngine.CompileInternal(strValue, ((ctx != null) ?
+					ctx.WithoutContentTransformations() : null),
+					ouRecursionLevel.Value + 1);
 
 			return StrUtil.ReplaceCaseInsensitive(strData, strPlaceholder,
-				SprEngine.TransformContent(strReplaceWith, ctx));
+				SprEngine.TransformContent(strValue, ctx));
+		}
+
+		private static string Fill(string strData, string strPlaceholder,
+			ProtectedString psReplacement, SprContext ctx, uint? ouRecursionLevel)
+		{
+			if(strData == null) { Debug.Assert(false); return string.Empty; }
+			if(string.IsNullOrEmpty(strPlaceholder)) { Debug.Assert(false); return strData; }
+			if(psReplacement == null) { Debug.Assert(false); psReplacement = ProtectedString.Empty; }
+
+			if(strData.IndexOf(strPlaceholder, SprEngine.ScMethod) < 0) return strData;
+
+			return Fill(strData, strPlaceholder, psReplacement.ReadString(),
+				ctx, ouRecursionLevel);
 		}
 
 		public static string TransformContent(string strContent, SprContext ctx)
@@ -376,6 +350,23 @@ namespace KeePass.Util.Spr
 
 				if(ctx.EncodeAsAutoTypeSequence)
 					str = SprEncoding.EncodeAsAutoTypeSequence(str);
+			}
+
+			return str;
+		}
+
+		private static string UntransformContent(string strContent, SprContext ctx)
+		{
+			if(strContent == null) { Debug.Assert(false); return string.Empty; }
+
+			string str = strContent;
+
+			if(ctx != null)
+			{
+				if(ctx.EncodeAsAutoTypeSequence) { Debug.Assert(false); }
+
+				if(ctx.EncodeForCommandLine)
+					str = SprEncoding.DecodeCommandLine(str);
 			}
 
 			return str;
@@ -408,15 +399,14 @@ namespace KeePass.Util.Spr
 					PwDefs.PasswordField + @"}", StrUtil.CaseIgnoreCmp) &&
 					Program.Config.MainWindow.IsColumnHidden(AceColumnType.Password))
 				{
-					str = SprEngine.FillIfExists(str, strKey, new ProtectedString(
-						false, PwDefs.HiddenPassword), ctx, uRecursionLevel);
+					str = Fill(str, strKey, PwDefs.HiddenPassword, ctx, null);
 					continue;
 				}
 
 				// Use GetSafe because the field doesn't necessarily exist
 				// (might be a standard field that has been added above)
-				str = SprEngine.FillIfExists(str, strKey, ctx.Entry.Strings.GetSafe(
-					strField), ctx, uRecursionLevel);
+				str = Fill(str, strKey, ctx.Entry.Strings.GetSafe(strField),
+					ctx, uRecursionLevel);
 			}
 
 			return str;
@@ -467,7 +457,9 @@ namespace KeePass.Util.Spr
 
 				string strRep = null;
 				if(i == 0) strRep = strDataCmp;
+				// UrlUtil supports prefixes like cmd://
 				else if(i == 1) strRep = UrlUtil.RemoveScheme(strDataCmp);
+				else if(i == 2) strRep = UrlUtil.GetScheme(strDataCmp);
 				else
 				{
 					try
@@ -477,7 +469,7 @@ namespace KeePass.Util.Spr
 						int t;
 						switch(i)
 						{
-							case 2: strRep = uri.Scheme; break;
+							// case 2: strRep = uri.Scheme; break; // No cmd:// support
 							case 3: strRep = uri.Host; break;
 							case 4:
 								strRep = uri.Port.ToString(
@@ -710,7 +702,7 @@ namespace KeePass.Util.Spr
 		{
 			Debug.Assert(strPlhStart.StartsWith(@"{") && !strPlhStart.EndsWith(@"}"));
 
-			iStart = str.IndexOf(strPlhStart, StrUtil.CaseIgnoreCmp);
+			iStart = str.IndexOf(strPlhStart, SprEngine.ScMethod);
 			if(iStart < 0) { lParams = null; return false; }
 
 			lParams = new List<string>();
@@ -818,6 +810,30 @@ namespace KeePass.Util.Spr
 			return str;
 		}
 
+		private static string PerformClipboardCopy(string strText, SprContext ctx,
+			uint uRecursionLevel)
+		{
+			string str = strText;
+			int iStart;
+			List<string> lParams;
+			SprContext ctxData = ((ctx != null) ? ctx.WithoutContentTransformations() : null);
+
+			while(ParseAndRemovePlhWithParams(ref str, ctxData, uRecursionLevel,
+				@"{CLIPBOARD-SET:", out iStart, out lParams, true))
+			{
+				if(lParams.Count < 1) continue;
+
+				try
+				{
+					ClipboardUtil.Copy(lParams[0] ?? string.Empty, false,
+						true, null, null, IntPtr.Zero);
+				}
+				catch(Exception) { Debug.Assert(false); }
+			}
+
+			return str;
+		}
+
 		private static string FillGroupPlh(string strData, string strPlhPrefix,
 			PwGroup pg, SprContext ctx, uint uRecursionLevel)
 		{
@@ -827,17 +843,15 @@ namespace KeePass.Util.Spr
 
 			string str = strData;
 
-			str = SprEngine.FillIfExists(str, strPlhPrefix + @"}",
-				new ProtectedString(false, pg.Name), ctx, uRecursionLevel);
+			str = Fill(str, strPlhPrefix + @"}", pg.Name, ctx, uRecursionLevel);
 
-			ProtectedString psGroupPath = new ProtectedString(false, pg.GetFullPath());
-			str = SprEngine.FillIfExists(str, strPlhPrefix + @"_PATH}", psGroupPath,
+			string strGroupPath = pg.GetFullPath();
+			str = Fill(str, strPlhPrefix + @"_PATH}", strGroupPath,
 				ctx, uRecursionLevel);
-			str = SprEngine.FillIfExists(str, strPlhPrefix + @"PATH}", psGroupPath,
+			str = Fill(str, strPlhPrefix + @"PATH}", strGroupPath,
 				ctx, uRecursionLevel); // Obsolete; for backward compatibility
 
-			str = SprEngine.FillIfExists(str, strPlhPrefix + @"_NOTES}",
-				new ProtectedString(false, pg.Notes), ctx, uRecursionLevel);
+			str = Fill(str, strPlhPrefix + @"_NOTES}", pg.Notes, ctx, uRecursionLevel);
 
 			return str;
 		}
@@ -850,15 +864,28 @@ namespace KeePass.Util.Spr
 			List<string> lParams;
 
 			while(ParseAndRemovePlhWithParams(ref str, ctx, uRecursionLevel,
-				@"{CMD:", out iStart, out lParams, true))
+				@"{CMD:", out iStart, out lParams, false))
 			{
 				if(lParams.Count == 0) continue;
-				string strCmd = lParams[0];
+
+				string strBaseRaw = null;
+				if((ctx != null) && (ctx.Base != null))
+				{
+					if(ctx.BaseIsEncoded)
+						strBaseRaw = UntransformContent(ctx.Base, ctx);
+					else strBaseRaw = ctx.Base;
+				}
+
+				string strCmd = WinUtil.CompileUrl((lParams[0] ?? string.Empty),
+					((ctx != null) ? ctx.Entry : null), true, strBaseRaw, true);
+				if(WinUtil.IsCommandLineUrl(strCmd))
+					strCmd = WinUtil.GetCommandLineFromUrl(strCmd);
 				if(string.IsNullOrEmpty(strCmd)) continue;
 
+				Process p = null;
 				try
 				{
-					const StringComparison sc = StrUtil.CaseIgnoreCmp;
+					StringComparison sc = StrUtil.CaseIgnoreCmp;
 
 					string strOpt = ((lParams.Count >= 2) ? lParams[1] :
 						string.Empty);
@@ -870,8 +897,7 @@ namespace KeePass.Util.Spr
 					StrUtil.SplitCommandLine(strCmd, out strApp, out strArgs);
 					if(string.IsNullOrEmpty(strApp)) continue;
 					psi.FileName = strApp;
-					if(!string.IsNullOrEmpty(strArgs))
-						psi.Arguments = strArgs;
+					if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
 
 					string strMethod = GetParam(d, "m", "s");
 					bool bShellExec = !strMethod.Equals("c", sc);
@@ -899,12 +925,18 @@ namespace KeePass.Util.Spr
 
 					bool bWait = GetParam(d, "w", "1").Equals("1", sc);
 
-					Process p = Process.Start(psi);
+					p = NativeLib.StartProcessEx(psi);
 					if(p == null) { Debug.Assert(false); continue; }
 
 					if(bStdOut)
 					{
-						string strOut = p.StandardOutput.ReadToEnd();
+						string strOut = (p.StandardOutput.ReadToEnd() ?? string.Empty);
+
+						// Remove trailing new-line characters, like $(...);
+						// https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
+						// https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html#Command-Substitution
+						strOut = strOut.TrimEnd('\r', '\n');
+
 						strOut = TransformContent(strOut, ctx);
 						str = str.Insert(iStart, strOut);
 					}
@@ -915,6 +947,11 @@ namespace KeePass.Util.Spr
 				{
 					string strMsg = strCmd + MessageService.NewParagraph + ex.Message;
 					MessageService.ShowWarning(strMsg);
+				}
+				finally
+				{
+					try { if(p != null) p.Dispose(); }
+					catch(Exception) { Debug.Assert(false); }
 				}
 			}
 

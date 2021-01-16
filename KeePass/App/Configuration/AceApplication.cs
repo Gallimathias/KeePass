@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,14 @@ namespace KeePass.App.Configuration
 	{
 		public AceApplication()
 		{
+		}
+
+		private bool m_bConfigSave = true;
+		[DefaultValue(true)]
+		public bool ConfigSave
+		{
+			get { return m_bConfigSave; }
+			set { m_bConfigSave = value; }
 		}
 
 		private string m_strLanguageFile = string.Empty; // = English
@@ -166,12 +174,20 @@ namespace KeePass.App.Configuration
 			set { m_bVerifyFile = value; }
 		}
 
-		private bool m_bTransactedWrites = true;
+		private bool m_bTransactedFileWrites = true;
 		[DefaultValue(true)]
 		public bool UseTransactedFileWrites
 		{
-			get { return m_bTransactedWrites; }
-			set { m_bTransactedWrites = value; }
+			get { return m_bTransactedFileWrites; }
+			set { m_bTransactedFileWrites = value; }
+		}
+
+		private bool m_bTransactedConfigWrites = true;
+		[DefaultValue(true)]
+		public bool UseTransactedConfigWrites
+		{
+			get { return m_bTransactedConfigWrites; }
+			set { m_bTransactedConfigWrites = value; }
 		}
 
 		private bool m_bFileTxExtra = false;
@@ -196,6 +212,14 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_bSaveForceSync; }
 			set { m_bSaveForceSync = value; }
+		}
+
+		private bool m_bAutoSaveAfterEntryEdit = false;
+		[DefaultValue(false)]
+		public bool AutoSaveAfterEntryEdit
+		{
+			get { return m_bAutoSaveAfterEntryEdit; }
+			set { m_bAutoSaveAfterEntryEdit = value; }
 		}
 
 		private AceCloseDb m_fc = new AceCloseDb();
@@ -229,6 +253,18 @@ namespace KeePass.App.Configuration
 			{
 				if(value == null) throw new ArgumentNullException("value");
 				m_strPluginCachePath = value;
+			}
+		}
+
+		private List<string> m_lPluginCompat = new List<string>();
+		[XmlArrayItem("Item")]
+		public List<string> PluginCompatibility
+		{
+			get { return m_lPluginCompat; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_lPluginCompat = value;
 			}
 		}
 
@@ -366,6 +402,25 @@ namespace KeePass.App.Configuration
 				m_dictWorkingDirs[str.Substring(0, iSep)] = str.Substring(iSep + 1);
 			}
 		}
+
+		internal bool IsPluginCompat(string strHash)
+		{
+			if(string.IsNullOrEmpty(strHash)) { Debug.Assert(false); return false; }
+
+			string str = "@" + strHash + "@" + WinUtil.GetAssemblyVersion() + "@1";
+
+			return m_lPluginCompat.Contains(str);
+		}
+
+		internal void SetPluginCompat(string strHash)
+		{
+			if(string.IsNullOrEmpty(strHash)) { Debug.Assert(false); return; }
+
+			string str = "@" + strHash + "@" + WinUtil.GetAssemblyVersion() + "@1";
+
+			if(m_lPluginCompat.Contains(str)) { Debug.Assert(false); return; }
+			m_lPluginCompat.Insert(0, str); // See auto. maintenance
+		}
 	}
 
 	internal enum AceDir
@@ -469,7 +524,7 @@ namespace KeePass.App.Configuration
 
 	public sealed class AceMru
 	{
-		public const uint DefaultMaxItemCount = 12;
+		public static readonly uint DefaultMaxItemCount = 12;
 
 		public AceMru()
 		{
@@ -482,12 +537,16 @@ namespace KeePass.App.Configuration
 			set { m_uMaxItems = value; }
 		}
 
-		private List<IOConnectionInfo> m_vItems = new List<IOConnectionInfo>();
+		private List<IOConnectionInfo> m_lItems = new List<IOConnectionInfo>();
 		[XmlArrayItem("ConnectionInfo")]
 		public List<IOConnectionInfo> Items
 		{
-			get { return m_vItems; }
-			set { m_vItems = value; }
+			get { return m_lItems; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_lItems = value;
+			}
 		}
 	}
 }

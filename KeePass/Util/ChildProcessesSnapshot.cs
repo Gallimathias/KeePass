@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -55,19 +55,19 @@ namespace KeePass.Util
 
 				uint uEntrySize = (uint)Marshal.SizeOf(typeof(
 					NativeMethods.PROCESSENTRY32));
-				if(WinUtil.IsAtLeastWindows2000) // Unicode
+				if(Marshal.SystemDefaultCharSize >= 2)
 				{
-					int p = Marshal.SizeOf(typeof(IntPtr));
-					if(p == 4)
+					if(IntPtr.Size == 4)
 					{
 						Debug.Assert(uEntrySize ==
 							NativeMethods.PROCESSENTRY32SizeUni32);
 					}
-					else if(p == 8)
+					else if(IntPtr.Size == 8)
 					{
 						Debug.Assert(uEntrySize ==
 							NativeMethods.PROCESSENTRY32SizeUni64);
 					}
+					else { Debug.Assert(false); }
 				}
 
 				IntPtr hSnap = NativeMethods.CreateToolhelp32Snapshot(

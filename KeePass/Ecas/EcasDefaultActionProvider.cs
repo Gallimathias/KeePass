@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
-using System.IO;
-using System.Windows.Forms;
-using System.Threading;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 using KeePass.App;
 using KeePass.DataExchange;
@@ -40,6 +40,8 @@ using KeePassLib.Delegates;
 using KeePassLib.Keys;
 using KeePassLib.Serialization;
 using KeePassLib.Utility;
+
+using NativeLib = KeePassLib.Native.NativeLib;
 
 namespace KeePass.Ecas
 {
@@ -258,20 +260,27 @@ namespace KeePass.Ecas
 
 		private static void ExecuteShellCmd(EcasAction a, EcasContext ctx)
 		{
-			string strCmd = EcasUtil.GetParamString(a.Parameters, 0, true, true);
+			string strCmd = EcasUtil.GetParamString(a.Parameters, 0);
 			string strArgs = EcasUtil.GetParamString(a.Parameters, 1, true, true);
-			bool bWait = StrUtil.StringToBool(EcasUtil.GetParamString(a.Parameters,
-				2, string.Empty));
+			bool bWait = EcasUtil.GetParamBool(a.Parameters, 2);
 			uint uWindowStyle = EcasUtil.GetParamUInt(a.Parameters, 3);
 			string strVerb = EcasUtil.GetParamString(a.Parameters, 4, true);
 
 			if(string.IsNullOrEmpty(strCmd)) return;
 
+			Process p = null;
 			try
 			{
-				ProcessStartInfo psi = new ProcessStartInfo(strCmd);
-				if(!string.IsNullOrEmpty(strArgs))
-					psi.Arguments = strArgs;
+				PwEntry pe = null;
+				try { pe = Program.MainForm.GetSelectedEntry(false); }
+				catch(Exception) { Debug.Assert(false); }
+
+				strCmd = WinUtil.CompileUrl(strCmd, pe, true, null, false);
+				if(string.IsNullOrEmpty(strCmd)) return; // Might be placeholder only
+
+				ProcessStartInfo psi = new ProcessStartInfo();
+				psi.FileName = strCmd;
+				if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
 
 				bool bShEx = true;
 				if(!string.IsNullOrEmpty(strVerb)) { } // Need ShellExecute
@@ -300,7 +309,7 @@ namespace KeePass.Ecas
 				if(!string.IsNullOrEmpty(strVerb))
 					psi.Verb = strVerb;
 
-				Process p = Process.Start(psi);
+				p = NativeLib.StartProcessEx(psi);
 
 				if((p != null) && bWait)
 				{
@@ -314,9 +323,14 @@ namespace KeePass.Ecas
 					Program.MainForm.UIBlockInteraction(false);
 				}
 			}
-			catch(Exception e)
+			catch(Exception ex)
 			{
-				throw new Exception(strCmd + MessageService.NewParagraph + e.Message);
+				throw new Exception(strCmd + MessageService.NewParagraph + ex.Message);
+			}
+			finally
+			{
+				try { if(p != null) p.Dispose(); }
+				catch(Exception) { Debug.Assert(false); }
 			}
 		}
 
@@ -365,8 +379,7 @@ namespace KeePass.Ecas
 		{
 			string strPassword = EcasUtil.GetParamString(a.Parameters, iPassword, true);
 			string strKeyFile = EcasUtil.GetParamString(a.Parameters, iKeyFile, true);
-			bool bUserAccount = StrUtil.StringToBool(EcasUtil.GetParamString(
-				a.Parameters, iUserAccount, true));
+			bool bUserAccount = EcasUtil.GetParamBool(a.Parameters, iUserAccount);
 
 			CompositeKey cmpKey = null;
 			if(!string.IsNullOrEmpty(strPassword) || !string.IsNullOrEmpty(strKeyFile) ||
@@ -502,10 +515,7 @@ namespace KeePass.Ecas
 
 			if(!string.IsNullOrEmpty(strTag))
 			{
-				// Do not use pg.Duplicate, because this method
-				// creates new UUIDs
 				pg = pg.CloneDeep();
-				pg.TakeOwnership(true, true, true);
 
 				GroupHandler gh = delegate(PwGroup pgSub)
 				{
@@ -603,7 +613,7 @@ namespace KeePass.Ecas
 				PwDatabase pd = Program.MainForm.DocumentManager.SafeFindContainerOf(pe);
 
 				IntPtr hFg = NativeMethods.GetForegroundWindowHandle();
-				if(AutoType.IsOwnWindow(hFg))
+				if(GlobalWindowManager.HasWindowMW(hFg))
 					AutoType.PerformIntoPreviousWindow(Program.MainForm, pe,
 						pd, strSeq);
 				else AutoType.PerformIntoCurrentWindow(pe, pd, strSeq);
@@ -614,7 +624,7 @@ namespace KeePass.Ecas
 		private static void ShowEntriesByTag(EcasAction a, EcasContext ctx)
 		{
 			string strTag = EcasUtil.GetParamString(a.Parameters, 0, true);
-			Program.MainForm.ShowEntriesByTag(strTag);
+			Program.MainForm.ShowEntriesByTag(strTag, false);
 		}
 
 		private static void AddToolBarButton(EcasAction a, EcasContext ctx)

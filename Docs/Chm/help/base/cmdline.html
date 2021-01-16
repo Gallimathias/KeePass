@@ -1,8 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta http-equiv="expires" content="0" />
 	<meta http-equiv="cache-control" content="no-cache" />
 	<meta http-equiv="pragma" content="no-cache" />
@@ -17,7 +18,7 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2018 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
 	<meta name="flattr:id" content="42rykv" />
@@ -25,6 +26,7 @@
 	<title>Command Line Options - KeePass</title>
 	<base target="_self" />
 	<link rel="stylesheet" type="text/css" href="../../default.css" />
+
 	
 </head>
 <body>
@@ -32,12 +34,11 @@
 
 
 
-<table class="sectionsummary"><tr><td width="68">
-<img src="../images/b64x64_konsole.png" width="64" height="64"
-class="singleimg" align="left" alt="Command Line" />
-</td><td valign="middle"><h1>Command Line Options</h1><br />
-Command line options to automate KeePass tasks.
-</td></tr></table>
+<table class="sectionheader"><tr>
+<td><img src="../images/b64x64_konsole.png" alt="Command Line" /></td>
+<td><h1>Command Line Options</h1>
+<p>Command line options to automate KeePass tasks.</p></td>
+</tr></table>
 
 <p>You can pass a file path in the command line in order to tell KeePass to open
 this file immediately after startup.</p>
@@ -59,12 +60,17 @@ pass 'abc' as password, you would add the following argument to the command line
 password. If your password contains a space, you must enclose it in quotes. For
 example: <code>-pw:&quot;my secret password&quot;</code>.</p>
 
-<p>Using the <code>-pw:</code> option is not recommended, because of
+<p>Using the <code>-pw:</code> option is not recommended, due to
 security reasons (the operating system allows reading the command line
 options of other applications).</p>
 
 <p>When passing the <code>-pw-stdin</code> option, KeePass
-reads the password from the StdIn stream.</p>
+reads the password from the StdIn stream.
+This option is intended for programmatically passing the password to KeePass.
+For entering the password by hand, it is recommended to use the
+normal master key dialog instead (because in this dialog the password
+is hidden by bullets/asterisks and it is encrypted by the process memory
+protection).</p>
 
 <p><b>Key file.</b>
 For supplying the key file location, the <code>-keyfile:</code> switch
@@ -79,7 +85,7 @@ just want to type
 in the password (so, without selecting the key file manually), your command line would
 look like this:</p>
 
-<pre>KeePass.exe &quot;C:\My Documents\MyDatabase.kdb&quot; -preselect:C:\pwsafe.key</pre>
+<pre>KeePass.exe &quot;C:\My Documents\MyDatabase.kdbx&quot; -preselect:C:\pwsafe.key</pre>
 
 <p>KeePass would then show a prompt for the password for the database, but in
 the key file list, the <code>C:\pwsafe.key</code> file is selected already. When using the
@@ -91,9 +97,10 @@ for you and displays the login prompt. In contrast, the <code>-keyfile:</code> s
 doesn't prompt you for the (maybe missing) password.</p>
 
 <p><b>Other.</b>
-The <code>-minimize</code> command line argument makes KeePass start up minimized.</p>
+The <code>-minimize</code> command line option makes KeePass start up minimized.
+This option may not work when KeePass runs on Mono (due to a bug in Mono).</p>
 
-<p>The <code>-auto-type</code> command line argument makes other already opened
+<p>The <code>-auto-type</code> command line option makes other already opened
 KeePass instances perform a global auto-type.</p>
 
 
@@ -121,8 +128,12 @@ The <code>-entry-url-open</code> option makes other already opened KeePass insta
 search for an entry and open its URL. The entry is identified by its UUID,
 which you can pass as <code>-uuid:</code> command line parameter.<br />
 <br />
-Analogously to the <code>-auto-type</code> option, <code>-auto-type-selected</code>
-performs auto-type for the currently selected entry.<br />
+The <code>-auto-type-password</code> option is similar to <code>-auto-type</code>,
+but auto-types only the password of a matching entry.
+<code>-auto-type-selected</code> performs auto-type for the currently selected entry.<br />
+<br />
+The <code>-cancel</code> option causes all other KeePass instances to
+cancel opening/saving a database file.<br />
 <br />
 The path of the local <a href="configuration.html">configuration</a> file can be changed
 using the <code>-cfg-local:</code> command line parameter.
@@ -132,40 +143,38 @@ using the <code>-cfg-local:</code> command line parameter.
 
 <br />
 
-<h2 class="sectiontitle">
-<img src="../images/b16x16_openterm.png" class="singleimg" alt="Text" />&nbsp;&nbsp;Usage
-Examples</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_openterm.png" alt="Terminal" />
+Usage Examples</h2>
 
-<p>Open the database file <i>'C:\My Documents\MyDatabase.kdb'</i> (KeePass will prompt you
+<p>Open the database file <i>'C:\My Documents\MyDatabase.kdbx'</i> (KeePass will prompt you
 for the password and/or key file location):</p>
 
-<pre>KeePass.exe &quot;C:\My Documents\MyDatabase.kdb&quot;</pre>
+<pre>KeePass.exe &quot;C:\My Documents\MyDatabase.kdbx&quot;</pre>
 
 <p>If you got a database that is locked with a password 'abc', you could open it like this:</p>
 
-<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithPw.kdb&quot; -pw:abc</pre>
+<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithPw.kdbx&quot; -pw:abc</pre>
 
 <p>If your USB stick always mounts to drive F: and you've locked your database with a key file
 on the USB stick, you could open your database as follows:</p>
 
-<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithFile.kdb&quot; -keyfile:F:\pwsafe.key</pre>
+<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithFile.kdbx&quot; -keyfile:F:\pwsafe.key</pre>
 
 <p>If you've locked your database using a password <i>and</i> a key file, you can combine
 the two switches and open your database as follows:</p>
 
-<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithTwo.kdb&quot; -pw:abc -keyfile:F:\pwsafe.key</pre>
+<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithTwo.kdbx&quot; -pw:abc -keyfile:F:\pwsafe.key</pre>
 
 <p>You have locked your database using a password <i>and</i> a key file, but only
 want to have the key file pre-selected (i.e. you want to get prompted for the
 password), your command line would look like this:</p>
 
-<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithTwo.kdb&quot; -preselect:F:\pwsafe.key</pre>
+<pre>KeePass.exe &quot;C:\My Documents\MyDatabaseWithTwo.kdbx&quot; -preselect:F:\pwsafe.key</pre>
 
 <br />
 
-<h2 class="sectiontitle">
-<img src="../images/b16x16_openterm.png" class="singleimg" alt="Text" />&nbsp;&nbsp;Starting
-KeePass using a Batch File</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_openterm.png" alt="Terminal" />
+Starting KeePass using a Batch File</h2>
 
 <p>Batch files can be used to start KeePass. Mostly you want to
 specify some of the parameters listed above. You can theoretically
@@ -174,10 +183,10 @@ into the batch file, but this is not recommended as the command
 window will stay open until KeePass is closed. The following
 method is recommended instead:</p>
 
-<pre>START &quot;&quot; KeePass.exe ..\MyDb.kdb -pw:MySecretPw</pre>
+<pre>START &quot;&quot; KeePass.exe ..\MyDb.kdbx -pw:MySecretPw</pre>
 
 <p>This <code>START</code> command will run KeePass (which opens the
-<code>..\MyDb.kdb</code> file using
+<code>..\MyDb.kdbx</code> file using
 <code>MySecretPw</code> as password). KeePass is assumed to be in the same
 directory (working directory) as the batch file, otherwise you need to
 specify a different path.</p>
@@ -195,9 +204,8 @@ If you want to learn more about the <code>START</code> command syntax, type
 
 <br />
 
-<h2 class="sectiontitle">
-<img src="../images/b16x16_openterm.png" class="singleimg" alt="Text" />&nbsp;&nbsp;Closing/Locking
-KeePass using a Batch File</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_openterm.png" alt="Terminal" />
+Closing/Locking KeePass using a Batch File</h2>
 
 <p>To close all currently running KeePass instances, call
 <code>KeePass.exe</code> with the <code>'--exit-all'</code> parameter:</p>

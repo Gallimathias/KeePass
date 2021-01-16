@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -94,22 +94,26 @@ namespace KeePass.DataExchange
 
 		private static KdbErrorCode SetDatabaseKey(KdbManager mgr, CompositeKey pwKey)
 		{
+			string strPassword = null;
+			if(pwKey.ContainsType(typeof(KcpPassword)))
+			{
+				KcpPassword p = (pwKey.GetUserKey(typeof(KcpPassword)) as KcpPassword);
+				ProtectedString ps = ((p != null) ? p.Password : null);
+				if(ps == null)
+					throw new Exception(KPRes.OptionReqOn + @" '" +
+						KPRes.MasterPasswordRmbWhileOpen + @"'.");
+				strPassword = ps.ReadString();
+			}
+
+			string strKeyFile = null;
+			if(pwKey.ContainsType(typeof(KcpKeyFile)))
+				strKeyFile = (pwKey.GetUserKey(typeof(KcpKeyFile)) as KcpKeyFile).Path;
+
 			KdbErrorCode e;
-
-			bool bPassword = pwKey.ContainsType(typeof(KcpPassword));
-			bool bKeyFile = pwKey.ContainsType(typeof(KcpKeyFile));
-
-			string strPassword = (bPassword ? (pwKey.GetUserKey(
-				typeof(KcpPassword)) as KcpPassword).Password.ReadString() : string.Empty);
-			string strKeyFile = (bKeyFile ? (pwKey.GetUserKey(
-				typeof(KcpKeyFile)) as KcpKeyFile).Path : string.Empty);
-
-			if(bPassword && bKeyFile)
+			if(!string.IsNullOrEmpty(strKeyFile))
 				e = mgr.SetMasterKey(strKeyFile, true, strPassword, IntPtr.Zero, false);
-			else if(bPassword && !bKeyFile)
+			else if(strPassword != null)
 				e = mgr.SetMasterKey(strPassword, false, null, IntPtr.Zero, false);
-			else if(!bPassword && bKeyFile)
-				e = mgr.SetMasterKey(strKeyFile, true, null, IntPtr.Zero, false);
 			else if(pwKey.ContainsType(typeof(KcpUserAccount)))
 				throw new Exception(KPRes.KdbWUA);
 			else throw new Exception(KLRes.InvalidCompositeKey);
@@ -354,7 +358,7 @@ namespace KeePass.DataExchange
 				grp.ExpirationTime.Set(pg.ExpiryTime);
 			else grp.ExpirationTime.Set(dtNeverExpire);
 
-			grp.Level = (bForceLevel0 ? (ushort)0 : (ushort)(pg.GetLevel() - 1));
+			grp.Level = (bForceLevel0 ? (ushort)0 : (ushort)(pg.GetDepth() - 1));
 
 			if(pg.IsExpanded) grp.Flags |= (uint)KdbGroupFlags.Expanded;
 
@@ -498,7 +502,7 @@ namespace KeePass.DataExchange
 		/* private static void ImportAutoType(ref string strNotes, PwEntry peStorage)
 		{
 			string str = strNotes;
-			char[] vTrim = new char[]{ '\r', '\n', '\t', ' ' };
+			char[] vTrim = new char[] { '\r', '\n', '\t', ' ' };
 
 			int nFirstAutoType = str.IndexOf(AutoTypePrefix, StringComparison.OrdinalIgnoreCase);
 			if(nFirstAutoType < 0) nFirstAutoType = int.MaxValue;
@@ -759,7 +763,7 @@ namespace KeePass.DataExchange
 				++uIndex;
 			}
 
-			strNotes = strNotes.TrimEnd(new char[]{ '\r', '\n', '\t', ' ' });
+			strNotes = strNotes.TrimEnd(new char[] { '\r', '\n', '\t', ' ' });
 			strNotes += sbAppend.ToString();
 		}
 

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Windows.Forms;
 using System.Diagnostics;
-using System.Threading;
 using System.Drawing;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 using KeePass.Native;
 using KeePass.Resources;
@@ -107,11 +107,8 @@ namespace KeePass.UI
 				IntPtr pOrgDesktop = NativeMethods.GetThreadDesktop(uOrgThreadId);
 
 				string strName = "D" + Convert.ToBase64String(
-					CryptoRandom.Instance.GetRandomBytes(16),
-					Base64FormattingOptions.None);
-				strName = strName.Replace(@"+", string.Empty);
-				strName = strName.Replace(@"/", string.Empty);
-				strName = strName.Replace(@"=", string.Empty);
+					CryptoRandom.Instance.GetRandomBytes(16));
+				strName = StrUtil.AlphaNumericOnly(strName);
 				if(strName.Length > 15) strName = strName.Substring(0, 15);
 
 				NativeMethods.DesktopFlags deskFlags =
@@ -239,10 +236,13 @@ namespace KeePass.UI
 					return;
 				}
 
-				// Disabling IME is not required anymore; we terminate
-				// CtfMon.exe child processes manually
-				// try { NativeMethods.ImmDisableIME(0); } // Always false on 2000/XP
-				// catch(Exception) { Debug.Assert(!WinUtil.IsAtLeastWindows2000); }
+				// Disabling the IME was not required, because we terminate
+				// CtfMon.exe child processes manually. However, since Sept. 2019,
+				// there is an IME bug resulting in a black screen and/or an
+				// IME/CTF process with high CPU load;
+				// https://sourceforge.net/p/keepass/bugs/1881/
+				try { NativeMethods.ImmDisableIME(0); } // Always false on 2000/XP
+				catch(Exception) { Debug.Assert(!WinUtil.IsAtLeastWindows2000); }
 
 				ProcessMessagesEx();
 

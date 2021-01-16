@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@ namespace KeePass.Forms
 		private ProtectedString m_psWord = null;
 		private ProtectedString m_psSelected = ProtectedString.Empty;
 
-		private SecureEdit m_secWord = new SecureEdit();
 		private List<Button> m_lButtons = new List<Button>();
 		private List<Label> m_lLabels = new List<Label>();
 		private bool m_bFormLoaded = false;
@@ -52,7 +51,7 @@ namespace KeePass.Forms
 		private string m_strInitialFormRect = string.Empty;
 		private bool m_bSetForeground = false;
 		private uint m_uCharCount = 0;
-		private bool? m_bInitHide = null;
+		private bool? m_obInitHide = null;
 		private int m_nBannerWidth = -1;
 
 		private Font m_fontChars = null;
@@ -93,6 +92,8 @@ namespace KeePass.Forms
 		public CharPickerForm()
 		{
 			InitializeComponent();
+
+			SecureTextBoxEx.InitEx(ref m_tbSelected);
 			Program.Translation.ApplyTo(this);
 		}
 
@@ -107,7 +108,7 @@ namespace KeePass.Forms
 		/// <param name="uCharCount">Number of characters to pick. Specify
 		/// 0 to allow picking a variable amount of characters.</param>
 		public void InitEx(ProtectedString psWord, bool bCenterScreen,
-			bool bSetForeground, uint uCharCount, bool? bInitHide)
+			bool bSetForeground, uint uCharCount, bool? obInitHide)
 		{
 			m_psWord = psWord;
 
@@ -115,13 +116,17 @@ namespace KeePass.Forms
 
 			m_bSetForeground = bSetForeground;
 			m_uCharCount = uCharCount;
-			m_bInitHide = bInitHide;
+			m_obInitHide = obInitHide;
 		}
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_psWord != null);
-			if(m_psWord == null) throw new InvalidOperationException();
+			if(m_psWord == null) { Debug.Assert(false); throw new InvalidOperationException(); }
+
+			// The password text box should not be focused by default
+			// in order to avoid a Caps Lock warning tooltip bug;
+			// https://sourceforge.net/p/keepass/bugs/1807/
+			Debug.Assert((m_pnlBottom.TabIndex == 0) && !m_tbSelected.Focused);
 
 			m_bFormLoaded = false;
 
@@ -137,13 +142,14 @@ namespace KeePass.Forms
 			this.Icon = AppIcons.Default;
 			this.Text = KPRes.PickCharacters + " - " + PwDefs.ShortProductName;
 
-			m_secWord.Attach(m_tbSelected, OnSelectedTextChangedEx, true);
+			// Must be set manually due to possible object override
+			m_tbSelected.TextChanged += this.OnSelectedTextChangedEx;
 
 			PwInputControlGroup.ConfigureHideButton(m_cbHideChars, null);
 
 			AceColumn colPw = Program.Config.MainWindow.FindColumn(AceColumnType.Password);
 			bool bHide = ((colPw != null) ? colPw.HideWithAsterisks : true);
-			if(m_bInitHide.HasValue) bHide = m_bInitHide.Value;
+			if(m_obInitHide.HasValue) bHide = m_obInitHide.Value;
 			bHide |= !AppPolicy.Current.UnhidePasswords;
 			m_cbHideChars.Checked = bHide;
 
@@ -161,8 +167,12 @@ namespace KeePass.Forms
 				this.Activate();
 			}
 
-			UIUtil.SetFocus(m_tbSelected, this);
 			m_bFormLoaded = true;
+		}
+
+		private void OnFormShown(object sender, EventArgs e)
+		{
+			UIUtil.ResetFocus(m_tbSelected, this, m_bSetForeground);
 		}
 
 		private void OnFormClosed(object sender, FormClosedEventArgs e)
@@ -173,9 +183,7 @@ namespace KeePass.Forms
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
-			byte[] pbUtf8 = m_secWord.ToUtf8();
-			m_psSelected = new ProtectedString(true, pbUtf8);
-			MemUtil.ZeroByteArray(pbUtf8);
+			m_psSelected = m_tbSelected.TextEx;
 		}
 
 		private void OnBtnCancel(object sender, EventArgs e)
@@ -188,7 +196,7 @@ namespace KeePass.Forms
 			if(strRect != m_strInitialFormRect) // Don't overwrite ""
 				Program.Config.UI.CharPickerRect = strRect;
 
-			m_secWord.Detach();
+			m_tbSelected.TextChanged -= this.OnSelectedTextChangedEx;
 
 			RemoveAllCharButtons();
 			m_fontChars.Dispose();
@@ -233,14 +241,14 @@ namespace KeePass.Forms
 
 			bool bRtl = (this.RightToLeft == RightToLeft.Yes);
 
-			string strWord = ((m_psWord != null) ? m_psWord.ReadString() : string.Empty);
-			if(strWord.Length >= 1)
+			char[] vWord = ((m_psWord != null) ? m_psWord.ReadChars() : new char[0]);
+			if(vWord.Length >= 1)
 			{
 				int x = 0;
 				int nPnlWidth = m_pnlSelect.Width, nPnlHeight = m_pnlSelect.Height;
-				for(int i = 0; i < strWord.Length; ++i)
+				for(int i = 0; i < vWord.Length; ++i)
 				{
-					int w = ((nPnlWidth * (i + 1)) / strWord.Length) - x;
+					int w = ((nPnlWidth * (i + 1)) / vWord.Length) - x;
 
 					int rx = (bRtl ? (nPnlWidth - x - w) : x);
 
@@ -248,7 +256,7 @@ namespace KeePass.Forms
 					btn.Location = new Point(rx, 0);
 					btn.Size = new Size(w, nPnlHeight / 2 - 1);
 					btn.Font = m_fontChars;
-					btn.Tag = strWord[i];
+					btn.Tag = vWord[i];
 					btn.Click += this.OnSelectCharacter;
 
 					m_lButtons.Add(btn);
@@ -266,6 +274,7 @@ namespace KeePass.Forms
 					x += w;
 				}
 			}
+			MemUtil.ZeroArray<char>(vWord);
 
 			OnHideCharsCheckedChanged(null, EventArgs.Empty);
 		}
@@ -279,9 +288,9 @@ namespace KeePass.Forms
 				return;
 			}
 
-			m_secWord.EnableProtection(bHide);
+			m_tbSelected.EnableProtection(bHide);
 
-			string strHiddenChar = new string(SecureEdit.PasswordChar, 1);
+			string strHiddenChar = new string(SecureTextBoxEx.PasswordCharEx, 1);
 
 			bool bHideBtns = bHide;
 			bHideBtns |= !Program.Config.UI.Hiding.UnhideButtonAlsoUnhidesSource;
@@ -335,7 +344,7 @@ namespace KeePass.Forms
 
 		private void OnSelectedTextChangedEx(object sender, EventArgs e)
 		{
-			if((m_uCharCount > 0) && (m_secWord.TextLength == m_uCharCount))
+			if((m_uCharCount > 0) && (m_tbSelected.TextLength == (int)m_uCharCount))
 			{
 				// m_btnOK.Visible = true;
 				m_btnOK.Enabled = true;

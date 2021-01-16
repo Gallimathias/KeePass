@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePass.Util.XmlSerialization;
 
+using KeePassLib;
 using KeePassLib.Delegates;
 using KeePassLib.Native;
 using KeePassLib.Serialization;
@@ -39,12 +40,23 @@ using KeePassLib.Utility;
 
 namespace KeePass.App.Configuration
 {
-	[XmlType(TypeName = "Configuration")]
+	[XmlType(AppConfigEx.StrXmlTypeName)]
 	public sealed class AppConfigEx
 	{
+		internal const string StrXmlTypeName = "Configuration";
+
+		private string m_strSearchString = null;
+
 		public AppConfigEx()
 		{
 		}
+
+#if DEBUG
+		~AppConfigEx()
+		{
+			Debug.Assert(m_strSearchString == null);
+		}
+#endif
 
 		private AceMeta m_meta = null;
 		public AceMeta Meta
@@ -166,6 +178,21 @@ namespace KeePass.App.Configuration
 			}
 		}
 
+		private AceSearch m_aceSearch = null;
+		public AceSearch Search
+		{
+			get
+			{
+				if(m_aceSearch == null) m_aceSearch = new AceSearch();
+				return m_aceSearch;
+			}
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+				m_aceSearch = value;
+			}
+		}
+
 		private AceDefaults m_def = null;
 		public AceDefaults Defaults
 		{
@@ -236,6 +263,7 @@ namespace KeePass.App.Configuration
 		{
 			AceMeta aceMeta = this.Meta; // m_meta might be null
 			AceApplication aceApp = this.Application; // m_aceApp might be null
+			AceSearch aceSearch = this.Search; // m_aceSearch might be null
 			AceDefaults aceDef = this.Defaults; // m_def might be null
 
 			aceMeta.OmitItemsWithDefaultValues = true;
@@ -252,12 +280,19 @@ namespace KeePass.App.Configuration
 
 			aceApp.TriggerSystem = Program.TriggerSystem;
 
-			SearchUtil.PrepareForSerialize(aceDef.SearchParameters);
+			SearchUtil.PrepareForSerialize(aceSearch.LastUsedProfile);
+			foreach(SearchParameters sp in aceSearch.UserProfiles)
+				SearchUtil.PrepareForSerialize(sp);
+
+			const int m = 64; // Maximum number of compatibility items
+			List<string> l = aceApp.PluginCompatibility;
+			if(l.Count > m) l.RemoveRange(m, l.Count - m); // See reg.
 		}
 
 		internal void OnLoad()
 		{
-			AceMainWindow aceMainWindow = this.MainWindow; // m_uiMainWindow might be null
+			AceMainWindow aceMW = this.MainWindow; // m_uiMainWindow might be null
+			AceSearch aceSearch = this.Search; // m_aceSearch might be null
 			AceDefaults aceDef = this.Defaults; // m_def might be null
 
 			// aceInt.UrlSchemeOverrides.SetDefaultsIfEmpty();
@@ -266,27 +301,38 @@ namespace KeePass.App.Configuration
 			ChangePathsRelAbs(true);
 
 			// Remove invalid columns
-			List<AceColumn> vColumns = aceMainWindow.EntryListColumns;
+			List<AceColumn> lColumns = aceMW.EntryListColumns;
 			int i = 0;
-			while(i < vColumns.Count)
+			while(i < lColumns.Count)
 			{
-				if(((int)vColumns[i].Type < 0) || ((int)vColumns[i].Type >=
+				if(((int)lColumns[i].Type < 0) || ((int)lColumns[i].Type >=
 					(int)AceColumnType.Count))
-					vColumns.RemoveAt(i);
+					lColumns.RemoveAt(i);
 				else ++i;
 			}
 
-			SearchUtil.FinishDeserialize(aceDef.SearchParameters);
+			SearchUtil.FinishDeserialize(aceSearch.LastUsedProfile);
+			foreach(SearchParameters sp in aceSearch.UserProfiles)
+				SearchUtil.FinishDeserialize(sp);
+
 			DpiScale();
+
+			if(aceMW.EscMinimizesToTray) // For backward compatibility
+			{
+				aceMW.EscMinimizesToTray = false; // Default value
+				aceMW.EscAction = AceEscAction.MinimizeToTray;
+			}
 
 			if(NativeLib.IsUnix())
 			{
 				this.Security.MasterKeyOnSecureDesktop = false;
 
 				AceIntegration aceInt = this.Integration;
-				aceInt.HotKeyGlobalAutoType = (ulong)Keys.None;
-				aceInt.HotKeySelectedAutoType = (ulong)Keys.None;
-				aceInt.HotKeyShowWindow = (ulong)Keys.None;
+				aceInt.HotKeyGlobalAutoType = (long)Keys.None;
+				aceInt.HotKeyGlobalAutoTypePassword = (long)Keys.None;
+				aceInt.HotKeySelectedAutoType = (long)Keys.None;
+				aceInt.HotKeyShowWindow = (long)Keys.None;
+				aceInt.HotKeyEntryMenu = (long)Keys.None;
 			}
 
 			if(MonoWorkarounds.IsRequired(1378))
@@ -299,8 +345,14 @@ namespace KeePass.App.Configuration
 
 			if(MonoWorkarounds.IsRequired(1418))
 			{
-				aceMainWindow.MinimizeAfterOpeningDatabase = false;
+				aceMW.MinimizeAfterOpeningDatabase = false;
 				this.Application.Start.MinimizedAndLocked = false;
+			}
+
+			if(MonoWorkarounds.IsRequired(1976))
+			{
+				aceMW.FocusQuickFindOnRestore = false;
+				aceMW.FocusQuickFindOnUntray = false;
 			}
 		}
 
@@ -310,10 +362,12 @@ namespace KeePass.App.Configuration
 
 			ChangePathsRelAbs(false);
 			ObfuscateCred(true);
+			RemoveSensitiveInfo(true);
 		}
 
 		internal void OnSavePost()
 		{
+			RemoveSensitiveInfo(false);
 			ObfuscateCred(false);
 			ChangePathsRelAbs(true);
 		}
@@ -347,8 +401,7 @@ namespace KeePass.App.Configuration
 			if(!ioc.IsLocalFile()) return;
 
 			// Update path separators for current system
-			if(!UrlUtil.IsUncPath(ioc.Path))
-				ioc.Path = UrlUtil.ConvertSeparators(ioc.Path);
+			ioc.Path = UrlUtil.ConvertSeparators(ioc.Path);
 
 			string strBase = WinUtil.GetExecutable();
 			bool bIsAbs = UrlUtil.IsAbsolutePath(ioc.Path);
@@ -388,6 +441,27 @@ namespace KeePass.App.Configuration
 
 			if(bObf) aceInt.ProxyPassword = StrUtil.Obfuscate(aceInt.ProxyPassword);
 			else aceInt.ProxyPassword = StrUtil.Deobfuscate(aceInt.ProxyPassword);
+		}
+
+		private void RemoveSensitiveInfo(bool bRemove)
+		{
+			SearchParameters sp = this.Search.LastUsedProfile;
+
+			if(bRemove)
+			{
+				Debug.Assert(m_strSearchString == null);
+				m_strSearchString = sp.SearchString;
+				sp.SearchString = string.Empty;
+			}
+			else
+			{
+				if(m_strSearchString != null)
+				{
+					sp.SearchString = m_strSearchString;
+					m_strSearchString = null;
+				}
+				else { Debug.Assert(false); }
+			}
 		}
 
 		private void DpiScale()
@@ -440,7 +514,7 @@ namespace KeePass.App.Configuration
 
 				return strArray;
 			};
-			GAction<AceFont> fFont = delegate(AceFont f)
+			Action<AceFont> fFont = delegate(AceFont f)
 			{
 				if(f == null) { Debug.Assert(false); return; }
 
@@ -499,7 +573,11 @@ namespace KeePass.App.Configuration
 			string strXPath = strPre + strProp;
 
 			XmlNode xn = xdEnforced.SelectSingleNode(strXPath);
-			return (xn != null);
+			if(xn == null) return false;
+
+			XmContext ctx = new XmContext(null, AppConfigEx.GetNodeOptions,
+				AppConfigEx.GetNodeKey);
+			return XmlUtil.IsAlwaysEnforced(xn, strXPath, ctx);
 		}
 
 		public static bool IsOptionEnforced(object pContainer, string strPropertyName)
@@ -537,6 +615,124 @@ namespace KeePass.App.Configuration
 
 			if((f & AceApplyFlags.FileTransactions) != AceApplyFlags.None)
 				FileTransactionEx.ExtraSafe = aceApp.FileTxExtra;
+		}
+
+		internal static void GetNodeOptions(XmNodeOptions o, string strXPath)
+		{
+			if(o == null) { Debug.Assert(false); return; }
+			if(string.IsNullOrEmpty(strXPath)) { Debug.Assert(false); return; }
+			Debug.Assert(strXPath.IndexOf('[') < 0);
+
+			switch(strXPath)
+			{
+				// Sync. with documentation
+
+				case "/Configuration/Application/PluginCompatibility":
+				case "/Configuration/Meta/DpiFactorX":
+				case "/Configuration/Meta/DpiFactorY":
+					o.NodeMode = XmNodeMode.None;
+					break;
+
+				case "/Configuration/Application/TriggerSystem/Triggers/Trigger":
+				case "/Configuration/Defaults/KeySources/Association":
+				case "/Configuration/PasswordGenerator/AutoGeneratedPasswordsProfile":
+				case "/Configuration/PasswordGenerator/LastUsedProfile":
+				case "/Configuration/PasswordGenerator/UserProfiles/Profile":
+				case "/Configuration/Search/LastUsedProfile":
+				case "/Configuration/Search/UserProfiles/Profile":
+					o.ContentMode = XmContentMode.Replace;
+					break;
+
+				// Nodes that do not have child elements:
+				// case "/Configuration/Application/WorkingDirectories/Item":
+				// case "/Configuration/Integration/AutoTypeAbortOnWindows/Window":
+
+				// Nodes where the mode 'Merge' may be more useful:
+				// case "/Configuration/Application/MostRecentlyUsed/Items/ConnectionInfo":
+				//     (allow users to save credentials)
+				// case "/Configuration/Custom/Item":
+				//     (empty Value explicitly only)
+				// case "/Configuration/Defaults/SearchParameters":
+				//     (admin might only want to turn off case-sensitivity)
+				// case "/Configuration/Integration/UrlSchemeOverrides/CustomOverrides/Override":
+				//     (allow users to enable/disable the item)
+				// case "/Configuration/MainWindow/EntryListColumnCollection/Column":
+				//     (allow users to change the width)
+
+				default: break;
+			}
+		}
+
+		internal static string GetNodeKey(XmlNode xn, string strXPath)
+		{
+			if(xn == null) { Debug.Assert(false); return null; }
+			if(string.IsNullOrEmpty(strXPath)) { Debug.Assert(false); return null; }
+
+			Debug.Assert(xn is XmlElement);
+			Debug.Assert((strXPath == xn.Name) || strXPath.EndsWith("/" + xn.Name));
+			Debug.Assert(strXPath.IndexOf('[') < 0);
+
+			string strA = null, strB = null;
+			switch(strXPath)
+			{
+				// Sync. with documentation
+
+				case "/Configuration/Application/PluginCompatibility/Item":
+				case "/Configuration/Application/WorkingDirectories/Item":
+				case "/Configuration/Integration/AutoTypeAbortOnWindows/Window":
+					strA = XmlUtil.SafeInnerXml(xn);
+					break;
+
+				case "/Configuration/Application/MostRecentlyUsed/Items/ConnectionInfo":
+					strA = XmlUtil.SafeInnerXml(xn, "Path");
+					strB = XmlUtil.SafeInnerXml(xn, "UserName"); // Cf. MRU display name
+					break;
+
+				case "/Configuration/Application/TriggerSystem/Triggers/Trigger":
+					strA = XmlUtil.SafeInnerXml(xn, "Guid");
+					break;
+
+				case "/Configuration/Custom/Item":
+					strA = XmlUtil.SafeInnerXml(xn, "Key");
+					break;
+
+				case "/Configuration/Defaults/KeySources/Association":
+					strA = XmlUtil.SafeInnerXml(xn, "DatabasePath");
+					break;
+
+				case "/Configuration/Integration/UrlSchemeOverrides/CustomOverrides/Override":
+					strA = XmlUtil.SafeInnerXml(xn, "Scheme");
+					strB = XmlUtil.SafeInnerXml(xn, "UrlOverride");
+					break;
+
+				case "/Configuration/MainWindow/EntryListColumnCollection/Column":
+					strA = XmlUtil.SafeInnerXml(xn, "Type");
+					strB = XmlUtil.SafeInnerXml(xn, "CustomName");
+					break;
+
+				case "/Configuration/PasswordGenerator/UserProfiles/Profile":
+				case "/Configuration/Search/UserProfiles/Profile":
+					strA = XmlUtil.SafeInnerXml(xn, "Name");
+					break;
+
+				default: break;
+			}
+
+			Debug.Assert((strA == null) || (strA.IndexOf('<') < 0));
+			Debug.Assert((strB == null) || (strB.IndexOf('<') < 0));
+			Debug.Assert((strB == null) || (strA != null)); // B => A
+			Debug.Assert((strA == null) || (strA.Length != 0));
+
+			if(strB != null) return ((strA ?? string.Empty) + " <> " + strB);
+			return strA;
+		}
+
+		internal static string GetEmptyConfigXml()
+		{
+			return ("<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
+				"<" + StrXmlTypeName + " xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n" +
+				"\t<Meta />\r\n" +
+				"</" + StrXmlTypeName + ">");
 		}
 	}
 

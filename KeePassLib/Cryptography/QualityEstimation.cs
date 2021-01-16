@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,19 +35,19 @@ namespace KeePassLib.Cryptography
 	{
 		private static class PatternID
 		{
-			public const char LowerAlpha = 'L';
-			public const char UpperAlpha = 'U';
-			public const char Digit = 'D';
-			public const char Special = 'S';
-			public const char High = 'H';
-			public const char Other = 'X';
+			internal const char LowerAlpha = 'L';
+			internal const char UpperAlpha = 'U';
+			internal const char Digit = 'D';
+			internal const char Special = 'S';
+			internal const char Latin1S = 'H';
+			internal const char Other = 'X';
 
-			public const char Dictionary = 'W';
-			public const char Repetition = 'R';
-			public const char Number = 'N';
-			public const char DiffSeq = 'C';
+			internal const char Dictionary = 'W';
+			internal const char Repetition = 'R';
+			internal const char Number = 'N';
+			internal const char DiffSeq = 'C';
 
-			public const string All = "LUDSHXWRNC";
+			internal const string All = "LUDSHXWRNC";
 		}
 
 		// private static class CharDistrib
@@ -295,7 +295,7 @@ namespace KeePassLib.Cryptography
 					else strSpecial = strSpecial + " ";
 
 					int nSp = strSpecial.Length;
-					int nHi = PwCharSet.HighAnsiChars.Length;
+					int nL1S = PwCharSet.Latin1S.Length;
 
 					m_lCharTypes = new List<QeCharType>();
 
@@ -307,10 +307,10 @@ namespace KeePassLib.Cryptography
 						PwCharSet.Digits, true));
 					m_lCharTypes.Add(new QeCharType(PatternID.Special,
 						strSpecial, false));
-					m_lCharTypes.Add(new QeCharType(PatternID.High,
-						PwCharSet.HighAnsiChars, false));
+					m_lCharTypes.Add(new QeCharType(PatternID.Latin1S,
+						PwCharSet.Latin1S, false));
 					m_lCharTypes.Add(new QeCharType(PatternID.Other,
-						0x10000 - (2 * 26) - 10 - nSp - nHi));
+						0x10000 - (2 * 26) - 10 - nSp - nL1S));
 				}
 			}
 		}
@@ -420,11 +420,12 @@ namespace KeePassLib.Cryptography
 		{
 			if(pbUnprotectedUtf8 == null) { Debug.Assert(false); return 0; }
 
-			char[] vChars = StrUtil.Utf8.GetChars(pbUnprotectedUtf8);
-			uint uResult = EstimatePasswordBits(vChars);
-			MemUtil.ZeroArray<char>(vChars);
+			char[] v = StrUtil.Utf8.GetChars(pbUnprotectedUtf8);
+			uint r;
+			try { r = EstimatePasswordBits(v); }
+			finally { MemUtil.ZeroArray<char>(v); }
 
-			return uResult;
+			return r;
 		}
 
 		private static QeCharType GetCharType(char ch)

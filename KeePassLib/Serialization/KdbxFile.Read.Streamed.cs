@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -95,36 +95,10 @@ namespace KeePassLib.Serialization
 
 		private void ReadXmlStreamed(Stream sXml, Stream sParent)
 		{
-			ReadDocumentStreamed(CreateXmlReader(sXml), sParent);
-		}
-
-		internal static XmlReaderSettings CreateStdXmlReaderSettings()
-		{
-			XmlReaderSettings xrs = new XmlReaderSettings();
-
-			xrs.CloseInput = true;
-			xrs.IgnoreComments = true;
-			xrs.IgnoreProcessingInstructions = true;
-			xrs.IgnoreWhitespace = true;
-
-#if KeePassUAP
-			xrs.DtdProcessing = DtdProcessing.Prohibit;
-#else
-#if !KeePassLibSD
-			// Also see PrepMonoDev.sh script
-			xrs.ProhibitDtd = true; // Obsolete in .NET 4, but still there
-			// xrs.DtdProcessing = DtdProcessing.Prohibit; // .NET 4 only
-#endif
-			xrs.ValidationType = ValidationType.None;
-#endif
-
-			return xrs;
-		}
-
-		private static XmlReader CreateXmlReader(Stream readerStream)
-		{
-			XmlReaderSettings xrs = CreateStdXmlReaderSettings();
-			return XmlReader.Create(readerStream, xrs);
+			using(XmlReader xr = XmlUtilEx.CreateXmlReader(sXml))
+			{
+				ReadDocumentStreamed(xr, sParent);
+			}
 		}
 
 		private void ReadDocumentStreamed(XmlReader xr, Stream sParentStream)
@@ -177,7 +151,7 @@ namespace KeePassLib.Serialization
 				}
 
 				++uTagCounter;
-				if(((uTagCounter % 256) == 0) && bSupportsStatus)
+				if(((uTagCounter & 0xFFU) == 0) && bSupportsStatus)
 				{
 					Debug.Assert(lStreamLength == sParentStream.Length);
 					uint uPct = (uint)((sParentStream.Position * 100) /
@@ -187,7 +161,8 @@ namespace KeePassLib.Serialization
 					// position/length values (M120413)
 					if(uPct > 100) { Debug.Assert(false); uPct = 100; }
 
-					m_slLogger.SetProgress(uPct);
+					if(!m_slLogger.SetProgress(uPct))
+						throw new OperationCanceledException();
 				}
 			}
 
@@ -768,9 +743,15 @@ namespace KeePassLib.Serialization
 			XorredBuffer xb = ProcessNode(xr);
 			if(xb != null)
 			{
-				byte[] pb = xb.ReadPlainText();
-				if(pb.Length == 0) return string.Empty;
-				return StrUtil.Utf8.GetString(pb, 0, pb.Length);
+				Debug.Assert(false); // Protected data is unexpected here
+				try
+				{
+					byte[] pb = xb.ReadPlainText();
+					if(pb.Length == 0) return string.Empty;
+					try { return StrUtil.Utf8.GetString(pb, 0, pb.Length); }
+					finally { MemUtil.ZeroByteArray(pb); }
+				}
+				finally { xb.Dispose(); }
 			}
 
 			m_bReadNextNode = false; // ReadElementString skips end tag
@@ -948,7 +929,11 @@ namespace KeePassLib.Serialization
 		private ProtectedString ReadProtectedString(XmlReader xr)
 		{
 			XorredBuffer xb = ProcessNode(xr);
-			if(xb != null) return new ProtectedString(true, xb);
+			if(xb != null)
+			{
+				try { return new ProtectedString(true, xb); }
+				finally { xb.Dispose(); }
+			}
 
 			bool bProtect = false;
 			if(m_format == KdbxFormat.PlainXml)
@@ -960,8 +945,7 @@ namespace KeePassLib.Serialization
 				}
 			}
 
-			ProtectedString ps = new ProtectedString(bProtect, ReadString(xr));
-			return ps;
+			return new ProtectedString(bProtect, ReadString(xr));
 		}
 
 		private ProtectedBinary ReadProtectedBinary(XmlReader xr)
@@ -1003,7 +987,8 @@ namespace KeePassLib.Serialization
 			if(xb != null)
 			{
 				Debug.Assert(!bCompressed); // See SubWriteValue(ProtectedBinary value)
-				return new ProtectedBinary(true, xb);
+				try { return new ProtectedBinary(true, xb); }
+				finally { xb.Dispose(); }
 			}
 
 			byte[] pbData = ReadBase64(xr, true);
@@ -1016,28 +1001,37 @@ namespace KeePassLib.Serialization
 		private void ReadUnknown(XmlReader xr)
 		{
 			Debug.Assert(false); // Unknown node!
+			Debug.Assert(xr.NodeType == XmlNodeType.Element);
 
-			if(xr.IsEmptyElement) return;
+			bool bRead = false;
+			int cOpen = 0;
 
-			string strUnknownName = xr.Name;
-			ProcessNode(xr);
-
-			while(xr.Read())
+			do
 			{
-				if(xr.NodeType == XmlNodeType.EndElement) break;
-				if(xr.NodeType != XmlNodeType.Element) continue;
+				if(bRead) xr.Read();
+				bRead = true;
 
-				ReadUnknown(xr);
+				if(xr.NodeType == XmlNodeType.EndElement) --cOpen;
+				else if(xr.NodeType == XmlNodeType.Element)
+				{
+					if(!xr.IsEmptyElement)
+					{
+						XorredBuffer xb = ProcessNode(xr);
+						if(xb != null) { xb.Dispose(); bRead = m_bReadNextNode; continue; }
+
+						++cOpen;
+					}
+				}
 			}
+			while(cOpen > 0);
 
-			Debug.Assert(xr.Name == strUnknownName);
+			m_bReadNextNode = bRead;
 		}
 
 		private XorredBuffer ProcessNode(XmlReader xr)
 		{
 			// Debug.Assert(xr.NodeType == XmlNodeType.Element);
 
-			XorredBuffer xb = null;
 			if(xr.HasAttributes)
 			{
 				if(xr.MoveToAttribute(AttrProtected))
@@ -1046,15 +1040,15 @@ namespace KeePassLib.Serialization
 					{
 						xr.MoveToElement();
 
-						byte[] pbEncrypted = ReadBase64(xr, true);
-						byte[] pbPad = m_randomStream.GetRandomBytes((uint)pbEncrypted.Length);
+						byte[] pbCT = ReadBase64(xr, true);
+						byte[] pbPad = m_randomStream.GetRandomBytes((uint)pbCT.Length);
 
-						xb = new XorredBuffer(pbEncrypted, pbPad);
+						return new XorredBuffer(pbCT, pbPad);
 					}
 				}
 			}
 
-			return xb;
+			return null;
 		}
 
 		private static KdbContext SwitchContext(KdbContext ctxCurrent,

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.ComponentModel;
+using System.Text;
+using System.Xml.Serialization;
 
 namespace KeePass.App.Configuration
 {
@@ -30,12 +31,24 @@ namespace KeePass.App.Configuration
 		{
 		}
 
-		private bool m_bOnlyIfTrayed = false;
-		[DefaultValue(false)]
+		[Obsolete] // For backward compatibility with plugins only
+		[XmlIgnore]
 		public bool ShowOnlyIfTrayed
 		{
-			get { return m_bOnlyIfTrayed; }
-			set { m_bOnlyIfTrayed = value; }
+			get { return this.ShowOnlyIfTrayedEx; }
+			// Old setting should not affect 'ShowOnlyIfTrayedEx';
+			// a reset of this option is intended
+			set { }
+		}
+
+		// Not available through the options dialog, see documentation;
+		// 'ShowOnlyIfTrayed' was used by KeePass <= 2.41
+		private bool m_bOnlyIfTrayedEx = false;
+		[DefaultValue(false)]
+		public bool ShowOnlyIfTrayedEx
+		{
+			get { return m_bOnlyIfTrayedEx; }
+			set { m_bOnlyIfTrayedEx = value; }
 		}
 
 		private bool m_bGrayIcon = false;

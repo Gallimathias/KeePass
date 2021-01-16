@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ namespace KeePass.Forms
 
 			m_sdCustomData = m_pwDatabase.CustomData.CloneDeep();
 			UIUtil.StrDictListInit(m_lvCustomData);
-			UIUtil.StrDictListUpdate(m_lvCustomData, m_sdCustomData);
+			UIUtil.StrDictListUpdate(m_lvCustomData, m_sdCustomData, false);
 
 			m_pbStatus.Visible = false;
 			EnableControlsEx();
@@ -92,7 +92,7 @@ namespace KeePass.Forms
 
 		private void EnableControlsEx()
 		{
-			m_btnCDDel.Enabled = (m_lvCustomData.SelectedItems.Count > 0);
+			m_btnCDDel.Enabled = (m_lvCustomData.SelectedIndices.Count > 0);
 		}
 
 		private void EnableStatusMsgEx(bool bEnable)
@@ -175,7 +175,7 @@ namespace KeePass.Forms
 
 		private void OnBtnCDDel(object sender, EventArgs e)
 		{
-			UIUtil.StrDictListDeleteSel(m_lvCustomData, m_sdCustomData);
+			UIUtil.StrDictListDeleteSel(m_lvCustomData, m_sdCustomData, false);
 			UIUtil.SetFocus(m_lvCustomData, this);
 			EnableControlsEx();
 		}

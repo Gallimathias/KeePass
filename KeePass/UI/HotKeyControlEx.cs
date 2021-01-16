@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,56 +17,42 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-// This control is based on the following article:
-// https://www.codeproject.com/useritems/hotkeycontrol.asp
-
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Windows.Forms;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
 
+using KeePass.App;
 using KeePass.Resources;
 
 namespace KeePass.UI
 {
 	public sealed class HotKeyControlEx : TextBox
 	{
-		private Keys m_kHotKey = Keys.None;
-		private Keys m_kModifiers = Keys.None;
+		private readonly Color m_clrNormalBack;
 
-		private static List<Keys> m_vNeedNonShiftModifier = new List<Keys>();
-		private static List<Keys> m_vNeedNonAltGrModifier = new List<Keys>();
+		private readonly Keys[] m_vModKeys = new Keys[] {
+			Keys.ControlKey, Keys.RControlKey, Keys.Menu, Keys.RMenu,
+			Keys.ShiftKey, Keys.RShiftKey
+		};
 
-		private ContextMenu m_ctxNone = new ContextMenu();
-
+		private Keys m_k = Keys.None;
 		[Browsable(false)]
+		[DefaultValue(Keys.None)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Keys HotKey
 		{
-			get { return m_kHotKey; }
-			set { m_kHotKey = value; }
+			get { return m_k; }
+			set { m_k = FixHotKey(value); UpdateUI(m_k, m_k); }
 		}
+		public bool ShouldSerializeHotKey() { return false; }
 
+		private string m_strTextNone = (Program.DesignMode ? string.Empty : KPRes.None);
 		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Keys HotKeyModifiers
-		{
-			get { return m_kModifiers; }
-			set { m_kModifiers = value; }
-		}
-
-		private bool m_bNoRightModKeys = false;
-		[DefaultValue(false)]
-		public bool NoRightModKeys
-		{
-			get { return m_bNoRightModKeys; }
-			set { m_bNoRightModKeys = value; }
-		}
-
-		private string m_strTextNone = KPRes.None;
-		[Browsable(false)]
+		[DefaultValue("")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public string TextNone
 		{
@@ -75,235 +61,119 @@ namespace KeePass.UI
 			{
 				if(value == null) throw new ArgumentNullException("value");
 				m_strTextNone = value;
+				UpdateUI(m_k, m_k);
 			}
 		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override ContextMenu ContextMenu
-		{
-			get { return m_ctxNone; }
-			set { base.ContextMenu = m_ctxNone; }
-		}
-
-		// Hot key control is single-line
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override bool Multiline
-		{
-			get { return base.Multiline; }
-			set { base.Multiline = false; }
-		}
+		public bool ShouldSerializeTextNone() { return false; }
 
 		public HotKeyControlEx()
 		{
-			this.ContextMenu = m_ctxNone; // No context menu available
-			this.Text = m_strTextNone;
+			m_clrNormalBack = this.BackColor;
+			if(Program.DesignMode) return;
 
-			this.KeyPress += new KeyPressEventHandler(this.OnKeyPressEx);
-			this.KeyUp += new KeyEventHandler(this.OnKeyUpEx);
-			this.KeyDown += new KeyEventHandler(this.OnKeyDownEx);
+			this.ContextMenuStrip = new ContextMenuStrip(); // No context menu
 
-			if(m_vNeedNonShiftModifier.Count == 0)
-				PopulateModifierLists();
+			UpdateUI(m_k, m_k); // Initialize text
 		}
 
-		private static void PopulateModifierLists()
+		protected override void OnKeyDown(KeyEventArgs e)
 		{
-			for(Keys k = Keys.D0; k <= Keys.Z; ++k)
-				m_vNeedNonShiftModifier.Add(k);
+			// base.OnKeyDown(e);
+			UIUtil.SetHandled(e, true);
 
-			for(Keys k = Keys.NumPad0; k <= Keys.NumPad9; ++k)
-				m_vNeedNonShiftModifier.Add(k);
-
-			for(Keys k = Keys.Oem1; k <= Keys.OemBackslash; ++k)
-				m_vNeedNonShiftModifier.Add(k);
-
-			for(Keys k = Keys.Space; k <= Keys.Home; ++k)
-				m_vNeedNonShiftModifier.Add(k);
-
-			m_vNeedNonShiftModifier.Add(Keys.Insert);
-			m_vNeedNonShiftModifier.Add(Keys.Help);
-			m_vNeedNonShiftModifier.Add(Keys.Multiply);
-			m_vNeedNonShiftModifier.Add(Keys.Add);
-			m_vNeedNonShiftModifier.Add(Keys.Subtract);
-			m_vNeedNonShiftModifier.Add(Keys.Divide);
-			m_vNeedNonShiftModifier.Add(Keys.Decimal);
-			m_vNeedNonShiftModifier.Add(Keys.Return);
-			m_vNeedNonShiftModifier.Add(Keys.Escape);
-			m_vNeedNonShiftModifier.Add(Keys.NumLock);
-			m_vNeedNonShiftModifier.Add(Keys.Scroll);
-			m_vNeedNonShiftModifier.Add(Keys.Pause);
-
-			for(Keys k = Keys.D0; k <= Keys.D9; ++k)
-				m_vNeedNonAltGrModifier.Add(k);
+			m_k = FixHotKey(e.KeyData);
+			UpdateUI(e.KeyData, m_k);
 		}
 
-		public new void Clear()
+		protected override void OnKeyUp(KeyEventArgs e)
 		{
-			m_kHotKey = Keys.None;
-			m_kModifiers = Keys.None;
+			// base.OnKeyUp(e);
+			UIUtil.SetHandled(e, true);
+
+			if(Control.ModifierKeys == Keys.None)
+				UpdateUI(m_k, m_k); // Clear 'Invalid' when releasing all modifiers
 		}
 
-		private void OnKeyDownEx(object sender, KeyEventArgs e)
+		protected override void OnKeyPress(KeyPressEventArgs e)
 		{
-			if((e.KeyCode == Keys.Back) || (e.KeyCode == Keys.Delete))
-				ResetHotKey();
-			else
-			{
-				m_kHotKey = e.KeyCode;
-				m_kModifiers = e.Modifiers;
-				RenderHotKey();
-			}
-		}
-
-		private void OnKeyUpEx(object sender, KeyEventArgs e)
-		{
-			if((m_kHotKey == Keys.None) && (Control.ModifierKeys == Keys.None))
-				ResetHotKey();
-		}
-
-		private void OnKeyPressEx(object sender, KeyPressEventArgs e)
-		{
+			// base.OnKeyPress(e);
 			e.Handled = true;
 		}
 
-		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+		protected override void OnLostFocus(EventArgs e)
 		{
-			if((keyData == Keys.Delete) || (keyData == (Keys.Control | Keys.Delete)))
-			{
-				ResetHotKey();
-				return true;
-			}
-
-			if(keyData == (Keys.Shift | Keys.Insert)) // Paste command
-				return true; // Not allowed
-
-			if((keyData & Keys.KeyCode) == Keys.F12)
-				return true; // Reserved for debugger, see MSDN
-
-			return base.ProcessCmdKey(ref msg, keyData);
+			UpdateUI(m_k, m_k); // For Shift+Tab, ...
+			base.OnLostFocus(e);
 		}
 
-		private void ResetHotKey()
+		private Keys FixHotKey(Keys kUser)
 		{
-			m_kHotKey = Keys.None;
-			m_kModifiers = Keys.None;
-			RenderHotKey();
-		}
+			Keys k = (kUser & Keys.KeyCode);
+			Keys kMod = (kUser & (Keys.Control | Keys.Alt | Keys.Shift)); // Others unsupported
 
-		public void ResetIfModifierOnly()
-		{
-			if((m_kHotKey == Keys.None) && (m_kModifiers != Keys.None))
-				ResetHotKey();
-		}
+			if(Array.IndexOf<Keys>(m_vModKeys, k) >= 0) return Keys.None;
 
-		public void RenderHotKey()
-		{
-			if(m_kHotKey == Keys.None)
+			Keys[] vInv = new Keys[] {
+				Keys.None, Keys.Escape, Keys.Tab, Keys.CapsLock,
+				Keys.LWin, Keys.RWin, Keys.Return,
+				Keys.F12, // Reserved for debugger, see RegisterHotKey API function
+				Keys.Scroll, Keys.NumLock
+			};
+			if(Array.IndexOf<Keys>(vInv, k) >= 0) return Keys.None;
+
+			if((kMod == Keys.None) || (kMod == Keys.Shift))
 			{
-				this.Text = m_strTextNone;
-				return;
+				if((k < Keys.F1) || (k > Keys.F24)) return Keys.None;
+			}
+			else if(kMod == Keys.Control)
+			{
+				if((k == Keys.Back) || (k == Keys.Insert) || (k == Keys.Delete))
+					return Keys.None;
+			}
+			else if(kMod == (Keys.Control | Keys.Alt))
+			{
+				if((k >= Keys.D0) && (k <= Keys.D9)) return Keys.None;
 			}
 
-			if((m_kHotKey == Keys.LWin) || (m_kHotKey == Keys.RWin))
-			{
-				ResetHotKey();
-				return;
-			}
+			return (kMod | k);
+		}
 
-			if(((m_kModifiers == Keys.Shift) || (m_kModifiers == Keys.None)) &&
-				m_vNeedNonShiftModifier.Contains(m_kHotKey))
+		private void UpdateUI(Keys kUser, Keys kFixed)
+		{
+			if(Program.DesignMode) return;
+
+			try
 			{
-				if(m_kModifiers == Keys.None)
-				{
-					if(m_vNeedNonAltGrModifier.Contains(m_kHotKey) == false)
-						m_kModifiers = (Keys.Alt | Keys.Control);
-					else
-						m_kModifiers = (Keys.Alt | Keys.Shift);
-				}
+				Keys kUC = (kUser & Keys.KeyCode);
+				string strText = string.Empty;
+				bool bInvalid = false;
+
+				if(kUser == Keys.None)
+					strText = m_strTextNone;
+				else if(kUser == kFixed)
+					strText = UIUtil.GetKeysName(kFixed);
 				else
 				{
-					m_kHotKey = Keys.None;
-					this.Text = ModifiersToString(m_kModifiers) + " + " + KPRes.InvalidKey;
-					return;
+					if((kUC == Keys.None) || (Array.IndexOf<Keys>(m_vModKeys, kUC) >= 0))
+						strText = UIUtil.GetKeysName(kUser & Keys.Modifiers) + "+";
+					else if(kFixed == Keys.None)
+					{
+						strText = KPRes.Invalid;
+						bInvalid = true;
+					}
+					else strText = UIUtil.GetKeysName(kFixed);
 				}
-			}
 
-			if((m_kModifiers == (Keys.Alt | Keys.Control)) &&
-				m_vNeedNonAltGrModifier.Contains(m_kHotKey))
-			{
-				m_kHotKey = Keys.None;
-				this.Text = ModifiersToString(m_kModifiers) + " + " + KPRes.InvalidKey;
-				return;
-			}
+				if(UIUtil.ColorsEqual(m_clrNormalBack, Color.White))
+					this.BackColor = (bInvalid ? AppDefs.ColorEditError : m_clrNormalBack);
 
-			if(m_kModifiers == Keys.None)
-			{
-				if(m_kHotKey == Keys.None)
+				if(strText != this.Text) // Avoid flicker
 				{
-					this.Text = m_strTextNone;
-					return;
-				}
-				else
-				{
-					this.Text = m_kHotKey.ToString();
-					return;
+					this.Text = strText;
+					Select(strText.Length, 0);
 				}
 			}
-
-			if((m_kHotKey == Keys.Menu) || (m_kHotKey == Keys.ShiftKey) ||
-				(m_kHotKey == Keys.ControlKey))
-			{
-				m_kHotKey = Keys.None;
-			}
-
-			this.Text = ModifiersToString(m_kModifiers) + " + " + m_kHotKey.ToString();
-		}
-
-		private string ModifiersToString(Keys kModifiers)
-		{
-			string str = string.Empty;
-
-			if((kModifiers & Keys.Shift) != Keys.None)
-				str = (m_bNoRightModKeys ? KPRes.KeyboardKeyShiftLeft : KPRes.KeyboardKeyShift);
-			if((kModifiers & Keys.Control) != Keys.None)
-			{
-				if(str.Length > 0) str += ", ";
-				str += (m_bNoRightModKeys ? KPRes.KeyboardKeyCtrlLeft : KPRes.KeyboardKeyCtrl);
-			}
-			if((kModifiers & Keys.Alt) != Keys.None)
-			{
-				if(str.Length > 0) str += ", ";
-				str += KPRes.KeyboardKeyAlt;
-			}
-
-			return str;
-		}
-
-		[Obsolete]
-		public static HotKeyControlEx ReplaceTextBox(Control cContainer, TextBox tb)
-		{
-			return ReplaceTextBox(cContainer, tb, false);
-		}
-
-		public static HotKeyControlEx ReplaceTextBox(Control cContainer, TextBox tb,
-			bool bNoRightModKeys)
-		{
-			Debug.Assert(tb != null); if(tb == null) throw new ArgumentNullException("tb");
-			tb.Enabled = false;
-			tb.Visible = false;
-			cContainer.Controls.Remove(tb);
-
-			HotKeyControlEx hk = new HotKeyControlEx();
-			hk.Location = tb.Location;
-			hk.Size = tb.Size;
-			hk.NoRightModKeys = bNoRightModKeys;
-
-			cContainer.Controls.Add(hk);
-			cContainer.PerformLayout();
-
-			return hk;
+			catch(Exception) { Debug.Assert(false); }
 		}
 	}
 }

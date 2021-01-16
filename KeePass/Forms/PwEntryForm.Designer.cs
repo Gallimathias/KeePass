@@ -40,8 +40,8 @@
 			this.m_btnIcon = new System.Windows.Forms.Button();
 			this.m_lblIcon = new System.Windows.Forms.Label();
 			this.m_tbUserName = new System.Windows.Forms.TextBox();
-			this.m_tbPassword = new System.Windows.Forms.TextBox();
-			this.m_tbRepeatPassword = new System.Windows.Forms.TextBox();
+			this.m_tbPassword = new KeePass.UI.SecureTextBoxEx();
+			this.m_tbRepeatPassword = new KeePass.UI.SecureTextBoxEx();
 			this.m_tbUrl = new System.Windows.Forms.TextBox();
 			this.m_cbExpires = new System.Windows.Forms.CheckBox();
 			this.m_dtExpireDateTime = new System.Windows.Forms.DateTimePicker();
@@ -85,6 +85,9 @@
 			this.m_ctxListOperations = new KeePass.UI.CustomContextMenuStripEx(this.components);
 			this.m_menuListCtxCopyFieldValue = new System.Windows.Forms.ToolStripMenuItem();
 			this.m_tabProperties = new System.Windows.Forms.TabPage();
+			this.m_lblCustomData = new System.Windows.Forms.Label();
+			this.m_btnCDDel = new System.Windows.Forms.Button();
+			this.m_lvCustomData = new KeePass.UI.CustomListViewEx();
 			this.m_cmbOverrideUrl = new KeePass.UI.ImageComboBoxEx();
 			this.m_tbTags = new System.Windows.Forms.TextBox();
 			this.m_lblTags = new System.Windows.Forms.Label();
@@ -111,6 +114,11 @@
 			this.m_btnAutoTypeDelete = new System.Windows.Forms.Button();
 			this.m_lvAutoType = new KeePass.UI.CustomListViewEx();
 			this.m_tabHistory = new System.Windows.Forms.TabPage();
+			this.m_lblPrev = new System.Windows.Forms.Label();
+			this.m_lblModifiedData = new System.Windows.Forms.Label();
+			this.m_lblModified = new System.Windows.Forms.Label();
+			this.m_lblCreatedData = new System.Windows.Forms.Label();
+			this.m_lblCreated = new System.Windows.Forms.Label();
 			this.m_btnHistoryDelete = new System.Windows.Forms.Button();
 			this.m_btnHistoryView = new System.Windows.Forms.Button();
 			this.m_btnHistoryRestore = new System.Windows.Forms.Button();
@@ -142,9 +150,6 @@
 			this.m_ctxBinImportFile = new System.Windows.Forms.ToolStripMenuItem();
 			this.m_ctxBinSep0 = new System.Windows.Forms.ToolStripSeparator();
 			this.m_ctxBinNew = new System.Windows.Forms.ToolStripMenuItem();
-			this.m_lvCustomData = new KeePass.UI.CustomListViewEx();
-			this.m_btnCDDel = new System.Windows.Forms.Button();
-			this.m_lblCustomData = new System.Windows.Forms.Label();
 			this.m_ctxDefaultTimes.SuspendLayout();
 			this.m_tabMain.SuspendLayout();
 			this.m_tabEntry.SuspendLayout();
@@ -169,7 +174,7 @@
 			this.m_lblUserName.Name = "m_lblUserName";
 			this.m_lblUserName.Size = new System.Drawing.Size(61, 13);
 			this.m_lblUserName.TabIndex = 4;
-			this.m_lblUserName.Text = "User name:";
+			this.m_lblUserName.Text = "&User name:";
 			// 
 			// m_lblPassword
 			// 
@@ -178,7 +183,7 @@
 			this.m_lblPassword.Name = "m_lblPassword";
 			this.m_lblPassword.Size = new System.Drawing.Size(56, 13);
 			this.m_lblPassword.TabIndex = 6;
-			this.m_lblPassword.Text = "Password:";
+			this.m_lblPassword.Text = "&Password:";
 			// 
 			// m_lblTitle
 			// 
@@ -186,8 +191,8 @@
 			this.m_lblTitle.Location = new System.Drawing.Point(6, 13);
 			this.m_lblTitle.Name = "m_lblTitle";
 			this.m_lblTitle.Size = new System.Drawing.Size(30, 13);
-			this.m_lblTitle.TabIndex = 1;
-			this.m_lblTitle.Text = "Title:";
+			this.m_lblTitle.TabIndex = 0;
+			this.m_lblTitle.Text = "&Title:";
 			// 
 			// m_lblPasswordRepeat
 			// 
@@ -196,7 +201,7 @@
 			this.m_lblPasswordRepeat.Name = "m_lblPasswordRepeat";
 			this.m_lblPasswordRepeat.Size = new System.Drawing.Size(45, 13);
 			this.m_lblPasswordRepeat.TabIndex = 9;
-			this.m_lblPasswordRepeat.Text = "Repeat:";
+			this.m_lblPasswordRepeat.Text = "&Repeat:";
 			// 
 			// m_lblUrl
 			// 
@@ -205,7 +210,7 @@
 			this.m_lblUrl.Name = "m_lblUrl";
 			this.m_lblUrl.Size = new System.Drawing.Size(32, 13);
 			this.m_lblUrl.TabIndex = 15;
-			this.m_lblUrl.Text = "URL:";
+			this.m_lblUrl.Text = "UR&L:";
 			// 
 			// m_lblNotes
 			// 
@@ -214,7 +219,7 @@
 			this.m_lblNotes.Name = "m_lblNotes";
 			this.m_lblNotes.Size = new System.Drawing.Size(38, 13);
 			this.m_lblNotes.TabIndex = 17;
-			this.m_lblNotes.Text = "Notes:";
+			this.m_lblNotes.Text = "&Notes:";
 			// 
 			// m_lblQuality
 			// 
@@ -230,7 +235,7 @@
 			this.m_tbTitle.Location = new System.Drawing.Point(81, 10);
 			this.m_tbTitle.Name = "m_tbTitle";
 			this.m_tbTitle.Size = new System.Drawing.Size(293, 20);
-			this.m_tbTitle.TabIndex = 0;
+			this.m_tbTitle.TabIndex = 1;
 			// 
 			// m_btnIcon
 			// 
@@ -248,7 +253,7 @@
 			this.m_lblIcon.Name = "m_lblIcon";
 			this.m_lblIcon.Size = new System.Drawing.Size(31, 13);
 			this.m_lblIcon.TabIndex = 2;
-			this.m_lblIcon.Text = "Icon:";
+			this.m_lblIcon.Text = "&Icon:";
 			// 
 			// m_tbUserName
 			// 
@@ -277,6 +282,7 @@
 			this.m_tbUrl.Name = "m_tbUrl";
 			this.m_tbUrl.Size = new System.Drawing.Size(373, 20);
 			this.m_tbUrl.TabIndex = 16;
+			this.m_tbUrl.TextChanged += new System.EventHandler(this.OnUrlTextChanged);
 			// 
 			// m_cbExpires
 			// 
@@ -285,7 +291,7 @@
 			this.m_cbExpires.Name = "m_cbExpires";
 			this.m_cbExpires.Size = new System.Drawing.Size(63, 17);
 			this.m_cbExpires.TabIndex = 19;
-			this.m_cbExpires.Text = "Expires:";
+			this.m_cbExpires.Text = "&Expires:";
 			this.m_cbExpires.UseVisualStyleBackColor = true;
 			// 
 			// m_dtExpireDateTime
@@ -442,7 +448,7 @@
 			this.m_lblSeparator.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
 			this.m_lblSeparator.Location = new System.Drawing.Point(0, 447);
 			this.m_lblSeparator.Name = "m_lblSeparator";
-			this.m_lblSeparator.Size = new System.Drawing.Size(486, 2);
+			this.m_lblSeparator.Size = new System.Drawing.Size(487, 2);
 			this.m_lblSeparator.TabIndex = 3;
 			// 
 			// m_ttBalloon
@@ -502,7 +508,6 @@
 			this.m_rtNotes.Size = new System.Drawing.Size(374, 139);
 			this.m_rtNotes.TabIndex = 18;
 			this.m_rtNotes.Text = "";
-			this.m_rtNotes.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.OnNotesLinkClicked);
 			// 
 			// m_pbQuality
 			// 
@@ -544,7 +549,7 @@
 			this.m_btnBinOpen.Name = "m_btnBinOpen";
 			this.m_btnBinOpen.Size = new System.Drawing.Size(75, 23);
 			this.m_btnBinOpen.TabIndex = 3;
-			this.m_btnBinOpen.Text = "O&pen";
+			this.m_btnBinOpen.Text = "Ope&n";
 			this.m_btnBinOpen.UseVisualStyleBackColor = true;
 			this.m_btnBinOpen.Click += new System.EventHandler(this.OnBtnBinOpen);
 			// 
@@ -574,7 +579,7 @@
 			this.m_btnBinAdd.Name = "m_btnBinAdd";
 			this.m_btnBinAdd.Size = new System.Drawing.Size(75, 23);
 			this.m_btnBinAdd.TabIndex = 1;
-			this.m_btnBinAdd.Text = "Attac&h";
+			this.m_btnBinAdd.Text = "A&ttach";
 			this.m_btnBinAdd.UseVisualStyleBackColor = true;
 			this.m_btnBinAdd.Click += new System.EventHandler(this.OnBtnBinAdd);
 			// 
@@ -706,6 +711,39 @@
 			this.m_tabProperties.Text = "Properties";
 			this.m_tabProperties.UseVisualStyleBackColor = true;
 			// 
+			// m_lblCustomData
+			// 
+			this.m_lblCustomData.AutoSize = true;
+			this.m_lblCustomData.Location = new System.Drawing.Point(6, 175);
+			this.m_lblCustomData.Name = "m_lblCustomData";
+			this.m_lblCustomData.Size = new System.Drawing.Size(63, 13);
+			this.m_lblCustomData.TabIndex = 8;
+			this.m_lblCustomData.Text = "&Plugin data:";
+			// 
+			// m_btnCDDel
+			// 
+			this.m_btnCDDel.Location = new System.Drawing.Point(381, 192);
+			this.m_btnCDDel.Name = "m_btnCDDel";
+			this.m_btnCDDel.Size = new System.Drawing.Size(75, 23);
+			this.m_btnCDDel.TabIndex = 10;
+			this.m_btnCDDel.Text = "&Delete";
+			this.m_btnCDDel.UseVisualStyleBackColor = true;
+			this.m_btnCDDel.Click += new System.EventHandler(this.OnBtnCDDel);
+			// 
+			// m_lvCustomData
+			// 
+			this.m_lvCustomData.FullRowSelect = true;
+			this.m_lvCustomData.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+			this.m_lvCustomData.HideSelection = false;
+			this.m_lvCustomData.Location = new System.Drawing.Point(9, 193);
+			this.m_lvCustomData.Name = "m_lvCustomData";
+			this.m_lvCustomData.ShowItemToolTips = true;
+			this.m_lvCustomData.Size = new System.Drawing.Size(366, 101);
+			this.m_lvCustomData.TabIndex = 9;
+			this.m_lvCustomData.UseCompatibleStateImageBehavior = false;
+			this.m_lvCustomData.View = System.Windows.Forms.View.Details;
+			this.m_lvCustomData.SelectedIndexChanged += new System.EventHandler(this.OnCustomDataSelectedIndexChanged);
+			// 
 			// m_cmbOverrideUrl
 			// 
 			this.m_cmbOverrideUrl.IntegralHeight = false;
@@ -714,6 +752,7 @@
 			this.m_cmbOverrideUrl.Name = "m_cmbOverrideUrl";
 			this.m_cmbOverrideUrl.Size = new System.Drawing.Size(447, 21);
 			this.m_cmbOverrideUrl.TabIndex = 7;
+			this.m_cmbOverrideUrl.TextChanged += new System.EventHandler(this.OnUrlOverrideTextChanged);
 			// 
 			// m_tbTags
 			// 
@@ -729,7 +768,7 @@
 			this.m_lblTags.Name = "m_lblTags";
 			this.m_lblTags.Size = new System.Drawing.Size(34, 13);
 			this.m_lblTags.TabIndex = 4;
-			this.m_lblTags.Text = "Tags:";
+			this.m_lblTags.Text = "&Tags:";
 			// 
 			// m_btnPickFgColor
 			// 
@@ -747,7 +786,7 @@
 			this.m_cbCustomForegroundColor.Name = "m_cbCustomForegroundColor";
 			this.m_cbCustomForegroundColor.Size = new System.Drawing.Size(144, 17);
 			this.m_cbCustomForegroundColor.TabIndex = 0;
-			this.m_cbCustomForegroundColor.Text = "Custom foreground color:";
+			this.m_cbCustomForegroundColor.Text = "Custom &foreground color:";
 			this.m_cbCustomForegroundColor.UseVisualStyleBackColor = true;
 			this.m_cbCustomForegroundColor.CheckedChanged += new System.EventHandler(this.OnCustomForegroundColorCheckedChanged);
 			// 
@@ -766,7 +805,7 @@
 			this.m_lblUuid.Name = "m_lblUuid";
 			this.m_lblUuid.Size = new System.Drawing.Size(37, 13);
 			this.m_lblUuid.TabIndex = 11;
-			this.m_lblUuid.Text = "UUID:";
+			this.m_lblUuid.Text = "&UUID:";
 			// 
 			// m_lblOverrideUrl
 			// 
@@ -775,7 +814,7 @@
 			this.m_lblOverrideUrl.Name = "m_lblOverrideUrl";
 			this.m_lblOverrideUrl.Size = new System.Drawing.Size(222, 13);
 			this.m_lblOverrideUrl.TabIndex = 6;
-			this.m_lblOverrideUrl.Text = "Override URL (e.g. to use a specific browser):";
+			this.m_lblOverrideUrl.Text = "O&verride URL (e.g. to use a specific browser):";
 			// 
 			// m_cbCustomBackgroundColor
 			// 
@@ -784,7 +823,7 @@
 			this.m_cbCustomBackgroundColor.Name = "m_cbCustomBackgroundColor";
 			this.m_cbCustomBackgroundColor.Size = new System.Drawing.Size(150, 17);
 			this.m_cbCustomBackgroundColor.TabIndex = 2;
-			this.m_cbCustomBackgroundColor.Text = "Custom background color:";
+			this.m_cbCustomBackgroundColor.Text = "Custom &background color:";
 			this.m_cbCustomBackgroundColor.UseVisualStyleBackColor = true;
 			this.m_cbCustomBackgroundColor.CheckedChanged += new System.EventHandler(this.OnCustomBackgroundColorCheckedChanged);
 			// 
@@ -823,7 +862,7 @@
 			// m_btnAutoTypeDown
 			// 
 			this.m_btnAutoTypeDown.Image = global::KeePass.Properties.Resources.B16x16_1DownArrow;
-			this.m_btnAutoTypeDown.Location = new System.Drawing.Point(382, 282);
+			this.m_btnAutoTypeDown.Location = new System.Drawing.Point(382, 285);
 			this.m_btnAutoTypeDown.Name = "m_btnAutoTypeDown";
 			this.m_btnAutoTypeDown.Size = new System.Drawing.Size(75, 23);
 			this.m_btnAutoTypeDown.TabIndex = 11;
@@ -833,7 +872,7 @@
 			// m_btnAutoTypeUp
 			// 
 			this.m_btnAutoTypeUp.Image = global::KeePass.Properties.Resources.B16x16_1UpArrow;
-			this.m_btnAutoTypeUp.Location = new System.Drawing.Point(382, 253);
+			this.m_btnAutoTypeUp.Location = new System.Drawing.Point(382, 256);
 			this.m_btnAutoTypeUp.Name = "m_btnAutoTypeUp";
 			this.m_btnAutoTypeUp.Size = new System.Drawing.Size(75, 23);
 			this.m_btnAutoTypeUp.TabIndex = 10;
@@ -843,7 +882,7 @@
 			// m_linkAutoTypeObfuscation
 			// 
 			this.m_linkAutoTypeObfuscation.AutoSize = true;
-			this.m_linkAutoTypeObfuscation.Location = new System.Drawing.Point(208, 314);
+			this.m_linkAutoTypeObfuscation.Location = new System.Drawing.Point(208, 317);
 			this.m_linkAutoTypeObfuscation.Name = "m_linkAutoTypeObfuscation";
 			this.m_linkAutoTypeObfuscation.Size = new System.Drawing.Size(68, 13);
 			this.m_linkAutoTypeObfuscation.TabIndex = 13;
@@ -854,11 +893,11 @@
 			// m_cbAutoTypeObfuscation
 			// 
 			this.m_cbAutoTypeObfuscation.AutoSize = true;
-			this.m_cbAutoTypeObfuscation.Location = new System.Drawing.Point(9, 313);
+			this.m_cbAutoTypeObfuscation.Location = new System.Drawing.Point(9, 316);
 			this.m_cbAutoTypeObfuscation.Name = "m_cbAutoTypeObfuscation";
 			this.m_cbAutoTypeObfuscation.Size = new System.Drawing.Size(193, 17);
 			this.m_cbAutoTypeObfuscation.TabIndex = 12;
-			this.m_cbAutoTypeObfuscation.Text = "Two-channel auto-type obfuscation";
+			this.m_cbAutoTypeObfuscation.Text = "&Two-channel auto-type obfuscation";
 			this.m_cbAutoTypeObfuscation.UseVisualStyleBackColor = true;
 			this.m_cbAutoTypeObfuscation.CheckedChanged += new System.EventHandler(this.OnAutoTypeObfuscationCheckedChanged);
 			// 
@@ -880,7 +919,7 @@
 			this.m_rbAutoTypeOverride.Size = new System.Drawing.Size(153, 17);
 			this.m_rbAutoTypeOverride.TabIndex = 2;
 			this.m_rbAutoTypeOverride.TabStop = true;
-			this.m_rbAutoTypeOverride.Text = "Override default sequence:";
+			this.m_rbAutoTypeOverride.Text = "O&verride default sequence:";
 			this.m_rbAutoTypeOverride.UseVisualStyleBackColor = true;
 			// 
 			// m_rbAutoTypeSeqInherit
@@ -891,7 +930,7 @@
 			this.m_rbAutoTypeSeqInherit.Size = new System.Drawing.Size(239, 17);
 			this.m_rbAutoTypeSeqInherit.TabIndex = 1;
 			this.m_rbAutoTypeSeqInherit.TabStop = true;
-			this.m_rbAutoTypeSeqInherit.Text = "Inherit default auto-type sequence from group";
+			this.m_rbAutoTypeSeqInherit.Text = "&Inherit default auto-type sequence from group";
 			this.m_rbAutoTypeSeqInherit.UseVisualStyleBackColor = true;
 			this.m_rbAutoTypeSeqInherit.CheckedChanged += new System.EventHandler(this.OnAutoTypeSeqInheritCheckedChanged);
 			// 
@@ -902,7 +941,7 @@
 			this.m_lblCustomAutoType.Name = "m_lblCustomAutoType";
 			this.m_lblCustomAutoType.Size = new System.Drawing.Size(219, 13);
 			this.m_lblCustomAutoType.TabIndex = 5;
-			this.m_lblCustomAutoType.Text = "Use custom sequences for specific windows:";
+			this.m_lblCustomAutoType.Text = "&Use custom sequences for specific windows:";
 			// 
 			// m_cbAutoTypeEnabled
 			// 
@@ -911,7 +950,7 @@
 			this.m_cbAutoTypeEnabled.Name = "m_cbAutoTypeEnabled";
 			this.m_cbAutoTypeEnabled.Size = new System.Drawing.Size(166, 17);
 			this.m_cbAutoTypeEnabled.TabIndex = 0;
-			this.m_cbAutoTypeEnabled.Text = "Enable auto-type for this entry";
+			this.m_cbAutoTypeEnabled.Text = "E&nable auto-type for this entry";
 			this.m_cbAutoTypeEnabled.UseVisualStyleBackColor = true;
 			this.m_cbAutoTypeEnabled.CheckedChanged += new System.EventHandler(this.OnAutoTypeEnableCheckedChanged);
 			// 
@@ -961,7 +1000,7 @@
 			this.m_lvAutoType.Location = new System.Drawing.Point(9, 134);
 			this.m_lvAutoType.Name = "m_lvAutoType";
 			this.m_lvAutoType.ShowItemToolTips = true;
-			this.m_lvAutoType.Size = new System.Drawing.Size(367, 170);
+			this.m_lvAutoType.Size = new System.Drawing.Size(367, 173);
 			this.m_lvAutoType.TabIndex = 6;
 			this.m_lvAutoType.UseCompatibleStateImageBehavior = false;
 			this.m_lvAutoType.View = System.Windows.Forms.View.Details;
@@ -970,6 +1009,11 @@
 			// 
 			// m_tabHistory
 			// 
+			this.m_tabHistory.Controls.Add(this.m_lblPrev);
+			this.m_tabHistory.Controls.Add(this.m_lblModifiedData);
+			this.m_tabHistory.Controls.Add(this.m_lblModified);
+			this.m_tabHistory.Controls.Add(this.m_lblCreatedData);
+			this.m_tabHistory.Controls.Add(this.m_lblCreated);
 			this.m_tabHistory.Controls.Add(this.m_btnHistoryDelete);
 			this.m_tabHistory.Controls.Add(this.m_btnHistoryView);
 			this.m_tabHistory.Controls.Add(this.m_btnHistoryRestore);
@@ -981,12 +1025,57 @@
 			this.m_tabHistory.Text = "History";
 			this.m_tabHistory.UseVisualStyleBackColor = true;
 			// 
+			// m_lblPrev
+			// 
+			this.m_lblPrev.AutoSize = true;
+			this.m_lblPrev.Location = new System.Drawing.Point(6, 57);
+			this.m_lblPrev.Name = "m_lblPrev";
+			this.m_lblPrev.Size = new System.Drawing.Size(93, 13);
+			this.m_lblPrev.TabIndex = 4;
+			this.m_lblPrev.Text = "&Previous versions:";
+			// 
+			// m_lblModifiedData
+			// 
+			this.m_lblModifiedData.AutoSize = true;
+			this.m_lblModifiedData.Location = new System.Drawing.Point(62, 35);
+			this.m_lblModifiedData.Name = "m_lblModifiedData";
+			this.m_lblModifiedData.Size = new System.Drawing.Size(19, 13);
+			this.m_lblModifiedData.TabIndex = 3;
+			this.m_lblModifiedData.Text = "<>";
+			// 
+			// m_lblModified
+			// 
+			this.m_lblModified.AutoSize = true;
+			this.m_lblModified.Location = new System.Drawing.Point(6, 35);
+			this.m_lblModified.Name = "m_lblModified";
+			this.m_lblModified.Size = new System.Drawing.Size(50, 13);
+			this.m_lblModified.TabIndex = 2;
+			this.m_lblModified.Text = "Modified:";
+			// 
+			// m_lblCreatedData
+			// 
+			this.m_lblCreatedData.AutoSize = true;
+			this.m_lblCreatedData.Location = new System.Drawing.Point(62, 13);
+			this.m_lblCreatedData.Name = "m_lblCreatedData";
+			this.m_lblCreatedData.Size = new System.Drawing.Size(19, 13);
+			this.m_lblCreatedData.TabIndex = 1;
+			this.m_lblCreatedData.Text = "<>";
+			// 
+			// m_lblCreated
+			// 
+			this.m_lblCreated.AutoSize = true;
+			this.m_lblCreated.Location = new System.Drawing.Point(6, 13);
+			this.m_lblCreated.Name = "m_lblCreated";
+			this.m_lblCreated.Size = new System.Drawing.Size(47, 13);
+			this.m_lblCreated.TabIndex = 0;
+			this.m_lblCreated.Text = "Created:";
+			// 
 			// m_btnHistoryDelete
 			// 
 			this.m_btnHistoryDelete.Location = new System.Drawing.Point(89, 307);
 			this.m_btnHistoryDelete.Name = "m_btnHistoryDelete";
 			this.m_btnHistoryDelete.Size = new System.Drawing.Size(75, 23);
-			this.m_btnHistoryDelete.TabIndex = 2;
+			this.m_btnHistoryDelete.TabIndex = 7;
 			this.m_btnHistoryDelete.Text = "&Delete";
 			this.m_btnHistoryDelete.UseVisualStyleBackColor = true;
 			this.m_btnHistoryDelete.Click += new System.EventHandler(this.OnBtnHistoryDelete);
@@ -996,7 +1085,7 @@
 			this.m_btnHistoryView.Location = new System.Drawing.Point(8, 307);
 			this.m_btnHistoryView.Name = "m_btnHistoryView";
 			this.m_btnHistoryView.Size = new System.Drawing.Size(75, 23);
-			this.m_btnHistoryView.TabIndex = 1;
+			this.m_btnHistoryView.TabIndex = 6;
 			this.m_btnHistoryView.Text = "&View";
 			this.m_btnHistoryView.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
 			this.m_btnHistoryView.UseVisualStyleBackColor = true;
@@ -1007,7 +1096,7 @@
 			this.m_btnHistoryRestore.Location = new System.Drawing.Point(382, 307);
 			this.m_btnHistoryRestore.Name = "m_btnHistoryRestore";
 			this.m_btnHistoryRestore.Size = new System.Drawing.Size(75, 23);
-			this.m_btnHistoryRestore.TabIndex = 3;
+			this.m_btnHistoryRestore.TabIndex = 8;
 			this.m_btnHistoryRestore.Text = "&Restore";
 			this.m_btnHistoryRestore.UseVisualStyleBackColor = true;
 			this.m_btnHistoryRestore.Click += new System.EventHandler(this.OnBtnHistoryRestore);
@@ -1017,11 +1106,11 @@
 			this.m_lvHistory.FullRowSelect = true;
 			this.m_lvHistory.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
 			this.m_lvHistory.HideSelection = false;
-			this.m_lvHistory.Location = new System.Drawing.Point(9, 13);
+			this.m_lvHistory.Location = new System.Drawing.Point(9, 73);
 			this.m_lvHistory.Name = "m_lvHistory";
 			this.m_lvHistory.ShowItemToolTips = true;
-			this.m_lvHistory.Size = new System.Drawing.Size(447, 288);
-			this.m_lvHistory.TabIndex = 0;
+			this.m_lvHistory.Size = new System.Drawing.Size(447, 228);
+			this.m_lvHistory.TabIndex = 5;
 			this.m_lvHistory.UseCompatibleStateImageBehavior = false;
 			this.m_lvHistory.View = System.Windows.Forms.View.Details;
 			this.m_lvHistory.ItemActivate += new System.EventHandler(this.OnHistoryItemActivate);
@@ -1033,7 +1122,7 @@
 			this.m_btnTools.Name = "m_btnTools";
 			this.m_btnTools.Size = new System.Drawing.Size(80, 23);
 			this.m_btnTools.TabIndex = 4;
-			this.m_btnTools.Text = "&Tools";
+			this.m_btnTools.Text = "T&ools";
 			this.m_btnTools.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
 			this.m_btnTools.UseVisualStyleBackColor = true;
 			this.m_btnTools.Click += new System.EventHandler(this.OnBtnTools);
@@ -1056,40 +1145,40 @@
             this.m_menuListCtxMoveStandardURL,
             this.m_menuListCtxMoveStandardNotes});
 			this.m_ctxStrMoveToStandard.Name = "m_ctxStrMoveToStandard";
-			this.m_ctxStrMoveToStandard.Size = new System.Drawing.Size(149, 114);
+			this.m_ctxStrMoveToStandard.Size = new System.Drawing.Size(148, 114);
 			// 
 			// m_menuListCtxMoveStandardTitle
 			// 
 			this.m_menuListCtxMoveStandardTitle.Name = "m_menuListCtxMoveStandardTitle";
-			this.m_menuListCtxMoveStandardTitle.Size = new System.Drawing.Size(148, 22);
+			this.m_menuListCtxMoveStandardTitle.Size = new System.Drawing.Size(147, 22);
 			this.m_menuListCtxMoveStandardTitle.Text = "To &Title";
 			this.m_menuListCtxMoveStandardTitle.Click += new System.EventHandler(this.OnCtxMoveToTitle);
 			// 
 			// m_menuListCtxMoveStandardUser
 			// 
 			this.m_menuListCtxMoveStandardUser.Name = "m_menuListCtxMoveStandardUser";
-			this.m_menuListCtxMoveStandardUser.Size = new System.Drawing.Size(148, 22);
+			this.m_menuListCtxMoveStandardUser.Size = new System.Drawing.Size(147, 22);
 			this.m_menuListCtxMoveStandardUser.Text = "To User &Name";
 			this.m_menuListCtxMoveStandardUser.Click += new System.EventHandler(this.OnCtxMoveToUserName);
 			// 
 			// m_menuListCtxMoveStandardPassword
 			// 
 			this.m_menuListCtxMoveStandardPassword.Name = "m_menuListCtxMoveStandardPassword";
-			this.m_menuListCtxMoveStandardPassword.Size = new System.Drawing.Size(148, 22);
+			this.m_menuListCtxMoveStandardPassword.Size = new System.Drawing.Size(147, 22);
 			this.m_menuListCtxMoveStandardPassword.Text = "To &Password";
 			this.m_menuListCtxMoveStandardPassword.Click += new System.EventHandler(this.OnCtxMoveToPassword);
 			// 
 			// m_menuListCtxMoveStandardURL
 			// 
 			this.m_menuListCtxMoveStandardURL.Name = "m_menuListCtxMoveStandardURL";
-			this.m_menuListCtxMoveStandardURL.Size = new System.Drawing.Size(148, 22);
+			this.m_menuListCtxMoveStandardURL.Size = new System.Drawing.Size(147, 22);
 			this.m_menuListCtxMoveStandardURL.Text = "To &URL";
 			this.m_menuListCtxMoveStandardURL.Click += new System.EventHandler(this.OnCtxMoveToURL);
 			// 
 			// m_menuListCtxMoveStandardNotes
 			// 
 			this.m_menuListCtxMoveStandardNotes.Name = "m_menuListCtxMoveStandardNotes";
-			this.m_menuListCtxMoveStandardNotes.Size = new System.Drawing.Size(148, 22);
+			this.m_menuListCtxMoveStandardNotes.Size = new System.Drawing.Size(147, 22);
 			this.m_menuListCtxMoveStandardNotes.Text = "To No&tes";
 			this.m_menuListCtxMoveStandardNotes.Click += new System.EventHandler(this.OnCtxMoveToNotes);
 			// 
@@ -1240,39 +1329,6 @@
 			this.m_ctxBinNew.Text = "&Create Empty Attachment";
 			this.m_ctxBinNew.Click += new System.EventHandler(this.OnCtxBinNew);
 			// 
-			// m_lvCustomData
-			// 
-			this.m_lvCustomData.FullRowSelect = true;
-			this.m_lvCustomData.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-			this.m_lvCustomData.HideSelection = false;
-			this.m_lvCustomData.Location = new System.Drawing.Point(9, 193);
-			this.m_lvCustomData.Name = "m_lvCustomData";
-			this.m_lvCustomData.ShowItemToolTips = true;
-			this.m_lvCustomData.Size = new System.Drawing.Size(366, 101);
-			this.m_lvCustomData.TabIndex = 9;
-			this.m_lvCustomData.UseCompatibleStateImageBehavior = false;
-			this.m_lvCustomData.View = System.Windows.Forms.View.Details;
-			this.m_lvCustomData.SelectedIndexChanged += new System.EventHandler(this.OnCustomDataSelectedIndexChanged);
-			// 
-			// m_btnCDDel
-			// 
-			this.m_btnCDDel.Location = new System.Drawing.Point(381, 192);
-			this.m_btnCDDel.Name = "m_btnCDDel";
-			this.m_btnCDDel.Size = new System.Drawing.Size(75, 23);
-			this.m_btnCDDel.TabIndex = 10;
-			this.m_btnCDDel.Text = "&Delete";
-			this.m_btnCDDel.UseVisualStyleBackColor = true;
-			this.m_btnCDDel.Click += new System.EventHandler(this.OnBtnCDDel);
-			// 
-			// m_lblCustomData
-			// 
-			this.m_lblCustomData.AutoSize = true;
-			this.m_lblCustomData.Location = new System.Drawing.Point(6, 175);
-			this.m_lblCustomData.Name = "m_lblCustomData";
-			this.m_lblCustomData.Size = new System.Drawing.Size(63, 13);
-			this.m_lblCustomData.TabIndex = 8;
-			this.m_lblCustomData.Text = "Plugin data:";
-			// 
 			// PwEntryForm
 			// 
 			this.AcceptButton = this.m_btnOK;
@@ -1309,6 +1365,7 @@
 			this.m_tabAutoType.ResumeLayout(false);
 			this.m_tabAutoType.PerformLayout();
 			this.m_tabHistory.ResumeLayout(false);
+			this.m_tabHistory.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).EndInit();
 			this.m_ctxStrMoveToStandard.ResumeLayout(false);
 			this.m_ctxPwGen.ResumeLayout(false);
@@ -1331,8 +1388,8 @@
 		private System.Windows.Forms.Button m_btnIcon;
 		private System.Windows.Forms.Label m_lblIcon;
 		private System.Windows.Forms.TextBox m_tbUserName;
-		private System.Windows.Forms.TextBox m_tbPassword;
-		private System.Windows.Forms.TextBox m_tbRepeatPassword;
+		private KeePass.UI.SecureTextBoxEx m_tbPassword;
+		private KeePass.UI.SecureTextBoxEx m_tbRepeatPassword;
 		private KeePass.UI.QualityProgressBar m_pbQuality;
 		private System.Windows.Forms.TextBox m_tbUrl;
 		private KeePass.UI.CustomRichTextBoxEx m_rtNotes;
@@ -1436,6 +1493,10 @@
 		private System.Windows.Forms.Label m_lblCustomData;
 		private System.Windows.Forms.Button m_btnCDDel;
 		private KeePass.UI.CustomListViewEx m_lvCustomData;
-
+		private System.Windows.Forms.Label m_lblModifiedData;
+		private System.Windows.Forms.Label m_lblModified;
+		private System.Windows.Forms.Label m_lblCreatedData;
+		private System.Windows.Forms.Label m_lblCreated;
+		private System.Windows.Forms.Label m_lblPrev;
 	}
 }

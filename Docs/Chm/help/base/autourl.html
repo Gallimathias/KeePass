@@ -1,8 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta http-equiv="expires" content="0" />
 	<meta http-equiv="cache-control" content="no-cache" />
 	<meta http-equiv="pragma" content="no-cache" />
@@ -17,7 +18,7 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2018 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
 	<meta name="flattr:id" content="42rykv" />
@@ -25,6 +26,7 @@
 	<title>URL Field Capabilities - KeePass</title>
 	<base target="_self" />
 	<link rel="stylesheet" type="text/css" href="../../default.css" />
+
 	
 </head>
 <body>
@@ -32,12 +34,11 @@
 
 
 
-<table class="sectionsummary"><tr><td width="68">
-<img src="../images/b64x64_enhanced_browsing.png" width="64" height="64"
-class="singleimg" align="left" alt="URL Field" />
-</td><td valign="middle"><h1>URL Field Capabilities</h1><br />
-The URL field supports various special protocols and placeholders.
-</td></tr></table>
+<table class="sectionheader"><tr>
+<td><img src="../images/b64x64_enhanced_browsing.png" alt="URL" /></td>
+<td><h1>URL Field Capabilities</h1>
+<p>The URL field supports various special protocols and placeholders.</p></td>
+</tr></table>
 
 <br />
 URL Field Capabibilities:
@@ -57,9 +58,8 @@ Usage Tips &amp; Tricks:
 <br />
 
 <a name="stdcp"></a>
-<h2 class="sectiontitle">
-<img src="../images/ascii.png" class="singleimg" alt="Text" />&nbsp;&nbsp;Standard
-Capabilities</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_ascii.png" alt="Text" />
+Standard Capabilities</h2>
 
 <p>The URL field can execute any valid URL for which a protocol handler is defined.
 On most systems at least the <code>http://</code>, <code>https://</code>,
@@ -72,11 +72,10 @@ KeePass will automatically use PuTTY for <code>ssh://</code> URLs, too.</p>
 <br />
 
 <a name="cmdln"></a>
-<h2 class="sectiontitle">
-<img src="../images/b16x16_openterm.png" class="singleimg" alt="Terminal" />&nbsp;&nbsp;Executing
-Command Lines</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_openterm.png" alt="Terminal" />
+Executing Command Lines</h2>
 
-<p>Instead of an URL, you can also execute command lines using the URL field.
+<p>Instead of a URL, you can also execute command lines using the URL field.
 To tell KeePass that the line you entered
 is a command line, prefix it using <code>cmd://</code>. For example if you would like to execute
 Notepad, your URL could look like this:</p>
@@ -106,11 +105,58 @@ For example <code>%TEMP%</code> is replaced by the user's temporary path.</p>
 Windows-style UNC paths (starting with <code>\\</code>) are directly
 supported, i.e. do not need to be prefixed with <code>cmd://</code>.</p>
 
+<p><b>Double Quotes (<code>&quot;</code>) and Backslashes (<code>\</code>):</b><br />
+There are multiple rule sets for parsing command lines
+(<a href="https://docs.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shellexecuteinfow"
+target="_blank"><code>SHELLEXECUTEINFOW</code> structure</a>,
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw"
+target="_blank"><code>CommandLineToArgvW</code> function</a>,
+<!-- https://docs.microsoft.com/en-us/cpp/cpp/parsing-cpp-command-line-arguments -->
+<a href="https://docs.microsoft.com/en-us/cpp/cpp/main-function-command-line-args"
+target="_blank">Microsoft C/C++ startup code</a>, etc.).
+These rule sets are contradictory; command lines are interpreted differently.
+For example, in the <code>SHELLEXECUTEINFOW</code> structure documentation,
+backslashes have no special meaning, whereas the
+<code>CommandLineToArgvW</code> function sometimes interprets a backslash
+as an escape character.
+Another example: <code>A&quot;&quot;&quot;B C&quot;&quot;&quot;D</code> is
+interpreted as <em>one</em> argument (namely <code>A&quot;B C&quot;D</code>)
+by the Microsoft C/C++ startup code, whereas the <code>CommandLineToArgvW</code>
+function returns <em>two</em> arguments
+(namely <code>A&quot;B</code> and <code>C&quot;D</code>).
+KeePass cannot know how the executed application will interpret its
+command line, and there is no command line encoding that is
+interpreted as intended by all applications.
+Therefore, we recommend:</p>
+<ul>
+<li>Use double quotes (&quot;) only to indicate the start and the end of
+the file path or of an argument. Do not use a quote in data that
+requires encoding. For example, if your command line contains a
+<code>{PASSWORD}</code> <a href="placeholders.html">placeholder</a>,
+the password should not contain a quote.</li>
+<li>Use a backslash only when the next character is not a quote,
+i.e. avoid <code>\&quot;</code>.
+Especially, avoid data ending with a backslash if a quote follows on
+the command line. For example, if the command line contains an
+argument like <code>-pw:&quot;{PASSWORD}&quot;</code>, the password should
+not end with a backslash, because otherwise the placeholder replacement
+results in the problematic <code>\&quot;</code> sequence.</li>
+</ul>
+
+<p><b>Unix-like Systems:</b><br />
+On Unix-like systems, KeePass assumes that double quotes (<code>&quot;</code>)
+and backslashes (<code>\</code>) must be encoded.
+Furthermore, KeePass assumes that single quotes (<code>'</code>)
+only occur in contexts where they must not be encoded (e.g. within
+double quotes). So, if any of your arguments may contain a single quote,
+you have to ensure that it occurs within such a context.
+On Windows, this is irrelevant, as single quotes do not have a special meaning here.</p>
+
 <br />
 
 <a name="subst"></a>
-<h2 class="sectiontitle">
-<img src="../images/ascii.png" class="singleimg" alt="Text" />&nbsp;&nbsp;Placeholders</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_ascii.png" alt="Text" />
+Placeholders</h2>
 
 <p>In the URL field, you can use several placeholders that will get automatically replaced
 when the URL is executed. For example:</p>
@@ -143,9 +189,8 @@ browser is installed).</p>
 <br />
 
 <a name="override"></a>
-<h2 class="sectiontitle">
-<img src="../images/ascii.png" class="singleimg" alt="Text" />&nbsp;&nbsp;Changing
-the URL Handler (URL Override)</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_ascii.png" alt="Text" />
+Changing the URL Handler (URL Override)</h2>
 
 <br />
 
@@ -172,9 +217,9 @@ as the parameter. This uses a <a href="#subst">placeholder</a> to find Internet
 Explorer.</p>
 
 <p><b>Globally changing the URL behavior:</b><br />
-If you want to change the <i>default</i> URL action for an URL scheme
+If you want to change the <i>default</i> URL action for a URL scheme
 (e.g. <code>http://</code>, <code>https://</code> or <code>ftp://</code>),
-you can define an URL scheme override
+you can define a URL scheme override
 in 'Tools' &rarr; 'Options' &rarr; tab 'Integration' &rarr; 'URL Overrides'.
 This for example allows to specify a browser as default for websites
 (in the dialog you can find several overrides for browsers like Internet Explorer,
@@ -186,7 +231,7 @@ specify the following as override for the kdbx scheme (on Windows):<br />
 <code>cmd://&quot;{APPDIR}\KeePass.exe&quot; &quot;{BASE:RMVSCM}&quot; -pw-enc:&quot;{PASSWORD_ENC}&quot;</code><br />
 or on Unix-like systems (Mono):<br />
 <code>cmd://mono &quot;{APPDIR}/KeePass.exe&quot; &quot;{BASE:RMVSCM}&quot; -pw-enc:&quot;{PASSWORD_ENC}&quot;</code><br />
-If an entry now has an URL looking like <code>kdbx://<i>PathToYourDatabase.kdbx</i></code>
+If an entry now has a URL looking like <code>kdbx://<i>PathToYourDatabase.kdbx</i></code>
 and the master password for this database in the password field,
 double-clicking the URL of the entry in the main window opens the other database.
 The <code>-pw-enc</code> <a href="cmdline.html">command line</a> parameter and
@@ -198,9 +243,8 @@ i.e. process monitors and similar utilities aren't be able to read the master pa
 <br /><br />
 
 <a name="rdpts"></a>
-<h2 class="sectiontitle">
-<img src="../images/b16x16_openterm.png" class="singleimg" alt="Terminal" />&nbsp;&nbsp;Starting
-RDP/TS Sessions</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_openterm.png" alt="Terminal" />
+Starting RDP/TS Sessions</h2>
 
 <p>You can use the URL field of entries and the virtual <code>cmd://</code>
 protocol to start remote desktop connections.</p>
@@ -233,9 +277,8 @@ the following URL opens the specified RDP file:</p>
 <br />
 
 <a name="builtin"></a>
-<h2 class="sectiontitle">
-<img src="../images/b16x16_openterm.png" class="singleimg" alt="Terminal" />&nbsp;&nbsp;Executing
-Built-In Shell Commands</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_openterm.png" alt="Terminal" />
+Executing Built-In Shell Commands</h2>
 
 <p>The URL field can be used to start applications/documents and URLs.
 If you want to execute a built-in shell command, like <code>COPY</code> for

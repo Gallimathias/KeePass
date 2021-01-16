@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,17 +19,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Xml;
-using System.IO;
-using System.Drawing;
-using System.Diagnostics;
 
 using KeePass.Resources;
 using KeePass.Util;
 
 using KeePassLib;
 using KeePassLib.Interfaces;
+using KeePassLib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {
@@ -84,7 +85,7 @@ namespace KeePass.DataExchange.Formats
 			string strDoc = sr.ReadToEnd();
 			sr.Close();
 
-			XmlDocument xd = new XmlDocument();
+			XmlDocument xd = XmlUtilEx.CreateXmlDocument();
 			xd.LoadXml(strDoc);
 
 			XmlNode xnRoot = xd.DocumentElement;
@@ -165,14 +166,13 @@ namespace KeePass.DataExchange.Formats
 
 		private static void AddGroup(XmlNode xnGrp, PwGroup pgParent, PwDatabase pd)
 		{
+			PwGroup pg = new PwGroup(true, true);
+			pgParent.AddGroup(pg, true);
+
 			XmlNode xnName = xnGrp.Attributes.GetNamedItem(AttribCaption);
 			string strName = ((xnName != null) ? xnName.Value : null);
 			if(string.IsNullOrEmpty(strName)) { Debug.Assert(false); strName = KPRes.Group; }
-
-			PwGroup pg = new PwGroup(true, true);
 			pg.Name = strName;
-
-			pgParent.AddGroup(pg, true);
 
 			foreach(XmlNode xn in xnGrp)
 			{

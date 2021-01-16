@@ -36,7 +36,6 @@
 			this.m_lblUserName = new System.Windows.Forms.Label();
 			this.m_tbUserName = new System.Windows.Forms.TextBox();
 			this.m_lblPassword = new System.Windows.Forms.Label();
-			this.m_tbPassword = new System.Windows.Forms.TextBox();
 			this.m_lblCredNote = new System.Windows.Forms.Label();
 			this.m_btnHelp = new System.Windows.Forms.Button();
 			this.m_cmbCredSaveMode = new System.Windows.Forms.ComboBox();
@@ -45,6 +44,7 @@
 			this.m_lblUrlHints = new System.Windows.Forms.Label();
 			this.m_tabMain = new System.Windows.Forms.TabControl();
 			this.m_tabConn = new System.Windows.Forms.TabPage();
+			this.m_tbPassword = new KeePass.UI.SecureTextBoxEx();
 			this.m_tabAdv = new System.Windows.Forms.TabPage();
 			this.m_pnlAdv = new System.Windows.Forms.Panel();
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).BeginInit();
@@ -91,7 +91,7 @@
 			this.m_lblUrl.Name = "m_lblUrl";
 			this.m_lblUrl.Size = new System.Drawing.Size(32, 13);
 			this.m_lblUrl.TabIndex = 0;
-			this.m_lblUrl.Text = "URL:";
+			this.m_lblUrl.Text = "UR&L:";
 			// 
 			// m_tbUrl
 			// 
@@ -107,7 +107,7 @@
 			this.m_lblUserName.Name = "m_lblUserName";
 			this.m_lblUserName.Size = new System.Drawing.Size(61, 13);
 			this.m_lblUserName.TabIndex = 4;
-			this.m_lblUserName.Text = "User name:";
+			this.m_lblUserName.Text = "&User name:";
 			// 
 			// m_tbUserName
 			// 
@@ -119,19 +119,11 @@
 			// m_lblPassword
 			// 
 			this.m_lblPassword.AutoSize = true;
-			this.m_lblPassword.Location = new System.Drawing.Point(210, 94);
+			this.m_lblPassword.Location = new System.Drawing.Point(212, 94);
 			this.m_lblPassword.Name = "m_lblPassword";
 			this.m_lblPassword.Size = new System.Drawing.Size(56, 13);
 			this.m_lblPassword.TabIndex = 6;
-			this.m_lblPassword.Text = "Password:";
-			// 
-			// m_tbPassword
-			// 
-			this.m_tbPassword.Location = new System.Drawing.Point(281, 91);
-			this.m_tbPassword.Name = "m_tbPassword";
-			this.m_tbPassword.Size = new System.Drawing.Size(122, 20);
-			this.m_tbPassword.TabIndex = 7;
-			this.m_tbPassword.UseSystemPasswordChar = true;
+			this.m_lblPassword.Text = "&Password:";
 			// 
 			// m_lblCredNote
 			// 
@@ -156,9 +148,9 @@
 			// 
 			this.m_cmbCredSaveMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.m_cmbCredSaveMode.FormattingEnabled = true;
-			this.m_cmbCredSaveMode.Location = new System.Drawing.Point(85, 161);
+			this.m_cmbCredSaveMode.Location = new System.Drawing.Point(83, 161);
 			this.m_cmbCredSaveMode.Name = "m_cmbCredSaveMode";
-			this.m_cmbCredSaveMode.Size = new System.Drawing.Size(318, 21);
+			this.m_cmbCredSaveMode.Size = new System.Drawing.Size(320, 21);
 			this.m_cmbCredSaveMode.TabIndex = 10;
 			// 
 			// m_lblRemember
@@ -168,16 +160,16 @@
 			this.m_lblRemember.Name = "m_lblRemember";
 			this.m_lblRemember.Size = new System.Drawing.Size(61, 13);
 			this.m_lblRemember.TabIndex = 9;
-			this.m_lblRemember.Text = "Remember:";
+			this.m_lblRemember.Text = "&Remember:";
 			// 
 			// m_lblUrlExamples
 			// 
 			this.m_lblUrlExamples.AutoSize = true;
 			this.m_lblUrlExamples.Location = new System.Drawing.Point(80, 64);
 			this.m_lblUrlExamples.Name = "m_lblUrlExamples";
-			this.m_lblUrlExamples.Size = new System.Drawing.Size(284, 13);
+			this.m_lblUrlExamples.Size = new System.Drawing.Size(255, 13);
 			this.m_lblUrlExamples.TabIndex = 3;
-			this.m_lblUrlExamples.Text = "Example: ftp://ftp.someserver.com/pub/MyDatabase.kdbx";
+			this.m_lblUrlExamples.Text = "Example: ftp://ftp.example.com/pub/Database.kdbx";
 			// 
 			// m_lblUrlHints
 			// 
@@ -218,6 +210,14 @@
 			this.m_tabConn.TabIndex = 0;
 			this.m_tabConn.Text = "Connection";
 			this.m_tabConn.UseVisualStyleBackColor = true;
+			// 
+			// m_tbPassword
+			// 
+			this.m_tbPassword.Location = new System.Drawing.Point(282, 91);
+			this.m_tbPassword.Name = "m_tbPassword";
+			this.m_tbPassword.Size = new System.Drawing.Size(121, 20);
+			this.m_tbPassword.TabIndex = 7;
+			this.m_tbPassword.UseSystemPasswordChar = true;
 			// 
 			// m_tabAdv
 			// 
@@ -260,6 +260,7 @@
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "<DYN>";
 			this.Load += new System.EventHandler(this.OnFormLoad);
+			this.Shown += new System.EventHandler(this.OnFormShown);
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OnFormClosed);
 			((System.ComponentModel.ISupportInitialize)(this.m_bannerImage)).EndInit();
 			this.m_tabMain.ResumeLayout(false);
@@ -280,7 +281,7 @@
 		private System.Windows.Forms.Label m_lblUserName;
 		private System.Windows.Forms.TextBox m_tbUserName;
 		private System.Windows.Forms.Label m_lblPassword;
-		private System.Windows.Forms.TextBox m_tbPassword;
+		private KeePass.UI.SecureTextBoxEx m_tbPassword;
 		private System.Windows.Forms.Label m_lblCredNote;
 		private System.Windows.Forms.Button m_btnHelp;
 		private System.Windows.Forms.ComboBox m_cmbCredSaveMode;

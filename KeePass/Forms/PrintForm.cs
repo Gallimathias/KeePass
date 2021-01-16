@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ using KeePass.Util.Spr;
 using KeePassLib;
 using KeePassLib.Collections;
 using KeePassLib.Delegates;
+using KeePassLib.Interfaces;
 using KeePassLib.Native;
 using KeePassLib.Resources;
 using KeePassLib.Security;
@@ -51,7 +52,7 @@ namespace KeePass.Forms
 		private bool m_bPrintMode = true;
 		private int m_nDefaultSortColumn = -1;
 
-		private bool m_bBlockPreviewRefresh = false;
+		private int m_iBlockPreviewRefresh = 0;
 		private Control m_cPreBlock = null;
 
 		private ImageList m_ilTabIcons = null;
@@ -83,6 +84,8 @@ namespace KeePass.Forms
 			public PwDatabase Database = null;
 			public ImageList ClientIcons = null;
 			public SprContext SprContext = null;
+
+			public DateTime Now = DateTime.UtcNow;
 
 			public PfOptions() { }
 
@@ -131,7 +134,9 @@ namespace KeePass.Forms
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_pgDataSource != null); if(m_pgDataSource == null) throw new ArgumentException();
+			if(m_pgDataSource == null) { Debug.Assert(false); throw new InvalidOperationException(); }
+
+			++m_iBlockPreviewRefresh;
 
 			GlobalWindowManager.AddWindow(this);
 
@@ -165,7 +170,6 @@ namespace KeePass.Forms
 
 			if(!m_bPrintMode) m_btnOK.Text = KPRes.Export;
 
-			m_bBlockPreviewRefresh = true;
 			m_rbTabular.Checked = true;
 
 			m_cmbSortEntries.Items.Add("(" + KPRes.None + ")");
@@ -187,7 +191,6 @@ namespace KeePass.Forms
 			else if(colType == AceColumnType.Url) nSortSel = 4;
 			else if(colType == AceColumnType.Notes) nSortSel = 5;
 			m_cmbSortEntries.SelectedIndex = nSortSel;
-			m_bBlockPreviewRefresh = false;
 
 			if(!m_bPrintMode) // Export to HTML
 			{
@@ -197,16 +200,17 @@ namespace KeePass.Forms
 
 			Program.TempFilesPool.AddWebBrowserPrintContent();
 
-			UpdateHtmlDocument(true);
+			--m_iBlockPreviewRefresh;
+			UpdateWebBrowser(true);
 			UpdateUIState();
 		}
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
-			UpdateHtmlDocument(false);
-
 			if(m_bPrintMode)
 			{
+				UpdateWebBrowser(false);
+
 				try { m_wbMain.ShowPrintDialog(); } // Throws in Mono 1.2.6+
 				catch(NotImplementedException)
 				{
@@ -214,9 +218,7 @@ namespace KeePass.Forms
 				}
 				catch(Exception ex) { MessageService.ShowWarning(ex); }
 			}
-			else m_strGeneratedHtml = UIUtil.GetWebBrowserDocument(m_wbMain);
-
-			if(m_strGeneratedHtml == null) m_strGeneratedHtml = string.Empty;
+			else m_strGeneratedHtml = (GenerateHtmlDocument(false) ?? string.Empty);
 		}
 
 		private void OnBtnCancel(object sender, EventArgs e)
@@ -261,36 +263,51 @@ namespace KeePass.Forms
 			m_btnOK.Enabled = !bBlock;
 			m_btnCancel.Enabled = !bBlock;
 
-			m_wbMain.Visible = !bBlock;
+			try { m_wbMain.Visible = !bBlock; }
+			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); }
 
 			if(!bBlock && (m_cPreBlock != null)) UIUtil.SetFocus(m_cPreBlock, this);
 		}
 
 		/* private void ShowWaitDocument()
 		{
-			StringBuilder sbW = new StringBuilder();
-			sbW.AppendLine("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"");
-			sbW.AppendLine("\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
-			sbW.AppendLine("<html xmlns=\"http://www.w3.org/1999/xhtml\">");
-			sbW.AppendLine("<head>");
-			sbW.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
-			sbW.AppendLine("<title>...</title>");
-			sbW.AppendLine("</head><body><br /><br />");
-			sbW.AppendLine("<h1 style=\"text-align: center;\">&#8987;</h1>");
-			sbW.AppendLine("</body></html>");
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine("<!DOCTYPE html>");
+			sb.AppendLine("<html xmlns=\"http://www.w3.org/1999/xhtml\">");
+			sb.AppendLine("<head>");
+			sb.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />");
+			sb.AppendLine("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />");
+			sb.AppendLine("<title>...</title>");
+			sb.AppendLine("</head><body><br /><br />");
+			sb.AppendLine("<h1 style=\"text-align: center;\">&#8987;</h1>");
+			sb.AppendLine("</body></html>");
 
-			try { UIUtil.SetWebBrowserDocument(m_wbMain, sbW.ToString()); }
+			try { UIUtil.SetWebBrowserDocument(m_wbMain, sb.ToString()); }
 			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); } // Throws in Mono 2.0+
 		} */
 
-		private void UpdateHtmlDocument(bool bInitial)
+		private void UpdateWebBrowser(bool bInitial)
 		{
-			if(m_bBlockPreviewRefresh) return;
-			m_bBlockPreviewRefresh = true;
+			if(m_iBlockPreviewRefresh > 0) return;
+
+			++m_iBlockPreviewRefresh;
 			if(!bInitial) UIBlockInteraction(true);
 			// ShowWaitDocument();
 
-			PwGroup pgDataSource = m_pgDataSource.CloneDeep();
+			string strHtml = GenerateHtmlDocument(true);
+
+			try { UIUtil.SetWebBrowserDocument(m_wbMain, strHtml); }
+			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); } // Throws in Mono 2.0+
+			try { m_wbMain.AllowNavigation = false; }
+			catch(Exception) { Debug.Assert(false); }
+
+			if(!bInitial) UIBlockInteraction(false);
+			--m_iBlockPreviewRefresh;
+		}
+
+		private string GenerateHtmlDocument(bool bTemporary)
+		{
+			PwGroup pgDataSource = m_pgDataSource.CloneDeep(); // Sorting, ...
 
 			int nSortEntries = m_cmbSortEntries.SelectedIndex;
 			string strSortFieldName = null;
@@ -353,89 +370,77 @@ namespace KeePass.Forms
 			};
 
 			StringBuilder sb = new StringBuilder();
-
-			sb.AppendLine("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"");
-			sb.AppendLine("\t\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
+			sb.AppendLine("<!DOCTYPE html>");
 
 			sb.Append("<html xmlns=\"http://www.w3.org/1999/xhtml\"");
 			string strLang = Program.Translation.Properties.Iso6391Code;
 			if(string.IsNullOrEmpty(strLang)) strLang = "en";
 			strLang = h(strLang);
-			sb.Append(" lang=\"" + strLang + "\" xml:lang=\"" + strLang + "\"");
+			sb.Append(" xml:lang=\"" + strLang + "\" lang=\"" + strLang + "\"");
 			if(p.Rtl) sb.Append(" dir=\"rtl\"");
 			sb.AppendLine(">");
 
 			sb.AppendLine("<head>");
-			sb.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
-			sb.Append("<title>");
-			sb.Append(h(pgDataSource.Name));
-			sb.AppendLine("</title>");
+			sb.AppendLine("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />");
+			sb.AppendLine("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />");
 			sb.AppendLine("<meta http-equiv=\"expires\" content=\"0\" />");
 			sb.AppendLine("<meta http-equiv=\"cache-control\" content=\"no-cache\" />");
 			sb.AppendLine("<meta http-equiv=\"pragma\" content=\"no-cache\" />");
 
+			sb.Append("<title>");
+			sb.Append(h(pgDataSource.Name));
+			sb.AppendLine("</title>");
+
 			sb.AppendLine("<style type=\"text/css\">");
 			sb.AppendLine("/* <![CDATA[ */");
 
-			sb.AppendLine("body, p, div, h1, h2, h3, h4, h5, h6, ol, ul, li, td, th, dd, dt, a {");
+			sb.AppendLine("body {");
+			sb.AppendLine("\tcolor: #000000;");
+			sb.AppendLine("\tbackground-color: #FFFFFF;");
 			sb.AppendLine("\tfont-family: \"Tahoma\", \"MS Sans Serif\", \"Sans Serif\", \"Verdana\", sans-serif;");
 			sb.AppendLine("\tfont-size: 10pt;");
 			sb.AppendLine("}");
 
-			sb.AppendLine("span.fserif {");
-			sb.AppendLine("\tfont-family: \"Times New Roman\", serif;");
-			sb.AppendLine("}");
-
-			sb.AppendLine("h1 { font-size: 2em; }");
 			sb.AppendLine("h2 {");
-			sb.AppendLine("\tfont-size: 1.5em;");
 			sb.AppendLine("\tcolor: #000000;");
 			sb.AppendLine("\tbackground-color: #D0D0D0;");
 			sb.AppendLine("\tpadding-left: 2pt;");
 			sb.AppendLine("\tpadding-right: 2pt;"); // RTL support
 			sb.AppendLine("}");
 			sb.AppendLine("h3 {");
-			sb.AppendLine("\tfont-size: 1.2em;");
 			sb.AppendLine("\tcolor: #000000;");
 			sb.AppendLine("\tbackground-color: #D0D0D0;");
 			sb.AppendLine("\tpadding-left: 2pt;");
 			sb.AppendLine("\tpadding-right: 2pt;"); // RTL support
 			sb.AppendLine("}");
-			sb.AppendLine("h4 { font-size: 1em; }");
-			sb.AppendLine("h5 { font-size: 0.89em; }");
-			sb.AppendLine("h6 { font-size: 0.6em; }");
+
+			sb.AppendLine("table, th, td {");
+			sb.AppendLine("\tborder: 0px none;");
+			sb.AppendLine("\tborder-collapse: collapse;");
+			sb.AppendLine("}");
 
 			sb.AppendLine("table {");
 			sb.AppendLine("\twidth: 100%;");
 			sb.AppendLine("\ttable-layout: fixed;");
+			sb.AppendLine("\tempty-cells: show;");
+			sb.AppendLine("}");
+
+			sb.AppendLine("th, td {");
+			sb.AppendLine("\ttext-align: " + (p.Rtl ? "right;" : "left;"));
+			sb.AppendLine("\tvertical-align: top;");
 			sb.AppendLine("}");
 
 			sb.AppendLine("th {");
-			sb.AppendLine("\ttext-align: " + (p.Rtl ? "right;" : "left;"));
-			sb.AppendLine("\tvertical-align: top;");
 			sb.AppendLine("\tfont-weight: bold;");
 			sb.AppendLine("}");
 
-			sb.AppendLine("td {");
-			sb.AppendLine("\ttext-align: " + (p.Rtl ? "right;" : "left;"));
-			sb.AppendLine("\tvertical-align: top;");
-			sb.AppendLine("}");
-
-			sb.AppendLine("a:visited {");
-			sb.AppendLine("\ttext-decoration: none;");
+			sb.AppendLine("a {");
 			sb.AppendLine("\tcolor: #0000DD;");
-			sb.AppendLine("}");
-			sb.AppendLine("a:active {");
 			sb.AppendLine("\ttext-decoration: none;");
+			sb.AppendLine("}");
+			sb.AppendLine("a:hover, a:active {");
 			sb.AppendLine("\tcolor: #6699FF;");
-			sb.AppendLine("}");
-			sb.AppendLine("a:link {");
-			sb.AppendLine("\ttext-decoration: none;");
-			sb.AppendLine("\tcolor: #0000DD;");
-			sb.AppendLine("}");
-			sb.AppendLine("a:hover {");
 			sb.AppendLine("\ttext-decoration: underline;");
-			sb.AppendLine("\tcolor: #6699FF;");
 			sb.AppendLine("}");
 
 			sb.AppendLine(".field_name {");
@@ -450,6 +455,10 @@ namespace KeePass.Forms
 			sb.AppendLine("\tword-wrap: break-word;");
 			sb.AppendLine("}");
 
+			sb.AppendLine(".fserif {");
+			sb.AppendLine("\tfont-family: \"Times New Roman\", serif;");
+			sb.AppendLine("}");
+
 			sb.AppendLine(".icon_cli {");
 			sb.AppendLine("\tdisplay: inline-block;");
 			sb.AppendLine("\tmargin: 0px 0px 0px 0px;");
@@ -460,10 +469,13 @@ namespace KeePass.Forms
 			sb.AppendLine("\tvertical-align: top;");
 			sb.AppendLine("}");
 
-			// Add the temporary content identifier
-			sb.AppendLine("." + Program.TempFilesPool.TempContentTag + " {");
-			sb.AppendLine("\tfont-size: 10pt;");
-			sb.AppendLine("}");
+			if(bTemporary)
+			{
+				// Add the temporary content identifier
+				sb.AppendLine("." + Program.TempFilesPool.TempContentTag + " {");
+				sb.AppendLine("\tfont-size: 10pt;");
+				sb.AppendLine("}");
+			}
 
 			sb.AppendLine("/* ]]> */");
 			sb.AppendLine("</style>");
@@ -610,8 +622,8 @@ namespace KeePass.Forms
 					if(bTitle)
 					{
 						PfOptions pSub = p.CloneShallow();
-						pSub.FontInit = MakeIconImg(pe.IconId, pe.CustomIconUuid, p) +
-							pSub.FontInit + "<b>";
+						pSub.FontInit = MakeIconImg(pe.IconId, pe.CustomIconUuid, pe,
+							p) + pSub.FontInit + "<b>";
 						pSub.FontExit = "</b>" + pSub.FontExit;
 
 						WriteDetailsLine(sb, KPRes.Title, pe.Strings.ReadSafe(
@@ -662,7 +674,7 @@ namespace KeePass.Forms
 				if(pg.Entries.UCount == 0) return true;
 
 				sb.Append("</table><br /><br /><h3>"); // "</table><br /><hr /><h3>"
-				// sb.Append(MakeIconImg(pg.IconId, pg.CustomIconUuid, p));
+				// sb.Append(MakeIconImg(pg.IconId, pg.CustomIconUuid, pg, p));
 				sb.Append(h(pg.GetFullPath(" - ", false)));
 				sb.AppendLine("</h3>");
 				WriteGroupNotes(sb, pg);
@@ -680,13 +692,11 @@ namespace KeePass.Forms
 
 			sb.AppendLine("</body></html>");
 
-			try { UIUtil.SetWebBrowserDocument(m_wbMain, sb.ToString()); }
-			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); } // Throws in Mono 2.0+
-			try { m_wbMain.AllowNavigation = false; }
-			catch(Exception) { Debug.Assert(false); }
-
-			if(!bInitial) UIBlockInteraction(false);
-			m_bBlockPreviewRefresh = false;
+			string strDoc = sb.ToString();
+#if DEBUG
+			XmlUtilEx.ValidateXml(strDoc, true);
+#endif
+			return strDoc;
 		}
 
 		private static string CompileText(string strText, PfOptions p, bool bToHtml,
@@ -727,7 +737,7 @@ namespace KeePass.Forms
 			string str = CompileText(pe.Strings.ReadSafe(strField), p, true, false);
 
 			if(strField == PwDefs.TitleField)
-				str = MakeIconImg(pe.IconId, pe.CustomIconUuid, p) + str;
+				str = MakeIconImg(pe.IconId, pe.CustomIconUuid, pe, p) + str;
 
 			WriteTabularIf(bCondition, sb, str, p);
 		}
@@ -754,13 +764,14 @@ namespace KeePass.Forms
 
 			sb.Append("<td class=\"field_data\" style=\"width: 80%;\">");
 
-			bool bPassword = (kvp.Key == PwDefs.PasswordField);
+			bool bUrl = (kvp.Key == KPRes.Url);
+			bool bPassword = (kvp.Key == KPRes.Password);
 			bool bCode = (p.MonoPasswords && bPassword);
 
 			if(bCode) sb.Append(p.SmallMono ? "<code><small>" : "<code>");
 			else sb.Append(p.FontInit);
 
-			if((kvp.Key == PwDefs.UrlField) && !kvp.Value.IsEmpty)
+			if(bUrl && !kvp.Value.IsEmpty)
 				sb.Append(MakeUrlLink(kvp.Value.ReadString(), p));
 			else
 			{
@@ -786,11 +797,17 @@ namespace KeePass.Forms
 			WriteDetailsLine(sb, kvp, p);
 		}
 
-		private static string MakeIconImg(PwIcon i, PwUuid ci, PfOptions p)
+		private static string MakeIconImg(PwIcon i, PwUuid ci, ITimeLogger tl, PfOptions p)
 		{
 			if(p.ClientIcons == null) return string.Empty;
 
 			Image img = null;
+
+			if((tl != null) && tl.Expires && (tl.ExpiryTime <= p.Now))
+			{
+				i = PwIcon.Expired;
+				ci = null;
+			}
 
 			PwDatabase pd = p.Database;
 			if((ci != null) && !ci.Equals(PwUuid.Zero) && (pd != null))
@@ -865,7 +882,7 @@ namespace KeePass.Forms
 
 		private void OnBtnConfigPage(object sender, EventArgs e)
 		{
-			UpdateHtmlDocument(false);
+			UpdateWebBrowser(false);
 
 			try { m_wbMain.ShowPageSetupDialog(); } // Throws in Mono 1.2.6+
 			catch(NotImplementedException)
@@ -877,7 +894,7 @@ namespace KeePass.Forms
 
 		private void OnBtnPrintPreview(object sender, EventArgs e)
 		{
-			UpdateHtmlDocument(false);
+			UpdateWebBrowser(false);
 
 			try { m_wbMain.ShowPrintPreviewDialog(); } // Throws in Mono 1.2.6+
 			catch(NotImplementedException)
@@ -889,7 +906,7 @@ namespace KeePass.Forms
 
 		private void OnTabSelectedIndexChanged(object sender, EventArgs e)
 		{
-			if(m_tabMain.SelectedIndex == 0) UpdateHtmlDocument(false);
+			if(m_tabMain.SelectedIndex == 0) UpdateWebBrowser(false);
 		}
 
 		private void OnTabularCheckedChanged(object sender, EventArgs e)
@@ -934,7 +951,7 @@ namespace KeePass.Forms
 
 		private void OnFormClosing(object sender, FormClosingEventArgs e)
 		{
-			if(m_bBlockPreviewRefresh) e.Cancel = true;
+			if(m_iBlockPreviewRefresh > 0) e.Cancel = true;
 		}
 
 		private void OnIconCheckedChanged(object sender, EventArgs e)

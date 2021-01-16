@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
-using System.Diagnostics;
+using System.Text;
+using System.Threading;
 
+using KeePassLib.Cryptography;
 using KeePassLib.Native;
 using KeePassLib.Utility;
 
@@ -81,7 +82,7 @@ namespace KeePass.Util
 				if(File.Exists(strPath))
 				{
 					byte[] pbEnc = File.ReadAllBytes(strPath);
-					byte[] pb = ProtectedData.Unprotect(pbEnc, GmpOptEnt,
+					byte[] pb = CryptoUtil.UnprotectData(pbEnc, GmpOptEnt,
 						DataProtectionScope.CurrentUser);
 					if(pb.Length == 12)
 					{
@@ -119,7 +120,7 @@ namespace KeePass.Util
 			byte[] pb = new byte[12];
 			MemUtil.Int64ToBytes(DateTime.UtcNow.ToBinary()).CopyTo(pb, 0);
 			MemUtil.Int32ToBytes(Process.GetCurrentProcess().Id).CopyTo(pb, 8);
-			byte[] pbEnc = ProtectedData.Protect(pb, GmpOptEnt,
+			byte[] pbEnc = CryptoUtil.ProtectData(pb, GmpOptEnt,
 				DataProtectionScope.CurrentUser);
 			File.WriteAllBytes(strPath, pbEnc);
 		}

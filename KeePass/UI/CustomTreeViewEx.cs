@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,9 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
-using System.Diagnostics;
 
 using KeePass.Native;
 using KeePass.Util;
@@ -49,6 +49,8 @@ namespace KeePass.UI
 
 		public CustomTreeViewEx() : base()
 		{
+			if(Program.DesignMode) return;
+
 			// Enable default double buffering (must be combined with
 			// TVS_EX_DOUBLEBUFFER, see OnHandleCreated)
 			try { this.DoubleBuffered = true; }
@@ -83,6 +85,13 @@ namespace KeePass.UI
 			//	}
 			// }
 			// catch(Exception) { }
+
+			ApplyOptions();
+		}
+
+		internal void ApplyOptions()
+		{
+			this.ShowLines = Program.Config.UI.TreeViewShowLines;
 		}
 
 		// protected override void WndProc(ref Message m)
@@ -142,6 +151,7 @@ namespace KeePass.UI
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
+			if(Program.DesignMode) return;
 
 			try
 			{
@@ -182,7 +192,9 @@ namespace KeePass.UI
 			catch(Exception) { Debug.Assert(false); }
 		}
 
-		/* protected override CreateParams CreateParams
+		/* [Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		protected override CreateParams CreateParams
 		{
 			get
 			{
@@ -215,6 +227,26 @@ namespace KeePass.UI
 			if(UIUtil.HandleCommonKeyEvent(e, false, this)) return;
 
 			base.OnKeyUp(e);
+		}
+
+		protected override void OnBeforeCollapse(TreeViewCancelEventArgs e)
+		{
+			TreeNode tn = ((e != null) ? e.Node : null);
+			if(tn != null)
+			{
+				if((tn.Parent == null) && !this.ShowRootLines)
+				{
+					// This should only occur due to a user action (e.g.
+					// double-click on the node), not programmatically
+					Debug.Assert(false);
+
+					e.Cancel = true;
+					return;
+				}
+			}
+			else { Debug.Assert(false); }
+
+			base.OnBeforeCollapse(e);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,13 +19,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
 using System.Diagnostics;
+using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 
 using KeePass.Forms;
 using KeePass.UI;
+
 using KeePassLib.Translation;
 
 namespace TrlUtil
@@ -61,7 +62,6 @@ namespace TrlUtil
 			AddForm(l, new EditAutoTypeItemForm());
 			AddForm(l, new EditStringForm());
 			AddForm(l, new EntropyForm());
-			AddForm(l, new EntryReportForm());
 			AddForm(l, new ExchangeDataForm());
 			AddForm(l, new FieldPickerForm());
 			AddForm(l, new FieldRefForm());
@@ -73,6 +73,7 @@ namespace TrlUtil
 			AddForm(l, new InternalBrowserForm());
 			AddForm(l, new IOConnectionForm());
 			AddForm(l, new KeyCreationForm());
+			AddForm(l, new KeyFileCreationForm());
 			AddForm(l, new KeyPromptForm());
 			AddForm(l, new LanguageForm());
 			AddForm(l, new ListViewForm());
@@ -122,42 +123,46 @@ namespace TrlUtil
 			bool bAdd = true;
 			Type t = c.GetType();
 
-			if(c.Text.Length == 0) bAdd = false;
-			else if(c.Name.Length == 0) bAdd = false;
+			if(string.IsNullOrEmpty(c.Name)) bAdd = false;
+			else if(string.IsNullOrEmpty(c.Text)) bAdd = false;
+			else if(c.Text.StartsWith("<") && c.Text.EndsWith(">")) bAdd = false;
 			else if(t == typeof(MenuStrip)) bAdd = false;
-			else if(t == typeof(PictureBox)) bAdd = false;
-			else if(t == typeof(TreeView)) bAdd = false;
-			else if(t == typeof(ToolStrip)) bAdd = false;
-			else if(t == typeof(WebBrowser)) bAdd = false;
 			else if(t == typeof(Panel)) bAdd = false;
+			else if(t == typeof(PictureBox)) bAdd = false;
 			else if(t == typeof(StatusStrip)) bAdd = false;
-			else if(c.Text.StartsWith(@"<") && c.Text.EndsWith(@">")) bAdd = false;
+			else if(t == typeof(ToolStrip)) bAdd = false;
+			else if(t == typeof(TreeView)) bAdd = false;
+			else if(t == typeof(WebBrowser)) bAdd = false;
 
-			if(t == typeof(TabControl)) bAdd = true;
-			else if(t == typeof(ProgressBar)) bAdd = true;
-			else if(t == typeof(TextBox)) bAdd = true;
-			else if(t == typeof(PromptedTextBox)) bAdd = true;
-			else if(t == typeof(RichTextBox)) bAdd = true;
-			else if(t == typeof(KeePass.UI.CustomRichTextBoxEx)) bAdd = true;
+			// For layout adjustments
+			if(t == typeof(Button)) bAdd = true;
+			else if(t == typeof(CheckedListBox)) bAdd = true;
 			else if(t == typeof(ComboBox)) bAdd = true;
-			else if(t == typeof(KeePass.UI.ImageComboBoxEx)) bAdd = true;
+			else if(t == typeof(CustomListViewEx)) bAdd = true;
+			else if(t == typeof(CustomRichTextBoxEx)) bAdd = true;
+			else if(t == typeof(DateTimePicker)) bAdd = true;
+			else if(t == typeof(HotKeyControlEx)) bAdd = true;
+			else if(t == typeof(ImageComboBoxEx)) bAdd = true;
 			else if(t == typeof(Label)) bAdd = true;
 			else if(t == typeof(ListView)) bAdd = true;
-			else if(t == typeof(CustomListViewEx)) bAdd = true;
-			else if(t == typeof(Button)) bAdd = true;
-			else if(t == typeof(KeePass.UI.QualityProgressBar)) bAdd = true;
-			else if(t == typeof(DateTimePicker)) bAdd = true;
-			else if(t == typeof(CheckedListBox)) bAdd = true;
+			else if(t == typeof(ProgressBar)) bAdd = true;
+			else if(t == typeof(PromptedTextBox)) bAdd = true;
+			else if(t == typeof(QualityProgressBar)) bAdd = true;
+			else if(t == typeof(RichTextBox)) bAdd = true;
+			else if(t == typeof(SecureTextBoxEx)) bAdd = true;
+			else if(t == typeof(TabControl)) bAdd = true;
+			else if(t == typeof(TextBox)) bAdd = true;
 
-			if(bAdd && (c.Name.Length > 0))
+			if(bAdd && !string.IsNullOrEmpty(c.Name))
 			{
 				KPControlCustomization kpcc = new KPControlCustomization();
 				kpcc.Name = c.Name;
 				kpcc.BaseHash = KPControlCustomization.HashControl(c);
 
-				if((t != typeof(TabControl)) && (t != typeof(NumericUpDown)))
-					kpcc.TextEnglish = c.Text;
-				else kpcc.TextEnglish = string.Empty;
+				if((t == typeof(HotKeyControlEx)) || (t == typeof(NumericUpDown)) ||
+					(t == typeof(TabControl)))
+					kpcc.TextEnglish = string.Empty;
+				else kpcc.TextEnglish = (c.Text ?? string.Empty);
 
 				kpfc.Controls.Add(kpcc);
 			}
@@ -166,10 +171,11 @@ namespace TrlUtil
 		}
 
 		public static void RenderToTreeControl(List<KPFormCustomization> listCustoms,
-			TreeView tv)
+			TreeView tv, Dictionary<string, TreeNode> dControls)
 		{
 			tv.BeginUpdate();
 			tv.Nodes.Clear();
+			dControls.Clear();
 
 			foreach(KPFormCustomization kpfc in listCustoms)
 			{
@@ -179,6 +185,7 @@ namespace TrlUtil
 
 				TreeNode tnForm = tv.Nodes.Add(strName);
 				tnForm.Tag = kpfc;
+				// Bold font results in clipping bug in release mode
 
 				TreeNode tnWindow = tnForm.Nodes.Add("Window");
 				tnWindow.Tag = kpfc.Window;
@@ -187,9 +194,11 @@ namespace TrlUtil
 				{
 					TreeNode tnControl = tnForm.Nodes.Add(kpcc.Name);
 					tnControl.Tag = kpcc;
+
+					dControls[kpfc.FullName + "." + kpcc.Name] = tnControl;
 				}
 
-				tnForm.ExpandAll();
+				tnForm.Expand();
 			}
 
 			tv.EndUpdate();

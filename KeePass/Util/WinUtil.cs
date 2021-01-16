@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -33,11 +33,13 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 using KeePass.App;
+using KeePass.Forms;
 using KeePass.Native;
 using KeePass.Resources;
 using KeePass.Util.Spr;
 
 using KeePassLib;
+using KeePassLib.Delegates;
 using KeePassLib.Serialization;
 using KeePassLib.Utility;
 
@@ -45,6 +47,43 @@ using NativeLib = KeePassLib.Native.NativeLib;
 
 namespace KeePass.Util
 {
+	public sealed class OpenUrlEventArgs : EventArgs
+	{
+		private string m_strUrl;
+		public string Url
+		{
+			get { return m_strUrl; }
+			set { m_strUrl = value; }
+		}
+
+		private readonly PwEntry m_pe;
+		public PwEntry Entry
+		{
+			get { return m_pe; }
+		}
+
+		private readonly bool m_bAllowOverride;
+		public bool AllowOverride
+		{
+			get { return m_bAllowOverride; }
+		}
+
+		private readonly string m_strBaseRaw;
+		public string BaseRaw
+		{
+			get { return m_strBaseRaw; }
+		}
+
+		public OpenUrlEventArgs(string strUrlToOpen, PwEntry peDataSource,
+			bool bAllowOverride, string strBaseRaw)
+		{
+			m_strUrl = strUrlToOpen;
+			m_pe = peDataSource;
+			m_bAllowOverride = bAllowOverride;
+			m_strBaseRaw = strBaseRaw;
+		}
+	}
+
 	public static class WinUtil
 	{
 		private static bool m_bIsWindows9x = false;
@@ -60,6 +99,8 @@ namespace KeePass.Util
 		private static string m_strExePath = null;
 
 		private static ulong m_uFrameworkVersion = 0;
+
+		public static event EventHandler<OpenUrlEventArgs> OpenUrlPre;
 
 		public static bool IsWindows9x
 		{
@@ -108,6 +149,8 @@ namespace KeePass.Util
 
 		static WinUtil()
 		{
+			if(NativeLib.IsUnix()) return;
+
 			OperatingSystem os = Environment.OSVersion;
 			Version v = os.Version;
 
@@ -136,9 +179,9 @@ namespace KeePass.Util
 						m_bIsAtLeastWindows10 = (u >= 10);
 					else { Debug.Assert(string.IsNullOrEmpty(str)); }
 				}
-				else { Debug.Assert(NativeLib.IsUnix()); }
+				else { Debug.Assert(false); }
 			}
-			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); }
+			catch(Exception) { Debug.Assert(false); }
 			finally { if(rk != null) rk.Close(); }
 
 			try
@@ -157,20 +200,23 @@ namespace KeePass.Util
 
 		public static void OpenEntryUrl(PwEntry pe)
 		{
-			Debug.Assert(pe != null);
-			if(pe == null) throw new ArgumentNullException("pe");
+			if(pe == null) { Debug.Assert(false); throw new ArgumentNullException("pe"); }
 
 			string strUrl = pe.Strings.ReadSafe(PwDefs.UrlField);
 
+			// The user interface enables the URL open command if and
+			// only if the URL is not empty, i.e. it ignores overrides
+			if(strUrl.Length == 0) return;
+
 			if(pe.OverrideUrl.Length > 0)
-				WinUtil.OpenUrl(pe.OverrideUrl, pe, true, strUrl);
+				OpenUrl(pe.OverrideUrl, pe, true, strUrl);
 			else
 			{
 				string strOverride = Program.Config.Integration.UrlOverride;
 				if(strOverride.Length > 0)
-					WinUtil.OpenUrl(strOverride, pe, true, strUrl);
+					OpenUrl(strOverride, pe, true, strUrl);
 				else
-					WinUtil.OpenUrl(strUrl, pe, true);
+					OpenUrl(strUrl, pe, true);
 			}
 		}
 
@@ -188,8 +234,31 @@ namespace KeePass.Util
 		public static void OpenUrl(string strUrlToOpen, PwEntry peDataSource,
 			bool bAllowOverride, string strBaseRaw)
 		{
-			// If URL is null, return, do not throw exception.
-			Debug.Assert(strUrlToOpen != null); if(strUrlToOpen == null) return;
+			VoidDelegate f = delegate()
+			{
+				try { OpenUrlPriv(strUrlToOpen, peDataSource, bAllowOverride, strBaseRaw); }
+				catch(Exception) { Debug.Assert(false); }
+			};
+
+			MainForm mf = Program.MainForm;
+			if((mf != null) && mf.InvokeRequired) mf.Invoke(f);
+			else f();
+		}
+
+		private static void OpenUrlPriv(string strUrlToOpen, PwEntry peDataSource,
+			bool bAllowOverride, string strBaseRaw)
+		{
+			if(string.IsNullOrEmpty(strUrlToOpen)) { Debug.Assert(false); return; }
+
+			if(WinUtil.OpenUrlPre != null)
+			{
+				OpenUrlEventArgs e = new OpenUrlEventArgs(strUrlToOpen, peDataSource,
+					bAllowOverride, strBaseRaw);
+				WinUtil.OpenUrlPre(null, e);
+				strUrlToOpen = e.Url;
+
+				if(string.IsNullOrEmpty(strUrlToOpen)) return;
+			}
 
 			string strPrevWorkDir = WinUtil.GetWorkingDirectory();
 			string strThisExe = WinUtil.GetExecutable();
@@ -197,21 +266,75 @@ namespace KeePass.Util
 			string strExeDir = UrlUtil.GetFileDirectory(strThisExe, false, true);
 			WinUtil.SetWorkingDirectory(strExeDir);
 
-			string strUrlFlt = strUrlToOpen;
-			strUrlFlt = strUrlFlt.TrimStart(new char[]{ ' ', '\t', '\r', '\n' });
+			string strUrl = CompileUrl(strUrlToOpen, peDataSource, bAllowOverride,
+				strBaseRaw, null);
 
-			PwDatabase pwDatabase = null;
-			try
+			if(string.IsNullOrEmpty(strUrl)) { } // Might be placeholder only
+			else if(WinUtil.IsCommandLineUrl(strUrl))
 			{
-				pwDatabase = Program.MainForm.DocumentManager.SafeFindContainerOf(
-					peDataSource);
+				string strApp, strArgs;
+				StrUtil.SplitCommandLine(WinUtil.GetCommandLineFromUrl(strUrl),
+					out strApp, out strArgs);
+
+				try
+				{
+					try { NativeLib.StartProcess(strApp, strArgs); }
+					catch(Win32Exception)
+					{
+						ProcessStartInfo psi = new ProcessStartInfo();
+						psi.FileName = strApp;
+						if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
+						psi.UseShellExecute = false;
+
+						NativeLib.StartProcess(psi);
+					}
+				}
+				catch(Exception exCmd)
+				{
+					string strMsg = KPRes.FileOrUrl + ": " + strApp;
+					if(!string.IsNullOrEmpty(strArgs))
+						strMsg += MessageService.NewParagraph +
+							KPRes.Arguments + ": " + strArgs;
+
+					MessageService.ShowWarning(strMsg, exCmd);
+				}
 			}
+			else // Standard URL
+			{
+				try { NativeLib.StartProcess(strUrl); }
+				catch(Exception exUrl)
+				{
+					MessageService.ShowWarning(strUrl, exUrl);
+				}
+			}
+
+			// Restore previous working directory
+			WinUtil.SetWorkingDirectory(strPrevWorkDir);
+
+			// SprEngine.Compile might have modified the database
+			MainForm mf = Program.MainForm;
+			if(mf != null)
+			{
+				mf.RefreshEntriesList();
+				mf.UpdateUI(false, null, false, null, false, null, false);
+			}
+		}
+
+		internal static string CompileUrl(string strUrlToOpen, PwEntry pe,
+			bool bAllowOverride, string strBaseRaw, bool? obForceEncCmd)
+		{
+			MainForm mf = Program.MainForm;
+			PwDatabase pd = null;
+			try { if(mf != null) pd = mf.DocumentManager.SafeFindContainerOf(pe); }
 			catch(Exception) { Debug.Assert(false); }
 
-			bool bEncCmd = WinUtil.IsCommandLineUrl(strUrlFlt);
+			string strUrlFlt = strUrlToOpen;
+			strUrlFlt = strUrlFlt.TrimStart(new char[] { ' ', '\t', '\r', '\n' });
 
-			SprContext ctx = new SprContext(peDataSource, pwDatabase,
-				SprCompileFlags.All, false, bEncCmd);
+			bool bEncCmd = (obForceEncCmd.HasValue ? obForceEncCmd.Value :
+				WinUtil.IsCommandLineUrl(strUrlFlt));
+
+			SprContext ctx = new SprContext(pe, pd, SprCompileFlags.All, false, bEncCmd);
 			ctx.Base = strBaseRaw;
 			ctx.BaseIsEncoded = false;
 
@@ -224,159 +347,119 @@ namespace KeePass.Util
 			{
 				bool bEncCmdOvr = WinUtil.IsCommandLineUrl(strOvr);
 
-				SprContext ctxOvr = new SprContext(peDataSource, pwDatabase,
-					SprCompileFlags.All, false, bEncCmdOvr);
+				SprContext ctxOvr = new SprContext(pe, pd, SprCompileFlags.All,
+					false, bEncCmdOvr);
 				ctxOvr.Base = strUrl;
 				ctxOvr.BaseIsEncoded = bEncCmd;
 
 				strUrl = SprEngine.Compile(strOvr, ctxOvr);
 			}
 
-			if(WinUtil.IsCommandLineUrl(strUrl))
-			{
-				string strApp, strArgs;
-				StrUtil.SplitCommandLine(WinUtil.GetCommandLineFromUrl(strUrl),
-					out strApp, out strArgs);
-
-				try
-				{
-					if((strArgs != null) && (strArgs.Length > 0))
-						Process.Start(strApp, strArgs);
-					else
-						Process.Start(strApp);
-				}
-				catch(Win32Exception)
-				{
-					StartWithoutShellExecute(strApp, strArgs);
-				}
-				catch(Exception exCmd)
-				{
-					string strInf = KPRes.FileOrUrl + ": " + strApp;
-					if((strArgs != null) && (strArgs.Length > 0))
-						strInf += MessageService.NewParagraph +
-							KPRes.Arguments + ": " + strArgs;
-
-					MessageService.ShowWarning(strInf, exCmd);
-				}
-			}
-			else // Standard URL
-			{
-				try { Process.Start(strUrl); }
-				catch(Exception exUrl)
-				{
-					MessageService.ShowWarning(strUrl, exUrl);
-				}
-			}
-
-			// Restore previous working directory
-			WinUtil.SetWorkingDirectory(strPrevWorkDir);
-
-			// SprEngine.Compile might have modified the database
-			Program.MainForm.UpdateUI(false, null, false, null, false, null, false);
+			return strUrl;
 		}
 
 		public static void OpenUrlWithApp(string strUrlToOpen, PwEntry peDataSource,
 			string strAppPath)
 		{
-			if(string.IsNullOrEmpty(strUrlToOpen)) return;
-			if(string.IsNullOrEmpty(strAppPath)) return;
+			if(string.IsNullOrEmpty(strUrlToOpen)) { Debug.Assert(false); return; }
+			if(string.IsNullOrEmpty(strAppPath)) { Debug.Assert(false); return; }
 
-			char[] vPathTrim = new char[]{ ' ', '\t', '\r', '\n',
-				'\"', '\'' };
-
-			string strUrl = strUrlToOpen.Trim(vPathTrim);
+			string strUrl = strUrlToOpen.Trim();
 			if(strUrl.Length == 0) { Debug.Assert(false); return; }
+			strUrl = SprEncoding.EncodeForCommandLine(strUrl);
 
-			string strApp = strAppPath.Trim(vPathTrim);
+			string strApp = strAppPath.Trim();
 			if(strApp.Length == 0) { Debug.Assert(false); return; }
+			strApp = SprEncoding.EncodeForCommandLine(strApp);
 
 			string str = "cmd://\"" + strApp + "\" \"" + strUrl + "\"";
 			OpenUrl(str, peDataSource, false);
 		}
 
-		private static void StartWithoutShellExecute(string strApp, string strArgs)
+		internal static void OpenUrlDirectly(string strUrl)
 		{
-			try
-			{
-				ProcessStartInfo psi = new ProcessStartInfo();
+			if(string.IsNullOrEmpty(strUrl)) { Debug.Assert(false); return; }
 
-				psi.FileName = strApp;
-
-				if((strArgs != null) && (strArgs.Length > 0))
-					psi.Arguments = strArgs;
-
-				psi.UseShellExecute = false;
-
-				Process.Start(psi);
-			}
-			catch(Exception exCmd)
-			{
-				string strInf = KPRes.FileOrUrl + ": " + strApp;
-				if((strArgs != null) && (strArgs.Length > 0))
-					strInf += MessageService.NewParagraph +
-						KPRes.Arguments + ": " + strArgs;
-
-				MessageService.ShowWarning(strInf, exCmd);
-			}
+			try { NativeLib.StartProcess(strUrl); }
+			catch(Exception ex) { MessageService.ShowWarning(strUrl, ex); }
 		}
 
 		public static void Restart()
 		{
-			try { Process.Start(WinUtil.GetExecutable()); }
-			catch(Exception exRestart)
-			{
-				MessageService.ShowWarning(exRestart);
-			}
+			try { NativeLib.StartProcess(WinUtil.GetExecutable()); }
+			catch(Exception ex) { MessageService.ShowWarning(ex); }
 		}
 
 		public static string GetExecutable()
 		{
-			if(m_strExePath != null) return m_strExePath;
+			string str = m_strExePath;
+			if(str != null) return str;
 
-			try { m_strExePath = Assembly.GetExecutingAssembly().Location; }
+			try { str = Assembly.GetExecutingAssembly().Location; }
 			catch(Exception) { }
 
-			if(string.IsNullOrEmpty(m_strExePath))
+			if(string.IsNullOrEmpty(str))
 			{
-				m_strExePath = Assembly.GetExecutingAssembly().GetName().CodeBase;
-				m_strExePath = UrlUtil.FileUrlToPath(m_strExePath);
+				str = Assembly.GetExecutingAssembly().GetName().CodeBase;
+				str = UrlUtil.FileUrlToPath(str);
 			}
 
-			return m_strExePath;
+			m_strExePath = str;
+			return str;
+		}
+
+		private static string g_strAsmVersion = null;
+		internal static string GetAssemblyVersion()
+		{
+			if(g_strAsmVersion == null)
+			{
+				try
+				{
+					Version v = typeof(WinUtil).Assembly.GetName().Version;
+					g_strAsmVersion = v.ToString(4);
+				}
+				catch(Exception) { Debug.Assert(false); }
+
+				if(g_strAsmVersion == null)
+					g_strAsmVersion = StrUtil.VersionToString(PwDefs.FileVersion64, 4);
+			}
+
+			return g_strAsmVersion;
 		}
 
 		/// <summary>
 		/// Shorten a path.
 		/// </summary>
 		/// <param name="strPath">Path to make shorter.</param>
-		/// <param name="nMaxChars">Maximum number of characters in the returned string.</param>
+		/// <param name="cchMax">Maximum number of characters in the returned string.</param>
 		/// <returns>Shortened path.</returns>
-		public static string CompactPath(string strPath, int nMaxChars)
+		public static string CompactPath(string strPath, int cchMax)
 		{
 			Debug.Assert(strPath != null);
 			if(strPath == null) throw new ArgumentNullException("strPath");
-			Debug.Assert(nMaxChars >= 0);
-			if(nMaxChars < 0) throw new ArgumentOutOfRangeException("nMaxChars");
+			Debug.Assert(cchMax >= 0);
+			if(cchMax < 0) throw new ArgumentOutOfRangeException("cchMax");
 
-			if(nMaxChars == 0) return string.Empty;
-			if(strPath.Length <= nMaxChars) return strPath;
+			if(strPath.Length <= cchMax) return strPath;
+			if(cchMax == 0) return string.Empty;
 
 			try
 			{
-				StringBuilder sb = new StringBuilder(strPath.Length * 2 + 4);
+				if(!NativeLib.IsUnix())
+				{
+					StringBuilder sb = new StringBuilder(strPath.Length + 2);
 
-				if(NativeMethods.PathCompactPathEx(sb, strPath, (uint)nMaxChars, 0) == false)
-					return StrUtil.CompactString3Dots(strPath, nMaxChars);
-
-				Debug.Assert(sb.Length <= nMaxChars);
-				if((sb.Length <= nMaxChars) && (sb.Length != 0))
-					return sb.ToString();
-				else
-					return StrUtil.CompactString3Dots(strPath, nMaxChars);
+					if(NativeMethods.PathCompactPathEx(sb, strPath, (uint)cchMax + 1, 0))
+					{
+						if((sb.Length <= cchMax) && (sb.Length != 0))
+							return sb.ToString();
+						else { Debug.Assert(false); }
+					}
+				}
 			}
 			catch(Exception) { Debug.Assert(false); }
 
-			return StrUtil.CompactString3Dots(strPath, nMaxChars);
+			return StrUtil.CompactString3Dots(strPath, cchMax);
 		}
 
 		public static bool FlushStorageBuffers(char chDriveLetter, bool bOnlyIfRemovable)
@@ -542,20 +625,18 @@ namespace KeePass.Util
 			try
 			{
 				ProcessStartInfo psi = new ProcessStartInfo();
-				if(strArgs != null) psi.Arguments = strArgs;
 				psi.FileName = strExe;
+				if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
 				psi.UseShellExecute = true;
-				psi.WindowStyle = ProcessWindowStyle.Normal;
 
 				// Elevate on Windows Vista and higher
 				if(WinUtil.IsAtLeastWindowsVista) psi.Verb = "runas";
 
-				Process.Start(psi);
+				NativeLib.StartProcess(psi);
 			}
 			catch(Exception ex)
 			{
 				if(bShowMessageIfFailed) MessageService.ShowWarning(ex);
-
 				return false;
 			}
 
@@ -770,6 +851,34 @@ namespace KeePass.Util
 
 			try { Directory.SetCurrentDirectory(str); }
 			catch(Exception) { Debug.Assert(false); }
+		}
+
+		internal static void ShowFileInFileManager(string strFilePath, bool bShowError)
+		{
+			if(string.IsNullOrEmpty(strFilePath)) { Debug.Assert(false); return; }
+
+			try
+			{
+				string strDir = UrlUtil.GetFileDirectory(strFilePath, false, true);
+				if(NativeLib.IsUnix())
+				{
+					NativeLib.StartProcess(strDir);
+					return;
+				}
+
+				string strExplorer = WinUtil.LocateSystemApp("Explorer.exe");
+
+				if(File.Exists(strFilePath))
+					NativeLib.StartProcess(strExplorer, "/select,\"" +
+						NativeLib.EncodeDataToArgs(strFilePath) + "\"");
+				else
+					NativeLib.StartProcess(strDir);
+			}
+			catch(Exception ex)
+			{
+				if(bShowError)
+					MessageService.ShowWarning(strFilePath, ex.Message);
+			}
 		}
 	}
 }

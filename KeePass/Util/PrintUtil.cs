@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 using KeePass.UI;
+using KeePass.Util.Spr;
 
 using KeePassLib.Native;
 using KeePassLib.Utility;
@@ -68,7 +69,8 @@ namespace KeePass.Util
 				string strPath = Program.TempFilesPool.GetTempFileName("html");
 
 				string strOrg = str;
-				str = UrlUtil.ExpandShellVariables(str, new string[] { strPath });
+				str = UrlUtil.ExpandShellVariables(str, new string[] {
+					strPath }, true);
 				if(str == strOrg) { Debug.Assert(false); return false; }
 
 				File.WriteAllText(strPath, strHtml, StrUtil.Utf8);
@@ -92,8 +94,9 @@ namespace KeePass.Util
 			{
 				string strSys = UrlUtil.EnsureTerminatingSeparator(
 					Environment.SystemDirectory, false);
-				str = "\"" + strSys + "rundll32.exe\" \"" + strSys +
-					"mshtml.dll\",PrintHTML \"%1\"";
+				str = "\"" + SprEncoding.EncodeForCommandLine(strSys +
+					"rundll32.exe") + "\" \"" + SprEncoding.EncodeForCommandLine(
+					strSys + "mshtml.dll") + "\",PrintHTML \"%1\"";
 			}
 
 			return str;
@@ -151,7 +154,7 @@ namespace KeePass.Util
 				}
 			}
 
-			Process.Start(psi);
+			NativeLib.StartProcess(psi);
 		}
 	}
 }

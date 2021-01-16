@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using System.ComponentModel;
-using System.Diagnostics;
 
 using KeePassLib;
 using KeePassLib.Interfaces;
@@ -33,29 +33,41 @@ namespace KeePass.App.Configuration
 {
 	public sealed class AceIntegration
 	{
-		private ulong m_hkAutoType = (ulong)(Keys.Control | Keys.Alt | Keys.A);
-		public ulong HotKeyGlobalAutoType
+		private long m_hkAutoType = (long)(Keys.Control | Keys.Alt | Keys.A);
+		[DefaultValue((long)(Keys.Control | Keys.Alt | Keys.A))]
+		public long HotKeyGlobalAutoType
 		{
 			get { return m_hkAutoType; }
 			set { m_hkAutoType = value; }
 		}
 
-		private ulong m_hkAutoTypeSel = (ulong)Keys.None;
-		public ulong HotKeySelectedAutoType
+		private long m_hkAutoTypePw = (long)(Keys.Control | Keys.Alt | Keys.Shift | Keys.A);
+		[DefaultValue((long)(Keys.Control | Keys.Alt | Keys.Shift | Keys.A))]
+		public long HotKeyGlobalAutoTypePassword
+		{
+			get { return m_hkAutoTypePw; }
+			set { m_hkAutoTypePw = value; }
+		}
+
+		private long m_hkAutoTypeSel = (long)Keys.None;
+		[DefaultValue((long)Keys.None)]
+		public long HotKeySelectedAutoType
 		{
 			get { return m_hkAutoTypeSel; }
 			set { m_hkAutoTypeSel = value; }
 		}
 
-		private ulong m_hkShowWindow = (ulong)(Keys.Control | Keys.Alt | Keys.K);
-		public ulong HotKeyShowWindow
+		private long m_hkShowWindow = (long)(Keys.Control | Keys.Alt | Keys.K);
+		[DefaultValue((long)(Keys.Control | Keys.Alt | Keys.K))]
+		public long HotKeyShowWindow
 		{
 			get { return m_hkShowWindow; }
 			set { m_hkShowWindow = value; }
 		}
 
-		private ulong m_hkEntryMenu = (ulong)Keys.None;
-		public ulong HotKeyEntryMenu
+		private long m_hkEntryMenu = (long)Keys.None;
+		[DefaultValue((long)Keys.None)]
+		public long HotKeyEntryMenu
 		{
 			get { return m_hkEntryMenu; }
 			set { m_hkEntryMenu = value; }
@@ -148,6 +160,14 @@ namespace KeePass.App.Configuration
 			set { m_bMatchByTagInTitle = value; }
 		}
 
+		private bool m_bMatchNormDashes = true;
+		[DefaultValue(true)]
+		public bool AutoTypeMatchNormDashes
+		{
+			get { return m_bMatchNormDashes; }
+			set { m_bMatchNormDashes = value; }
+		}
+
 		private bool m_bExpiredCanMatch = false;
 		[DefaultValue(false)]
 		public bool AutoTypeExpiredCanMatch
@@ -233,6 +253,7 @@ namespace KeePass.App.Configuration
 		}
 
 		private ProxyServerType m_pstProxyType = ProxyServerType.System;
+		[DefaultValue(ProxyServerType.System)]
 		public ProxyServerType ProxyType
 		{
 			get { return m_pstProxyType; }
@@ -264,6 +285,7 @@ namespace KeePass.App.Configuration
 		}
 
 		private ProxyAuthType m_pstProxyAuthType = ProxyAuthType.Auto;
+		[DefaultValue(ProxyAuthType.Auto)]
 		public ProxyAuthType ProxyAuthType
 		{
 			get { return m_pstProxyAuthType; }
@@ -343,7 +365,7 @@ namespace KeePass.App.Configuration
 			m_lBuiltInOverrides.Clear();
 
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(true, "ssh",
-				@"cmd://PuTTY.exe -ssh {USERNAME}@{BASE:RMVSCM}", 0x1));
+				"cmd://PuTTY.exe -ssh {USERNAME}@{BASE:RMVSCM}", 0x1));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "http",
 				"cmd://{INTERNETEXPLORER} \"{BASE}\"", 0x2));
 			m_lBuiltInOverrides.Add(new AceUrlSchemeOverride(false, "https",
@@ -448,7 +470,7 @@ namespace KeePass.App.Configuration
 			}
 		}
 
-		public ulong GetEnabledBuiltInOverrides()
+		private ulong GetEnabledBuiltInOverrides()
 		{
 			ulong u = 0;
 			for(int i = 0; i < m_lBuiltInOverrides.Count; ++i)
@@ -460,11 +482,51 @@ namespace KeePass.App.Configuration
 			return u;
 		}
 
-		public void SetEnabledBuiltInOverrides(ulong uFlags)
+		private void SetEnabledBuiltInOverrides(ulong uFlags)
 		{
 			for(int i = 0; i < m_lBuiltInOverrides.Count; ++i)
 				m_lBuiltInOverrides[i].Enabled = ((uFlags &
 					m_lBuiltInOverrides[i].BuiltInFlagID) != 0UL);
+		}
+
+		internal void AddCustomOverride(string strScheme, string strOverride,
+			bool bEnable, bool bDisableOthers)
+		{
+			if(string.IsNullOrEmpty(strScheme)) return; // No assert
+			if(strOverride == null) return; // No assert
+
+			if(bDisableOthers)
+			{
+				List<AceUrlSchemeOverride> l = new List<AceUrlSchemeOverride>();
+				l.AddRange(m_lBuiltInOverrides);
+				l.AddRange(m_lCustomOverrides);
+
+				foreach(AceUrlSchemeOverride o in l)
+				{
+					if(o.Scheme.Equals(strScheme, StrUtil.CaseIgnoreCmp))
+						o.Enabled = false;
+				}
+			}
+
+			m_lCustomOverrides.Add(new AceUrlSchemeOverride(bEnable,
+				strScheme, strOverride));
+		}
+
+		internal void RemoveCustomOverride(string strScheme, string strOverride)
+		{
+			if(string.IsNullOrEmpty(strScheme)) return; // No assert
+			if(strOverride == null) return; // No assert
+
+			for(int i = m_lCustomOverrides.Count - 1; i >= 0; --i)
+			{
+				AceUrlSchemeOverride o = m_lCustomOverrides[i];
+				if(o.Scheme.Equals(strScheme, StrUtil.CaseIgnoreCmp) &&
+					(o.UrlOverride == strOverride))
+				{
+					m_lCustomOverrides.RemoveAt(i);
+					return; // Remove one item only
+				}
+			}
 		}
 	}
 

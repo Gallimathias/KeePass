@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.Windows.Forms;
 
 using KeePass.App;
@@ -70,15 +71,15 @@ namespace KeePass.UI
 		private const int StdHeight = 60; // Standard height for 96 DPI
 		private const int StdIconDim = 48;
 
-		private static Dictionary<string, Image> m_vImageCache =
+		private static Dictionary<string, Image> g_dCache =
 			new Dictionary<string, Image>();
 		private const int MaxCachedImages = 32;
 
-		private static BfBannerGenerator m_pCustomGen = null;
+		private static BfBannerGenerator g_pCustomGen = null;
 		public static BfBannerGenerator CustomGenerator
 		{
-			get { return m_pCustomGen; }
-			set { m_pCustomGen = value; }
+			get { return g_pCustomGen; }
+			set { g_pCustomGen = value; }
 		}
 
 		public static Image CreateBanner(int nWidth, int nHeight, BannerStyle bs,
@@ -91,19 +92,13 @@ namespace KeePass.UI
 			Image imgIcon, string strTitle, string strLine, bool bNoCache)
 		{
 			// imgIcon may be null
-			Debug.Assert(strTitle != null); if(strTitle == null) throw new ArgumentNullException("strTitle");
-			Debug.Assert(strLine != null); if(strLine == null) throw new ArgumentNullException("strLine");
+			if(strTitle == null) { Debug.Assert(false); strTitle = string.Empty; }
+			if(strLine == null) { Debug.Assert(false); strLine = string.Empty; }
 
 			Debug.Assert((nHeight == StdHeight) || DpiUtil.ScalingRequired ||
 				UISystemFonts.OverrideUIFont);
-
 			if(MonoWorkarounds.IsRequired(12525) && (nHeight > 0))
 				--nHeight;
-
-			string strImageID = nWidth.ToString() + "x" + nHeight.ToString() + ":";
-			if(strTitle != null) strImageID += strTitle;
-			strImageID += ":";
-			if(strLine != null) strImageID += strLine;
 
 			if(bs == BannerStyle.Default) bs = Program.Config.UI.BannerStyle;
 			if(bs == BannerStyle.Default)
@@ -112,15 +107,18 @@ namespace KeePass.UI
 				bs = BannerStyle.WinVistaBlack;
 			}
 
-			strImageID += ":" + ((uint)bs).ToString();
+			NumberFormatInfo nfi = NumberFormatInfo.InvariantInfo;
+			ulong uIconHash = ((imgIcon != null) ? GfxUtil.HashImage64(imgIcon) : 0);
+			string strID = nWidth.ToString(nfi) + "x" + nHeight.ToString(nfi) +
+				":" + ((uint)bs).ToString(nfi) + ":" + strTitle + ":/:" + strLine +
+				":" + uIconHash.ToString(nfi);
 
-			// Try getting the banner from the banner cache
 			Image img = null;
-			if(!bNoCache && m_vImageCache.TryGetValue(strImageID, out img))
+			if(!bNoCache && g_dCache.TryGetValue(strID, out img))
 				return img;
 
-			if(m_pCustomGen != null)
-				img = m_pCustomGen(new BfBannerInfo(nWidth, nHeight, bs, imgIcon,
+			if(g_pCustomGen != null)
+				img = g_pCustomGen(new BfBannerInfo(nWidth, nHeight, bs, imgIcon,
 					strTitle, strLine));
 
 			const float fHorz = 0.90f;
@@ -302,50 +300,52 @@ namespace KeePass.UI
 				// if(bRtl) tff |= TextFormatFlags.RightToLeft;
 
 				float fFontSize = DpiScaleFloat((12.0f * 96.0f) / g.DpiY, nHeight);
-				Font font = FontUtil.CreateFont(FontFamily.GenericSansSerif,
-					fFontSize, FontStyle.Bold);
-				int txT = (!bRtl ? tx : (nWidth - tx));
-					// - TextRenderer.MeasureText(g, strTitle, font).Width));
-				// g.DrawString(strTitle, font, brush, fx, fy);
-				BannerFactory.DrawText(g, strTitle, txT, ty, font, clrText, bRtl);
-				font.Dispose();
+				using(Font font = FontUtil.CreateFont(FontFamily.GenericSansSerif,
+					fFontSize, FontStyle.Bold))
+				{
+					int txT = (!bRtl ? tx : (nWidth - tx));
+						// - TextRenderer.MeasureText(g, strTitle, font).Width));
+					// g.DrawString(strTitle, font, brush, fx, fy);
+					BannerFactory.DrawText(g, strTitle, txT, ty, font,
+						clrText, bRtl, nWidth);
+				}
 
 				tx += xIcon; // fx
 				ty += xIcon * 2 + 2; // fy
 
 				float fFontSizeSm = DpiScaleFloat((9.0f * 96.0f) / g.DpiY, nHeight);
-				Font fontSmall = FontUtil.CreateFont(FontFamily.GenericSansSerif,
-					fFontSizeSm, FontStyle.Regular);
-				int txL = (!bRtl ? tx : (nWidth - tx));
-					// - TextRenderer.MeasureText(g, strLine, fontSmall).Width));
-				// g.DrawString(strLine, fontSmall, brush, fx, fy);
-				BannerFactory.DrawText(g, strLine, txL, ty, fontSmall, clrText, bRtl);
-				fontSmall.Dispose();
+				using(Font fontSmall = FontUtil.CreateFont(FontFamily.GenericSansSerif,
+					fFontSizeSm, FontStyle.Regular))
+				{
+					int txL = (!bRtl ? tx : (nWidth - tx));
+						// - TextRenderer.MeasureText(g, strLine, fontSmall).Width));
+					// g.DrawString(strLine, fontSmall, brush, fx, fy);
+					BannerFactory.DrawText(g, strLine, txL, ty, fontSmall,
+						clrText, bRtl, nWidth);
+				}
 
 				g.Dispose();
 			}
 
 			if(!bNoCache)
 			{
-				while(m_vImageCache.Count >= MaxCachedImages)
+				if(g_dCache.Count >= MaxCachedImages)
 				{
-					foreach(string strKey in m_vImageCache.Keys)
-					{
-						m_vImageCache.Remove(strKey);
-						break; // Remove first item only
-					}
+					List<string> lK = new List<string>(g_dCache.Keys);
+					g_dCache.Remove(lK[Program.GlobalRandom.Next(lK.Count)]);
 				}
 
-				// Save in cache
-				m_vImageCache[strImageID] = img;
+				g_dCache[strID] = img;
 			}
 
 			return img;
 		}
 
 		private static void DrawText(Graphics g, string strText, int x,
-			int y, Font font, Color clrForeground, bool bRtl)
+			int y, Font font, Color clrForeground, bool bRtl, int wImg)
 		{
+			if(string.IsNullOrEmpty(strText)) return;
+
 			// With ClearType on, text drawn using Graphics.DrawString
 			// looks better than TextRenderer.DrawText;
 			// https://sourceforge.net/p/keepass/discussion/329220/thread/06ef4466/
@@ -367,7 +367,46 @@ namespace KeePass.UI
 
 				using(StringFormat sf = new StringFormat(sff))
 				{
-					g.DrawString(strText, font, br, x, y, sf);
+					bool bDrawn = false;
+
+					try
+					{
+						if(bRtl) return; // Default draw (in 'finally')
+
+						GraphicsUnit gu = g.PageUnit; // For MeasureString
+						if((gu != GraphicsUnit.Pixel) && (gu != GraphicsUnit.Display))
+						{
+							Debug.Assert(false); // The code below assumes pixels
+							return;
+						}
+
+						int wTextMax = wImg - x - 1; // 1 px free on right
+						if(wTextMax <= 0) { Debug.Assert(false); return; }
+
+						for(int cch = strText.Length; cch > 0; --cch)
+						{
+							string str = StrUtil.CompactString3Dots(strText, cch);
+							int wText = (int)g.MeasureString(str, font).Width;
+
+							if(wText <= 0)
+							{
+								Debug.Assert(false);
+								break; // Default draw (in 'finally')
+							}
+							if(wText <= wTextMax)
+							{
+								g.DrawString(str, font, br, x, y, sf);
+								bDrawn = true;
+								break;
+							}
+						}
+						Debug.Assert(bDrawn); // Even one char too wide?!
+					}
+					catch(Exception) { Debug.Assert(false); }
+					finally
+					{
+						if(!bDrawn) g.DrawString(strText, font, br, x, y, sf);
+					}
 				}
 			}
 		}

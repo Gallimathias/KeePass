@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Reflection;
-using System.Windows.Forms;
-using System.Diagnostics;
 
 using KeePass.Util.XmlSerialization;
 
@@ -36,7 +36,7 @@ namespace KeePass.Util
 	{
 		public static string SafeInnerText(XmlNode xmlNode)
 		{
-			Debug.Assert(xmlNode != null); if(xmlNode == null) return string.Empty;
+			if(xmlNode == null) { Debug.Assert(false); return string.Empty; }
 
 			return (xmlNode.InnerText ?? string.Empty);
 		}
@@ -52,14 +52,23 @@ namespace KeePass.Util
 
 		public static string SafeInnerXml(XmlNode xmlNode)
 		{
-			Debug.Assert(xmlNode != null); if(xmlNode == null) return string.Empty;
+			if(xmlNode == null) { Debug.Assert(false); return string.Empty; }
 
 			return (xmlNode.InnerXml ?? string.Empty);
 		}
 
+		internal static string SafeInnerXml(XmlNode xmlNode, string strXPath)
+		{
+			if(xmlNode == null) { Debug.Assert(false); return string.Empty; }
+			if(string.IsNullOrEmpty(strXPath)) return SafeInnerXml(xmlNode);
+
+			XmlNode xnSub = xmlNode.SelectSingleNode(strXPath);
+			return ((xnSub != null) ? SafeInnerXml(xnSub) : string.Empty);
+		}
+
 		public static string SafeInnerText(HtmlElement htmlNode)
 		{
-			Debug.Assert(htmlNode != null); if(htmlNode == null) return string.Empty;
+			if(htmlNode == null) { Debug.Assert(false); return string.Empty; }
 
 			return (htmlNode.InnerText ?? string.Empty);
 		}
@@ -255,70 +264,33 @@ namespace KeePass.Util
 			if(xnFind == null) throw new ArgumentNullException("xnFind");
 
 			string strChildName = xnFind.Name;
-			int nChildIndex = 0;
+			int iChild = 0;
 			for(int i = 0; i < xlList.Count; ++i)
 			{
-				if(xlList[i] == xnFind) return nChildIndex;
-				else if(xlList[i].Name == strChildName) ++nChildIndex;
+				if(xlList[i] == xnFind) return iChild;
+				if(xlList[i].Name == strChildName) ++iChild;
 			}
 
 			return -1;
 		}
 
 		public static XmlNode FindMultiChild(XmlNodeList xlList, string strChildName,
-			int nMultiChildIndex)
+			int iMultiChild)
 		{
 			if(xlList == null) throw new ArgumentNullException("xlList");
 			if(strChildName == null) throw new ArgumentNullException("strChildName");
 
-			int nChildIndex = 0;
+			int iChild = 0;
 			for(int i = 0; i < xlList.Count; ++i)
 			{
 				if(xlList[i].Name == strChildName)
 				{
-					if(nChildIndex == nMultiChildIndex) return xlList[i];
-					else ++nChildIndex;
+					if(iChild == iMultiChild) return xlList[i];
+					++iChild;
 				}
 			}
 
 			return null;
-		}
-
-		public static void MergeNodes(XmlDocument xd, XmlNode xn, XmlNode xnOverride)
-		{
-			if(xd == null) throw new ArgumentNullException("xd");
-			if(xn == null) throw new ArgumentNullException("xn");
-			if(xnOverride == null) throw new ArgumentNullException("xnOverride");
-			Debug.Assert(xn.Name == xnOverride.Name);
-
-			foreach(XmlNode xnOvrChild in xnOverride.ChildNodes)
-			{
-				if(xnOvrChild.NodeType == XmlNodeType.Comment) continue;
-				Debug.Assert(xnOvrChild.NodeType == XmlNodeType.Element);
-
-				int nOvrIndex = GetMultiChildIndex(xnOverride.ChildNodes, xnOvrChild);
-				if(nOvrIndex < 0) { Debug.Assert(false); continue; }
-
-				XmlNode xnRep = FindMultiChild(xn.ChildNodes, xnOvrChild.Name, nOvrIndex);
-				bool bHasSub = (XmlUtil.SafeInnerXml(xnOvrChild).IndexOf('>') >= 0);
-
-				if(xnRep == null)
-				{
-					if(xnOvrChild.NodeType != XmlNodeType.Element)
-					{
-						Debug.Assert(false);
-						continue;
-					}
-
-					XmlNode xnNew = xd.CreateElement(xnOvrChild.Name);
-					xn.AppendChild(xnNew);
-
-					if(!bHasSub) xnNew.InnerText = XmlUtil.SafeInnerText(xnOvrChild);
-					else MergeNodes(xd, xnNew, xnOvrChild);
-				}
-				else if(bHasSub) MergeNodes(xd, xnRep, xnOvrChild);
-				else xnRep.InnerText = XmlUtil.SafeInnerText(xnOvrChild);
-			}
 		}
 
 		private sealed class XuopContainer
@@ -391,5 +363,37 @@ namespace KeePass.Util
 
 			return null;
 		}
+
+		/* internal static XmlElement FindOrCreateChildElement(XmlNode xn,
+			string strChildPath, XmlDocument xd)
+		{
+			if(xn == null) { Debug.Assert(false); return null; }
+			if(string.IsNullOrEmpty(strChildPath)) { Debug.Assert(false); return null; }
+			if(xd == null) { Debug.Assert(false); return null; }
+
+			string[] v = strChildPath.Split('/');
+			if((v != null) && (v.Length >= 2))
+			{
+				XmlElement xeCur = FindOrCreateChildElement(xn, v[0], xd);
+				for(int i = 1; i < v.Length; ++i)
+					xeCur = FindOrCreateChildElement(xeCur, v[i], xd);
+				return xeCur;
+			}
+
+			foreach(XmlNode xnChild in xn.ChildNodes)
+			{
+				if((xnChild.NodeType == XmlNodeType.Element) &&
+					(xnChild.Name == strChildPath))
+				{
+					XmlElement xeChild = (xnChild as XmlElement);
+					Debug.Assert(xeChild != null);
+					return xeChild;
+				}
+			}
+
+			XmlElement xeNew = xd.CreateElement(strChildPath);
+			xn.AppendChild(xeNew);
+			return xeNew;
+		} */
 	}
 }

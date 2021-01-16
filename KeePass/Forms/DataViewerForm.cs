@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@ using KeePass.Util;
 using KeePassLib;
 using KeePassLib.Utility;
 
+using NativeLib = KeePassLib.Native.NativeLib;
+
 namespace KeePass.Forms
 {
 	public partial class DataViewerForm : Form
@@ -54,7 +56,12 @@ namespace KeePass.Forms
 		private readonly string m_strViewerImage = KPRes.ImageViewer;
 		private readonly string m_strViewerWeb = KPRes.WebBrowser;
 
-		private readonly string m_strDataExpand = "--- " + KPRes.More + " ---";
+		private readonly string m_strZoomAuto = KPRes.Auto;
+
+		// Link on Windows, hint on Linux (linkifying only works on Windows)
+		private readonly string m_strDataExpand = (NativeLib.IsUnix() ?
+			("--- " + KPRes.More + " ---") :
+			("--- " + KPRes.ShowMore + " (" + KPRes.TimeReq + ") ---"));
 		private bool m_bDataExpanded = false;
 
 		private string m_strInitialFormRect = string.Empty;
@@ -98,7 +105,7 @@ namespace KeePass.Forms
 			this.Icon = AppIcons.Default;
 			this.DoubleBuffered = true;
 
-			string strTitle = PwDefs.ShortProductName + " " + KPRes.DataViewer;
+			string strTitle = KPRes.DataViewerKP;
 			if(m_strDataDesc.Length > 0)
 				strTitle = m_strDataDesc + " - " + strTitle;
 			this.Text = strTitle;
@@ -130,11 +137,19 @@ namespace KeePass.Forms
 
 			m_tslZoom.Text = KPRes.Zoom + ":";
 
-			m_tscZoom.Items.Add(KPRes.Auto);
+			// Required for mouse wheel handling
+			Debug.Assert(m_tscZoom.DropDownStyle == ComboBoxStyle.DropDownList);
+
+			m_tscZoom.Items.Add(m_strZoomAuto);
 			int[] vZooms = new int[] { 10, 25, 50, 75, 100, 125, 150, 200, 400 };
 			foreach(int iZoom in vZooms)
-				m_tscZoom.Items.Add(iZoom.ToString() + @"%");
+				m_tscZoom.Items.Add(iZoom.ToString() + "%");
 			m_tscZoom.SelectedIndex = 0;
+
+			m_tsbZoomOut.ToolTipText = KPRes.Zoom + " - (" + UIUtil.GetKeysName(
+				Keys.Control | Keys.Subtract) + ")";
+			m_tsbZoomIn.ToolTipText = KPRes.Zoom + " + (" + UIUtil.GetKeysName(
+				Keys.Control | Keys.Add) + ")";
 
 			m_tslViewer.Text = KPRes.ShowIn + ":";
 
@@ -155,21 +170,29 @@ namespace KeePass.Forms
 				this.DvfInit(this, new DvfContextEventArgs(this, m_pbData,
 					m_strDataDesc, m_tscViewers));
 
+			m_picBox.MouseWheel += this.OnPicBoxMouseWheel;
+
 			m_bInitializing = false;
 			UpdateDataView();
 		}
 
 		private void OnRichTextBoxLinkClicked(object sender, LinkClickedEventArgs e)
 		{
-			string strLink = e.LinkText;
-			if(string.IsNullOrEmpty(strLink)) { Debug.Assert(false); return; }
-
 			try
 			{
-				if((strLink == m_strDataExpand) && (m_tscViewers.Text == m_strViewerHex))
+				string strLink = e.LinkText;
+				if(string.IsNullOrEmpty(strLink)) { Debug.Assert(false); return; }
+
+				string strViewer = m_tscViewers.Text;
+				bool bTextViewer = ((strViewer == m_strViewerHex) ||
+					(strViewer == m_strViewerText));
+
+				if((strLink == m_strDataExpand) && bTextViewer)
 				{
 					m_bDataExpanded = true;
-					UpdateHexView();
+
+					UpdateDataView();
+
 					m_rtbText.Select(m_rtbText.TextLength, 0);
 					m_rtbText.ScrollToCaret();
 				}
@@ -178,7 +201,7 @@ namespace KeePass.Forms
 			catch(Exception) { } // ScrollToCaret might throw (but still works)
 		}
 
-		private string BinaryDataToString(bool bReplaceNulls)
+		private string BinaryDataToString(bool bReplaceNulls, out bool bDecodedStringValid)
 		{
 			string strEnc = m_tscEncoding.Text;
 			StrEncodingInfo sei = StrUtil.GetEncoding(strEnc);
@@ -187,10 +210,13 @@ namespace KeePass.Forms
 			{
 				string str = (sei.Encoding.GetString(m_pbData, (int)m_uStartOffset,
 					m_pbData.Length - (int)m_uStartOffset) ?? string.Empty);
+
+				bDecodedStringValid = StrUtil.IsValid(str);
+
 				if(bReplaceNulls) str = StrUtil.ReplaceNulls(str);
 				return str;
 			}
-			catch(Exception) { }
+			catch(Exception) { bDecodedStringValid = false; }
 
 			return string.Empty;
 		}
@@ -204,7 +230,7 @@ namespace KeePass.Forms
 			if(bFixedFont) FontUtil.AssignDefaultMono(m_rtbText, false);
 			else FontUtil.AssignDefault(m_rtbText);
 
-			if(bRtf) m_rtbText.Rtf = strData;
+			if(bRtf) m_rtbText.Rtf = StrUtil.RtfFix(strData);
 			else
 			{
 				m_rtbText.Text = strData;
@@ -271,22 +297,41 @@ namespace KeePass.Forms
 				}
 			}
 
-			if(cbData < m_pbData.Length)
-				sb.AppendLine(m_strDataExpand);
+			if(cbData < m_pbData.Length) sb.AppendLine(m_strDataExpand);
 
 			SetRtbData(sb.ToString(), false, true);
 
-			if(cbData < m_pbData.Length)
-			{
-				int iLinkStart = m_rtbText.Text.LastIndexOf(m_strDataExpand);
-				if(iLinkStart >= 0)
-				{
-					m_rtbText.Select(iLinkStart, m_strDataExpand.Length);
-					UIUtil.RtfSetSelectionLink(m_rtbText);
-					m_rtbText.Select(0, 0);
-				}
-				else { Debug.Assert(false); }
-			}
+			if(cbData < m_pbData.Length) LinkifyExpandLink();
+		}
+
+		private void UpdateTextView()
+		{
+			bool bValid;
+			string strData = BinaryDataToString(true, out bValid);
+
+			bool bRtf = (m_bdc == BinaryDataClass.RichText);
+
+			const int ccInvMax = 1024;
+			bool bShorten = (!bValid && !bRtf && !m_bDataExpanded &&
+				(strData.Length > ccInvMax));
+
+			if(bShorten)
+				strData = strData.Substring(0, ccInvMax) + MessageService.NewLine +
+					m_strDataExpand + MessageService.NewLine;
+
+			SetRtbData(strData, bRtf, false);
+
+			if(bShorten) LinkifyExpandLink();
+		}
+
+		private void LinkifyExpandLink()
+		{
+			int i = m_rtbText.Text.LastIndexOf(m_strDataExpand);
+			if(i < 0) { Debug.Assert(false); return; }
+
+			m_rtbText.Select(i, m_strDataExpand.Length);
+			UIUtil.RtfSetSelectionLink(m_rtbText);
+			m_rtbText.Select(0, 0);
 		}
 
 		private void UpdateVisibility(string strViewer, bool bMakeVisible)
@@ -331,7 +376,8 @@ namespace KeePass.Forms
 			UpdateVisibility(strViewer, false);
 			m_tssSeparator0.Visible = (bText || bImage);
 			m_tslEncoding.Visible = m_tscEncoding.Visible = bText;
-			m_tslZoom.Visible = m_tscZoom.Visible = bImage;
+			m_tslZoom.Visible = m_tscZoom.Visible = m_tsbZoomOut.Visible =
+				m_tsbZoomIn.Visible = bImage;
 
 			try
 			{
@@ -346,10 +392,7 @@ namespace KeePass.Forms
 				if(strViewer == m_strViewerHex)
 					UpdateHexView();
 				else if(strViewer == m_strViewerText)
-				{
-					string strData = BinaryDataToString(true);
-					SetRtbData(strData, (m_bdc == BinaryDataClass.RichText), false);
-				}
+					UpdateTextView();
 				else if(strViewer == m_strViewerImage)
 				{
 					if(m_img == null) m_img = GfxUtil.LoadImage(m_pbData);
@@ -357,7 +400,8 @@ namespace KeePass.Forms
 				}
 				else if(strViewer == m_strViewerWeb)
 				{
-					string strData = BinaryDataToString(false);
+					bool bValid;
+					string strData = BinaryDataToString(false, out bValid);
 					UIUtil.SetWebBrowserDocument(m_webBrowser, strData);
 				}
 			}
@@ -386,7 +430,7 @@ namespace KeePass.Forms
 			if(m_img == null) return;
 
 			string strZoom = m_tscZoom.Text;
-			if(string.IsNullOrEmpty(strZoom) || (strZoom == KPRes.Auto))
+			if(string.IsNullOrEmpty(strZoom) || (strZoom == m_strZoomAuto))
 			{
 				m_pnlImageViewer.AutoScroll = false;
 				m_picBox.Dock = DockStyle.Fill;
@@ -402,7 +446,7 @@ namespace KeePass.Forms
 				return;
 			}
 
-			if(!strZoom.EndsWith(@"%")) { Debug.Assert(false); return; }
+			if(!strZoom.EndsWith("%")) { Debug.Assert(false); return; }
 
 			int iZoom;
 			if(!int.TryParse(strZoom.Substring(0, strZoom.Length - 1), out iZoom))
@@ -489,6 +533,11 @@ namespace KeePass.Forms
 			string strRect = UIUtil.GetWindowScreenRect(this);
 			if(strRect != m_strInitialFormRect) // Don't overwrite ""
 				Program.Config.UI.DataViewerRect = strRect;
+		}
+
+		private void OnFormClosed(object sender, FormClosedEventArgs e)
+		{
+			m_picBox.MouseWheel -= this.OnPicBoxMouseWheel;
 
 			m_picBox.Image = null;
 			if(m_img != null) { m_img.Dispose(); m_img = null; }
@@ -500,12 +549,29 @@ namespace KeePass.Forms
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
-			if(keyData == Keys.Escape)
+			bool bDown;
+			if(!NativeMethods.GetKeyMessageState(ref msg, out bDown))
+				return base.ProcessCmdKey(ref msg, keyData);
+
+			if(keyData == Keys.Escape) // No modifiers
 			{
-				bool? obKeyDown = NativeMethods.IsKeyDownMessage(ref msg);
-				if(obKeyDown.HasValue)
+				if(bDown) Close();
+				return true;
+			}
+
+			Keys kc = (keyData & Keys.KeyCode);
+			bool bCtrl = ((keyData & Keys.Control) != Keys.None);
+
+			if(bCtrl && m_tscZoom.Visible)
+			{
+				if((kc == Keys.Add) || (kc == Keys.Subtract))
 				{
-					if(obKeyDown.Value) this.Close();
+					if(bDown) PerformZoom((kc == Keys.Add) ? 1 : -1);
+					return true;
+				}
+				if((kc == Keys.Oemplus) || (kc == Keys.OemMinus))
+				{
+					if(bDown) PerformZoom((kc == Keys.Oemplus) ? 1 : -1);
 					return true;
 				}
 			}
@@ -516,6 +582,83 @@ namespace KeePass.Forms
 		private void OnZoomSelectedIndexChanged(object sender, EventArgs e)
 		{
 			UpdateImageView();
+		}
+
+		private void PerformZoom(int d)
+		{
+			if(!m_tscZoom.Visible) { Debug.Assert(false); return; }
+
+			int iCur = m_tscZoom.SelectedIndex, cMax = m_tscZoom.Items.Count;
+			if((iCur < 0) || (iCur >= cMax)) { Debug.Assert(false); return; }
+
+			int iAuto = m_tscZoom.Items.IndexOf(m_strZoomAuto);
+			if((iAuto < 0) || (iAuto >= cMax)) { Debug.Assert(false); return; }
+
+			if(iCur == iAuto)
+			{
+				iCur = GetNearestFixedZoomItemIndex();
+				if((iCur < 0) || (iCur >= cMax)) { Debug.Assert(false); return; }
+			}
+
+			int iNew = Math.Min(Math.Max(iCur + d, 0), cMax - 1);
+			if((iNew != iCur) && (iNew != iAuto)) m_tscZoom.SelectedIndex = iNew;
+		}
+
+		private void OnPicBoxMouseWheel(object sender, MouseEventArgs e)
+		{
+			if(e == null) { Debug.Assert(false); return; }
+			if((Control.ModifierKeys & Keys.Control) == Keys.None) return;
+
+			int d = e.Delta / 120; // See Control.MouseWheel event
+			PerformZoom(d);
+		}
+
+		private void OnViewerZoomOut(object sender, EventArgs e)
+		{
+			PerformZoom(-1);
+		}
+
+		private void OnViewerZoomIn(object sender, EventArgs e)
+		{
+			PerformZoom(1);
+		}
+
+		private int GetNearestFixedZoomItemIndex()
+		{
+			if(m_img == null) { Debug.Assert(false); return -1; }
+
+			int iW = m_img.Width, iH = m_img.Height;
+			if((iW <= 0) || (iH <= 0)) { Debug.Assert(false); return -1; }
+
+			int cW = m_picBox.ClientSize.Width, cH = m_picBox.ClientSize.Height;
+			if((cW <= 0) || (cH <= 0)) { Debug.Assert(false); return -1; }
+
+			int z = 100;
+			if((iW > cW) || (iH > cH))
+			{
+				int zW = (int)Math.Round(100.0 * (double)cW / (double)iW);
+				int zH = (int)Math.Round(100.0 * (double)cH / (double)iH);
+				z = Math.Min(zW, zH);
+			}
+
+			int dMin = int.MaxValue;
+			int iBest = -1;
+			for(int i = 0; i < m_tscZoom.Items.Count; ++i)
+			{
+				string str = (m_tscZoom.Items[i] as string);
+				if(string.IsNullOrEmpty(str)) { Debug.Assert(false); continue; }
+
+				if(!str.EndsWith("%")) continue;
+				str = str.Substring(0, str.Length - 1);
+
+				int zItem = 0;
+				if(!int.TryParse(str, out zItem)) { Debug.Assert(false); continue; }
+
+				int d = Math.Abs(z - zItem);
+				if(d < dMin) { iBest = i; dMin = d; }
+			}
+
+			return iBest;
 		}
 	}
 

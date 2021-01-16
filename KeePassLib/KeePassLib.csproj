@@ -63,6 +63,7 @@
     <Compile Include="Cryptography\CryptoRandom.cs" />
     <Compile Include="Cryptography\CryptoRandomStream.cs" />
     <Compile Include="Cryptography\Cipher\ICipherEngine.cs" />
+    <Compile Include="Cryptography\CryptoStreamEx.cs" />
     <Compile Include="Cryptography\CryptoUtil.cs" />
     <Compile Include="Cryptography\HashingStreamEx.cs" />
     <Compile Include="Cryptography\Hash\Blake2b.cs" />
@@ -87,6 +88,7 @@
     <Compile Include="Interfaces\IUIOperations.cs" />
     <Compile Include="Interfaces\IXmlSerializerEx.cs" />
     <Compile Include="Keys\KcpCustomKey.cs" />
+    <Compile Include="Keys\KcpKeyFile.Xml.cs" />
     <Compile Include="Keys\KeyProvider.cs" />
     <Compile Include="Keys\KeyProviderPool.cs" />
     <Compile Include="Keys\KeyValidator.cs" />
@@ -95,7 +97,10 @@
     <Compile Include="Native\ClipboardU.cs" />
     <Compile Include="Native\NativeMethods.cs" />
     <Compile Include="Native\NativeMethods.Unix.cs" />
+    <Compile Include="Native\SimpleStat.cs" />
     <Compile Include="PwCustomIcon.cs" />
+    <Compile Include="PwGroup.Search.cs" />
+    <Compile Include="Resources\KLRes.cs" />
     <Compile Include="Resources\KLRes.Generated.cs" />
     <Compile Include="Resources\KSRes.Generated.cs" />
     <Compile Include="Security\XorredBuffer.cs" />
@@ -149,8 +154,10 @@
     <Compile Include="Cryptography\PasswordGenerator\PwGenerator.cs" />
     <Compile Include="Utility\MonoWorkarounds.cs" />
     <Compile Include="Utility\StrUtil.cs" />
+    <Compile Include="Utility\TypeOverridePool.cs" />
     <Compile Include="Utility\UrlUtil.cs" />
     <Compile Include="Utility\TimeUtil.cs" />
+    <Compile Include="Utility\XmlUtilEx.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="KeePassLib.pfx" />

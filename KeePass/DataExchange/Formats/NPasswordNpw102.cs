@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ namespace KeePass.DataExchange.Formats
 
 		private const string ElemUnsupp0 = "settings";
 
-		private const string Password2Key = PwDefs.PasswordField + " 2";
+		private static readonly string Password2Key = PwDefs.PasswordField + " 2";
 
 		private static Dictionary<string, string> m_dAutoTypeConv = null;
 
@@ -94,10 +94,7 @@ namespace KeePass.DataExchange.Formats
 				m_dAutoTypeConv = d;
 			}
 
-			MemoryStream ms = new MemoryStream();
-			MemUtil.CopyStream(sInput, ms);
-			byte[] pbData = ms.ToArray();
-			ms.Close();
+			byte[] pbData = MemUtil.Read(sInput);
 
 			string strFmt = KLRes.FileLoadFailed + MessageService.NewParagraph +
 				KPRes.NoEncNoCompress;
@@ -110,11 +107,15 @@ namespace KeePass.DataExchange.Formats
 			strData = strData.Replace(@"&", @"&amp;");
 
 			byte[] pbDataUtf8 = StrUtil.Utf8.GetBytes(strData);
-			ms = new MemoryStream(pbDataUtf8, false);
-			StreamReader sr = new StreamReader(ms, StrUtil.Utf8);
 
-			XmlDocument xmlDoc = new XmlDocument();
-			xmlDoc.Load(sr);
+			XmlDocument xmlDoc = XmlUtilEx.CreateXmlDocument();
+			using(MemoryStream ms = new MemoryStream(pbDataUtf8, false))
+			{
+				using(StreamReader sr = new StreamReader(ms, StrUtil.Utf8))
+				{
+					xmlDoc.Load(sr);
+				}
+			}
 
 			XmlNode xmlRoot = xmlDoc.DocumentElement;
 

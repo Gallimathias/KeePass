@@ -100,6 +100,9 @@
     <Compile Include="..\KeePassLib\Cryptography\CryptoRandomStream.cs">
       <Link>KeePassLib\Cryptography\CryptoRandomStream.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Cryptography\CryptoStreamEx.cs">
+      <Link>KeePassLib\Cryptography\CryptoStreamEx.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Cryptography\CryptoUtil.cs">
       <Link>KeePassLib\Cryptography\CryptoUtil.cs</Link>
     </Compile>
@@ -196,6 +199,9 @@
     <Compile Include="..\KeePassLib\Keys\KcpKeyFile.cs">
       <Link>KeePassLib\Keys\KcpKeyFile.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Keys\KcpKeyFile.Xml.cs">
+      <Link>KeePassLib\Keys\KcpKeyFile.Xml.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Keys\KcpPassword.cs">
       <Link>KeePassLib\Keys\KcpPassword.cs</Link>
     </Compile>
@@ -229,6 +235,9 @@
     <Compile Include="..\KeePassLib\Native\NativeMethods.Unix.cs">
       <Link>KeePassLib\Native\NativeMethods.Unix.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Native\SimpleStat.cs">
+      <Link>KeePassLib\Native\SimpleStat.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\PwCustomIcon.cs">
       <Link>KeePassLib\PwCustomIcon.cs</Link>
     </Compile>
@@ -250,8 +259,14 @@
     <Compile Include="..\KeePassLib\PwGroup.cs">
       <Link>KeePassLib\PwGroup.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\PwGroup.Search.cs">
+      <Link>KeePassLib\PwGroup.Search.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\PwUuid.cs">
       <Link>KeePassLib\PwUuid.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Resources\KLRes.cs">
+      <Link>KeePassLib\Resources\KLRes.cs</Link>
     </Compile>
     <Compile Include="..\KeePassLib\Resources\KLRes.Generated.cs">
       <Link>KeePassLib\Resources\KLRes.Generated.cs</Link>
@@ -353,8 +368,14 @@
     <Compile Include="..\KeePassLib\Utility\TimeUtil.cs">
       <Link>KeePassLib\Utility\TimeUtil.cs</Link>
     </Compile>
+    <Compile Include="..\KeePassLib\Utility\TypeOverridePool.cs">
+      <Link>KeePassLib\Utility\TypeOverridePool.cs</Link>
+    </Compile>
     <Compile Include="..\KeePassLib\Utility\UrlUtil.cs">
       <Link>KeePassLib\Utility\UrlUtil.cs</Link>
+    </Compile>
+    <Compile Include="..\KeePassLib\Utility\XmlUtilEx.cs">
+      <Link>KeePassLib\Utility\XmlUtilEx.cs</Link>
     </Compile>
     <Compile Include="App\AppDefs.cs" />
     <Compile Include="App\AppHelp.cs" />
@@ -368,6 +389,7 @@
     <Compile Include="App\Configuration\AceMainWindow.cs" />
     <Compile Include="App\Configuration\AceNative.cs" />
     <Compile Include="App\Configuration\AcePasswordGenerator.cs" />
+    <Compile Include="App\Configuration\AceSearch.cs" />
     <Compile Include="App\Configuration\AceSecurity.cs" />
     <Compile Include="App\Configuration\AceToolBar.cs" />
     <Compile Include="App\Configuration\AceTrayIcon.cs" />
@@ -380,8 +402,11 @@
     <Compile Include="DataExchange\FileFormatProvider.cs" />
     <Compile Include="DataExchange\Formats\AmpXml250.cs" />
     <Compile Include="DataExchange\Formats\AnyPwCsv144.cs" />
+    <Compile Include="DataExchange\Formats\BitwardenJson112.cs" />
+    <Compile Include="DataExchange\Formats\ChromeCsv66.cs" />
     <Compile Include="DataExchange\Formats\CodeWalletTxt605.cs" />
     <Compile Include="DataExchange\Formats\DashlaneCsv2.cs" />
+    <Compile Include="DataExchange\Formats\DashlaneJson6.cs" />
     <Compile Include="DataExchange\Formats\DataVaultCsv47.cs" />
     <Compile Include="DataExchange\Formats\DesktopKnoxXml32.cs" />
     <Compile Include="DataExchange\Formats\EnpassTxt5.cs" />
@@ -410,7 +435,8 @@
     <Compile Include="DataExchange\Formats\PinsTxt450.cs" />
     <Compile Include="DataExchange\Formats\PpKeeperHtml270.cs" />
     <Compile Include="DataExchange\Formats\PVaultTxt14.cs" />
-    <Compile Include="DataExchange\Formats\PwAgentXml234.cs" />
+    <Compile Include="DataExchange\Formats\PwAgentXml2.cs" />
+    <Compile Include="DataExchange\Formats\PwAgentXml3.cs" />
     <Compile Include="DataExchange\Formats\PwDepotXml26.cs" />
     <Compile Include="DataExchange\Formats\PwExporterXml105.cs" />
     <Compile Include="DataExchange\Formats\PwKeeperCsv70.cs" />
@@ -426,8 +452,10 @@
     <Compile Include="DataExchange\Formats\SecurityTxt12.cs" />
     <Compile Include="DataExchange\Formats\Spamex20070328.cs" />
     <Compile Include="DataExchange\Formats\SplashIdCsv402.cs" />
-    <Compile Include="DataExchange\Formats\SteganosPwManager2007.cs" />
+    <Compile Include="DataExchange\Formats\SteganosCsv20.cs" />
+    <Compile Include="DataExchange\Formats\SteganosUI2007.cs" />
     <Compile Include="DataExchange\Formats\StickyPwXml50.cs" />
+    <Compile Include="DataExchange\Formats\TrueKeyCsv4.cs" />
     <Compile Include="DataExchange\Formats\TurboPwsCsv5.cs" />
     <Compile Include="DataExchange\Formats\VisKeeperTxt3.cs" />
     <Compile Include="DataExchange\Formats\Whisper32Csv116.cs" />
@@ -438,7 +466,7 @@
     <Compile Include="DataExchange\GxiImporter.cs" />
     <Compile Include="DataExchange\GxiProfile.cs" />
     <Compile Include="DataExchange\ImportUtil.cs" />
-    <Compile Include="DataExchange\Json.cs" />
+    <Compile Include="DataExchange\JsonObject.cs" />
     <Compile Include="DataExchange\KdbFile.cs" />
     <Compile Include="DataExchange\KdbManager.cs" />
     <Compile Include="DataExchange\PwExportInfo.cs" />
@@ -557,17 +585,17 @@
     <Compile Include="Forms\EntropyForm.Designer.cs">
       <DependentUpon>EntropyForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\KeyFileCreationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\KeyFileCreationForm.Designer.cs">
+      <DependentUpon>KeyFileCreationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ListViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\ListViewForm.Designer.cs">
       <DependentUpon>ListViewForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\EntryReportForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\EntryReportForm.Designer.cs">
-      <DependentUpon>EntryReportForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\FieldPickerForm.cs">
       <SubType>Form</SubType>
@@ -772,6 +800,7 @@
     <Compile Include="Plugins\PlgxCsprojLoader.cs" />
     <Compile Include="Plugins\PlgxPluginInfo.cs" />
     <Compile Include="Plugins\PlgxPlugin.cs" />
+    <Compile Include="Resources\KPRes.cs" />
     <Compile Include="Resources\KPRes.Generated.cs" />
     <Compile Include="UI\AsyncPwListUpdate.cs" />
     <Compile Include="UI\BackgroundForm.cs">
@@ -810,8 +839,10 @@
     <Compile Include="UI\EnableThemingInScope.cs" />
     <Compile Include="UI\ExpiryControlGroup.cs" />
     <Compile Include="UI\FileDialogsEx.cs" />
+    <Compile Include="UI\FileIcons.cs" />
     <Compile Include="UI\FontUtil.cs" />
     <Compile Include="UI\GlobalWindowManager.cs" />
+    <Compile Include="UI\IconColorizer.cs" />
     <Compile Include="UI\IGwmWindow.cs" />
     <Compile Include="UI\ImageComboBoxEx.cs">
       <SubType>Component</SubType>
@@ -821,6 +852,7 @@
     <Compile Include="UI\ListViewGroupingMenu.cs" />
     <Compile Include="UI\ListViewSortMenu.cs" />
     <Compile Include="UI\ListViewStateEx.cs" />
+    <Compile Include="UI\MenuItemLinks.cs" />
     <Compile Include="UI\NotifyIconEx.cs" />
     <Compile Include="UI\OnDemandStatusDialog.cs" />
     <Compile Include="UI\OpenWithMenu.cs" />
@@ -831,6 +863,9 @@
     <Compile Include="UI\PwInputControlGroup.cs" />
     <Compile Include="UI\RichTextBuilder.cs" />
     <Compile Include="UI\RtlAwareResizeScope.cs" />
+    <Compile Include="UI\SecureTextBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="UI\SplitButtonEx.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -869,8 +904,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\RichTextBoxContextMenu.cs" />
-    <Compile Include="UI\SecureEdit.cs">
-    </Compile>
     <Compile Include="Plugins\Plugin.cs" />
     <Compile Include="Plugins\IPluginHost.cs" />
     <Compile Include="Plugins\DefaultPluginHost.cs" />
@@ -939,12 +972,12 @@
       <SubType>Designer</SubType>
       <DependentUpon>EntropyForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\KeyFileCreationForm.resx">
+      <DependentUpon>KeyFileCreationForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\ListViewForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>ListViewForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\EntryReportForm.resx">
-      <DependentUpon>EntryReportForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\FieldPickerForm.resx">
       <DependentUpon>FieldPickerForm.cs</DependentUpon>
@@ -1082,6 +1115,7 @@
     <Compile Include="Util\ClipboardEventChainBlocker.cs" />
     <Compile Include="Util\ClipboardUtil.cs" />
     <Compile Include="Util\ClipboardUtil.Unix.cs" />
+    <Compile Include="Util\ClipboardUtil.Uwp.cs" />
     <Compile Include="Util\ClipboardUtil.Windows.cs" />
     <Compile Include="Util\CommandLineArgs.cs" />
     <Compile Include="Ecas\EcasActionType.cs" />
@@ -1107,12 +1141,17 @@
     <Compile Include="Util\EntryMenu.cs" />
     <Compile Include="Util\EntryTemplates.cs" />
     <Compile Include="Util\EntryUtil.cs" />
+    <Compile Include="Util\FileSearchEx.cs" />
     <Compile Include="Util\GlobalMutexPool.cs" />
     <Compile Include="Util\IniFile.cs" />
     <Compile Include="Util\IpcBroadcast.cs" />
     <Compile Include="Util\IpcBroadcast.Fsw.cs" />
+    <Compile Include="Util\IpcBroadcast.Tcp.cs" />
     <Compile Include="Util\IpcUtilEx.cs" />
     <Compile Include="Util\KeyUtil.cs" />
+    <Compile Include="Util\MultipleValues\MultipleValuesContext.cs" />
+    <Compile Include="Util\MultipleValues\MultipleValuesEntryContext.cs" />
+    <Compile Include="Util\MultipleValues\MultipleValuesEx.cs" />
     <Compile Include="Util\NetUtil.cs" />
     <Compile Include="Util\PrintUtil.cs" />
     <Compile Include="Util\PwGeneratorUtil.cs" />
@@ -1123,6 +1162,7 @@
     <Compile Include="Util\SendInputExt\SiEngineStd.cs" />
     <Compile Include="Util\SendInputExt\SiEngineUnix.cs" />
     <Compile Include="Util\SendInputExt\SiEngineWin.cs" />
+    <Compile Include="Util\SendInputExt\SiEventArgs.cs" />
     <Compile Include="Util\SendInputExt\SiObf.cs" />
     <Compile Include="Util\SendInputExt\SiWindowInfo.cs" />
     <Compile Include="Util\SessionLockNotifier.cs" />
@@ -1142,7 +1182,8 @@
     <Compile Include="Util\XmlSerialization\XmlSerializerEx.Gen.cs" />
     <Compile Include="Util\XmlUtil.cs" />
     <Compile Include="Util\XmlSerialization\XmlSerializerEx.cs" />
-    <Compile Include="Util\XmlUtil.XmlReplace.cs" />
+    <Compile Include="Util\XmlUtil.Merge.cs" />
+    <Compile Include="Util\XmlUtil.Replace.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Nuvola\B16x16_1DownArrow.png" />
@@ -1263,14 +1304,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="KeePass.ico" />
+    <None Include="Resources\Images\B16x16_Imp_TrueKey.png" />
+    <None Include="Resources\Images\B16x16_Imp_Steganos20.png" />
+    <None Include="Resources\Images\B16x16_Imp_Bitwarden.png" />
+    <None Include="Resources\Images\B16x16_Imp_Chrome.png" />
     <None Include="Resources\Images\B48x35_WritingHand.png" />
     <None Include="Resources\Icons\KeePass.ico" />
-    <None Include="Resources\Icons\QuadNormal_Y.ico" />
-    <None Include="Resources\Icons\QuadNormal_R.ico" />
-    <None Include="Resources\Icons\QuadNormal_G.ico" />
-    <None Include="Resources\Icons\KeePass_Y.ico" />
-    <None Include="Resources\Icons\KeePass_R.ico" />
-    <None Include="Resources\Icons\KeePass_G.ico" />
     <None Include="Resources\Images\B16x16_Imp_Enpass.png" />
     <None Include="Resources\Images\B16x16_Imp_MSecure.png" />
     <None Include="Resources\Images\B16x16_Imp_PwSaver.png" />

@@ -1,8 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta http-equiv="expires" content="0" />
 	<meta http-equiv="cache-control" content="no-cache" />
 	<meta http-equiv="pragma" content="no-cache" />
@@ -17,7 +18,7 @@
 	<meta name="DC.type" content="Text" />
 	<meta name="DC.format" content="text/html" />
 	<meta name="DC.language" content="en" />
-	<meta name="DC.rights" content="Copyright (C) 2003-2018 Dominik Reichl" />
+	<meta name="DC.rights" content="Copyright (C) 2003-2021 Dominik Reichl" />
 
 	<meta name="robots" content="index, follow" />
 	<meta name="flattr:id" content="42rykv" />
@@ -25,18 +26,18 @@
 	<title>Application Policy - KeePass</title>
 	<base target="_self" />
 	<link rel="stylesheet" type="text/css" href="../../default.css" />
+
 	
 </head>
 <body>
 
 
 
-<table class="sectionsummary"><tr><td width="68">
-<img src="../images/b64x64_file_locked.png" width="64" height="64"
-class="singleimg" align="left" alt="Settings" />
-</td><td valign="middle"><h1>Application Policy</h1><br />
-Details about the application policy system within KeePass.
-</td></tr></table>
+<table class="sectionheader"><tr>
+<td><img src="../images/b64x64_file_locked.png" alt="Locked" /></td>
+<td><h1>Application Policy</h1>
+<p>Details about the application policy system within KeePass.</p></td>
+</tr></table>
 
 <ul>
 <li><a href="#helpuser">Help for Users</a></li>
@@ -52,9 +53,8 @@ Details about the application policy system within KeePass.
 <br />
 
 <a name="helpuser"></a>
-<h2 class="sectiontitle">
-<img src="../images/b16x16_kdmconfig.png" class="singleimg" alt="Users" />&nbsp;&nbsp;Help
-for Users</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_kdmconfig.png" alt="Users" />
+Help for Users</h2>
 
 <p>Application policy is a KeePass feature that enables administrators
 to prevent you from accidently compromising the security
@@ -71,14 +71,14 @@ accidental leakage of sensitive information.</p>
 
 <p>In order to prevent changing the policy after it has
 been specified, it is recommended to use an
-<a href="../base/configuration.html">enforced configuration file</a>.</p>
+<a href="https://keepass.info/help/kb/config_enf.html" target="_blank">enforced
+configuration file</a>.</p>
 
 <br />
 
 <a name="helpadmin"></a>
-<h2 class="sectiontitle">
-<img src="../images/b16x16_kgpg.png" class="singleimg" alt="Administrator" />&nbsp;&nbsp;Help
-for Administrators</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_kgpg.png" alt="Administrator" />
+Help for Administrators</h2>
 
 <p>KeePass can be installed on a network drive and a policy
 can be enforced (like not permitting users to print the
@@ -87,8 +87,8 @@ entry list).</p>
 <p>The application policy enforcement is based on
 the mechanism how KeePass stores configuration settings. You
 first need to understand this method before you can continue
-creating a policy:
-<a href="../base/configuration.html">Configuration</a>.</p>
+creating a policy; see the
+<a href="../base/configuration.html">configuration</a> help page.</p>
 
 <p>A policy-enforcing KeePass installation looks like
 the following: the KeePass application files are stored
@@ -119,15 +119,14 @@ on the network drive).</p> -->
 <br />
 
 <a name="security"></a>
-<h2 class="sectiontitle">
-<img src="../images/b16x16_file_locked.png" class="singleimg" alt="Locked" />&nbsp;&nbsp;Policy
-Security</h2>
+<h2 class="sectiontitle"><img src="../images/b16x16_file_locked.png" alt="Locked" />
+Policy Security</h2>
 
 <p>Recall what the policy mechanism looks like: KeePass and the
 configuration file are stored on the network drive. If you
 grant your users free access to the Internet or allow them
 to insert CD-ROMs/DVDs/USB-sticks, nothing prevents
-a user to download a fresh copy of KeePass and run it. In
+a user to download a separate copy of KeePass and run it. In
 this case the policy isn't enforced, as the downloaded KeePass
 doesn't know anything of the enforced configuration file on the network
 drive.</p>

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -118,8 +118,10 @@ namespace KeePass.DataExchange
 			m_vFormats.Add(new OnePwProCsv599());
 			m_vFormats.Add(new AmpXml250());
 			m_vFormats.Add(new AnyPwCsv144());
+			m_vFormats.Add(new BitwardenJson112());
 			m_vFormats.Add(new CodeWalletTxt605());
 			m_vFormats.Add(new DashlaneCsv2());
+			m_vFormats.Add(new DashlaneJson6());
 			m_vFormats.Add(new DataVaultCsv47());
 			m_vFormats.Add(new DesktopKnoxXml32());
 			m_vFormats.Add(new EnpassTxt5());
@@ -135,7 +137,7 @@ namespace KeePass.DataExchange
 			m_vFormats.Add(new NPasswordNpw102());
 			m_vFormats.Add(new PassKeeper12());
 			m_vFormats.Add(new PpKeeperHtml270());
-			m_vFormats.Add(new PwAgentXml234());
+			m_vFormats.Add(new PwAgentXml3());
 			m_vFormats.Add(new PwDepotXml26());
 			m_vFormats.Add(new PwKeeperCsv70());
 			m_vFormats.Add(new PwMemory2008Xml104());
@@ -151,13 +153,16 @@ namespace KeePass.DataExchange
 			m_vFormats.Add(new SafeWalletXml3());
 			m_vFormats.Add(new SecurityTxt12());
 			m_vFormats.Add(new SplashIdCsv402());
-			m_vFormats.Add(new SteganosPwManager2007());
+			m_vFormats.Add(new SteganosCsv20());
+			m_vFormats.Add(new SteganosUI2007());
 			m_vFormats.Add(new StickyPwXml50());
+			m_vFormats.Add(new TrueKeyCsv4());
 			m_vFormats.Add(new TurboPwsCsv5());
 			m_vFormats.Add(new VisKeeperTxt3());
 			m_vFormats.Add(new Whisper32Csv116());
 			m_vFormats.Add(new ZdnPwProTxt314());
 
+			m_vFormats.Add(new ChromeCsv66());
 			m_vFormats.Add(new MozillaBookmarksHtml100());
 			m_vFormats.Add(new MozillaBookmarksJson100());
 			m_vFormats.Add(new PwExporterXml105());

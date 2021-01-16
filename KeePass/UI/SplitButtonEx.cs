@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,14 +19,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Drawing;
-using System.Windows.Forms;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
 
 using KeePass.Native;
 using KeePass.Util;
+
+using NativeLib = KeePassLib.Native.NativeLib;
 
 namespace KeePass.UI
 {
@@ -49,6 +51,7 @@ namespace KeePass.UI
 			get { return m_ctx; }
 			set { m_ctx = value; }
 		}
+		public bool ShouldSerializeSplitDropDownMenu() { return false; }
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -74,12 +77,9 @@ namespace KeePass.UI
 		public SplitButtonEx() : base()
 		{
 			m_bSupported = (WinUtil.IsAtLeastWindowsVista &&
-				!KeePassLib.Native.NativeLib.IsUnix() && !Program.DesignMode);
+				!NativeLib.IsUnix() && !Program.DesignMode);
 
-			if(m_bSupported)
-			{
-				this.FlatStyle = FlatStyle.System;
-			}
+			if(m_bSupported) this.FlatStyle = FlatStyle.System;
 		}
 
 		protected override void WndProc(ref Message m)

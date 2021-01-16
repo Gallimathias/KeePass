@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Diagnostics;
+using System.Text;
+using System.Xml;
 
 using KeePass.Resources;
 using KeePass.Util;
@@ -31,6 +31,7 @@ using KeePass.Util;
 using KeePassLib;
 using KeePassLib.Interfaces;
 using KeePassLib.Security;
+using KeePassLib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {
@@ -64,7 +65,7 @@ namespace KeePass.DataExchange.Formats
 		{
 			StreamReader sr = new StreamReader(sInput, Encoding.Default);
 
-			XmlDocument xmlDoc = new XmlDocument();
+			XmlDocument xmlDoc = XmlUtilEx.CreateXmlDocument();
 			xmlDoc.Load(sr);
 
 			XmlNode xmlRoot = xmlDoc.DocumentElement;

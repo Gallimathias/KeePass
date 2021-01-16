@@ -15,7 +15,6 @@ help\base\autourl.html
 help\base\cmdline.html
 help\base\configuration.html
 help\base\credits.html
-help\base\disclaimer.html
 help\base\faq.html
 help\base\faq_tech.html
 help\base\fieldrefs.html
@@ -29,9 +28,11 @@ help\base\multiuser.html
 help\base\placeholders.html
 help\base\pwgenerator.html
 help\base\repair.html
+help\base\search.html
 help\base\secedits.html
 help\base\security.html
 help\base\tans.html
+help\base\terms.html
 help\base\usingpws.html
 help\v2\autotype_obfuscation.html
 help\v2\dbsettings.html
@@ -53,12 +54,7 @@ help\v2_dev\plg_index.html
 help\v2_dev\scr_index.html
 help\v2_dev\scr_kps_index.html
 help\v2_dev\scr_sc_index.html
-images\grad_v_gw.gif
 images\back.gif
-images\grad_h_gw.gif
-images\grad_h_gw_186.gif
-images\grad_v_dlb.gif
-images\grad_v_dlb_tall_light.png
 
 [INFOTYPES]
 

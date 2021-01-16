@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@ using KeePassLib.Security;
 using KeePassLib.Collections;
 using KeePassLib.Delegates;
 using KeePassLib.Utility;
+
+using NativeLib = KeePassLib.Native.NativeLib;
 
 namespace KeePass.Util
 {
@@ -80,6 +82,8 @@ namespace KeePass.Util
 		public static event EventHandler<AutoTypeEventArgs> FilterSendPre;
 		public static event EventHandler<AutoTypeEventArgs> FilterSend;
 
+		public static event EventHandler<AutoTypeEventArgs> SendPost;
+
 		public static event EventHandler<SequenceQueryEventArgs> SequenceQueryPre;
 		public static event EventHandler<SequenceQueryEventArgs> SequenceQuery;
 		public static event EventHandler<SequenceQueryEventArgs> SequenceQueryPost;
@@ -99,7 +103,6 @@ namespace KeePass.Util
 			{
 				// SendKeys is not used anymore, thus the following is
 				// not required:
-
 				// // Enable new SendInput method; see
 				// // https://msdn.microsoft.com/en-us/library/system.windows.forms.sendkeys.aspx
 				// ConfigurationManager.AppSettings.Set("SendKeys", "SendInput");
@@ -107,40 +110,42 @@ namespace KeePass.Util
 			catch(Exception) { Debug.Assert(false); }
 		}
 
-		internal static bool MatchWindows(string strFilter, string strWindow)
+		internal static bool IsMatchWindow(string strWindow, string strFilter)
 		{
-			Debug.Assert(strFilter != null); if(strFilter == null) return false;
-			Debug.Assert(strWindow != null); if(strWindow == null) return false;
+			if(strWindow == null) { Debug.Assert(false); return false; }
+			if(strFilter == null) { Debug.Assert(false); return false; }
 
-			string strF = strFilter.Trim();
+			Debug.Assert(NormalizeWindowText(strWindow) == strWindow); // Should be done by caller
+			string strF = NormalizeWindowText(strFilter);
 
-			/* bool bArbStart = strF.StartsWith("*"), bArbEnd = strF.EndsWith("*");
-
-			if(bArbStart) strF = strF.Remove(0, 1);
-			if(bArbEnd) strF = strF.Substring(0, strF.Length - 1);
-
-			if(bArbStart && bArbEnd)
-				return (strWindow.IndexOf(strF, StrUtil.CaseIgnoreCmp) >= 0);
-			else if(bArbStart)
-				return strWindow.EndsWith(strF, StrUtil.CaseIgnoreCmp);
-			else if(bArbEnd)
-				return strWindow.StartsWith(strF, StrUtil.CaseIgnoreCmp);
-
-			return strWindow.Equals(strF, StrUtil.CaseIgnoreCmp); */
-
-			if(strF.StartsWith(@"//") && strF.EndsWith(@"//") && (strF.Length > 4))
+			int ccF = strF.Length;
+			if((ccF > 4) && (strF[0] == '/') && (strF[1] == '/') &&
+				(strF[ccF - 2] == '/') && (strF[ccF - 1] == '/'))
 			{
 				try
 				{
-					Regex rx = new Regex(strF.Substring(2, strF.Length - 4),
-						RegexOptions.IgnoreCase);
-
-					return rx.IsMatch(strWindow);					
+					string strRx = strF.Substring(2, ccF - 4);
+					return Regex.IsMatch(strWindow, strRx, RegexOptions.IgnoreCase);
 				}
-				catch(Exception) { }
+				catch(Exception) { return false; }
 			}
 
 			return StrUtil.SimplePatternMatch(strF, strWindow, StrUtil.CaseIgnoreCmp);
+		}
+
+		private static bool IsMatchSub(string strWindow, string strSub)
+		{
+			if(strWindow == null) { Debug.Assert(false); return false; }
+			if(strSub == null) { Debug.Assert(false); return false; }
+
+			Debug.Assert(NormalizeWindowText(strWindow) == strWindow); // Should be done by caller
+			string strS = NormalizeWindowText(strSub);
+
+			// If strS is empty, return false, because strS is a substring
+			// that must occur, not a filter
+			if(strS.Length == 0) return false;
+
+			return (strWindow.IndexOf(strS, StrUtil.CaseIgnoreCmp) >= 0);
 		}
 
 		private static bool Execute(AutoTypeCtx ctx)
@@ -154,9 +159,9 @@ namespace KeePass.Util
 			if(!pweData.GetAutoTypeEnabled()) return false;
 			if(!AppPolicy.Try(AppPolicyId.AutoType)) return false;
 
-			if(KeePassLib.Native.NativeLib.IsUnix())
+			if(NativeLib.IsUnix())
 			{
-				if(!NativeMethods.TryXDoTool())
+				if(!NativeMethods.TryXDoTool() && !NativeLib.IsWayland())
 				{
 					MessageService.ShowWarning(KPRes.AutoTypeXDoToolRequired,
 						KPRes.PackageInstallHint);
@@ -200,6 +205,8 @@ namespace KeePass.Util
 						ex.Message;
 				}
 
+				if(AutoType.SendPost != null) AutoType.SendPost(null, args);
+
 				if(!string.IsNullOrEmpty(strError))
 				{
 					try
@@ -227,6 +234,10 @@ namespace KeePass.Util
 				// SprEngine.Compile might have modified the database;
 				// pd.Modified is set by SprEngine
 				mf.UpdateUI(false, null, false, null, false, null, false);
+
+				if(Program.Config.MainWindow.MinimizeAfterAutoType &&
+					mf.IsCommandTypeInvokable(null, MainForm.AppCommandType.Window))
+					UIUtil.SetWindowState(mf, FormWindowState.Minimized);
 			}
 
 			return true;
@@ -288,12 +299,8 @@ namespace KeePass.Util
 			// in order to allow selecting the first item as default one
 			foreach(AutoTypeAssociation a in pwe.AutoType.Associations)
 			{
-				string strWndSpec = a.WindowName;
-				if(strWndSpec == null) { Debug.Assert(false); continue; }
-
-				strWndSpec = SprEngine.Compile(strWndSpec.Trim(), sprCtx);
-
-				if(MatchWindows(strWndSpec, strWindow))
+				string strFilter = SprEngine.Compile(a.WindowName, sprCtx);
+				if(IsMatchWindow(strWindow, strFilter))
 				{
 					string strSeq = a.Sequence;
 					if(string.IsNullOrEmpty(strSeq))
@@ -308,19 +315,17 @@ namespace KeePass.Util
 			if(Program.Config.Integration.AutoTypeMatchByTitle)
 			{
 				string strTitle = SprEngine.Compile(pwe.Strings.ReadSafe(
-					PwDefs.TitleField).Trim(), sprCtx);
-				if((strTitle.Length > 0) && (strWindow.IndexOf(strTitle,
-					StrUtil.CaseIgnoreCmp) >= 0))
+					PwDefs.TitleField), sprCtx);
+				if(IsMatchSub(strWindow, strTitle))
 					AddSequence(l, pwe.GetAutoTypeSequence());
 			}
 
-			string strCmpUrl = null; // To cache compiled URL
+			string strCmpUrl = null; // To cache the compiled URL
 			if(Program.Config.Integration.AutoTypeMatchByUrlInTitle)
 			{
 				strCmpUrl = SprEngine.Compile(pwe.Strings.ReadSafe(
-					PwDefs.UrlField).Trim(), sprCtx);
-				if((strCmpUrl.Length > 0) && (strWindow.IndexOf(strCmpUrl,
-					StrUtil.CaseIgnoreCmp) >= 0))
+					PwDefs.UrlField), sprCtx);
+				if(IsMatchSub(strWindow, strCmpUrl))
 					AddSequence(l, pwe.GetAutoTypeSequence());
 			}
 
@@ -328,9 +333,9 @@ namespace KeePass.Util
 			{
 				if(strCmpUrl == null)
 					strCmpUrl = SprEngine.Compile(pwe.Strings.ReadSafe(
-						PwDefs.UrlField).Trim(), sprCtx);
+						PwDefs.UrlField), sprCtx);
 
-				string strCleanUrl = StrUtil.RemovePlaceholders(strCmpUrl);
+				string strCleanUrl = StrUtil.RemovePlaceholders(strCmpUrl).Trim();
 				string strHost = UrlUtil.GetHost(strCleanUrl);
 
 				if(strHost.StartsWith("www.", StrUtil.CaseIgnoreCmp) &&
@@ -338,8 +343,7 @@ namespace KeePass.Util
 					strCleanUrl.StartsWith("https:", StrUtil.CaseIgnoreCmp)))
 					strHost = strHost.Substring(4);
 
-				if((strHost.Length > 0) && (strWindow.IndexOf(strHost,
-					StrUtil.CaseIgnoreCmp) >= 0))
+				if(IsMatchSub(strWindow, strHost))
 					AddSequence(l, pwe.GetAutoTypeSequence());
 			}
 
@@ -347,9 +351,7 @@ namespace KeePass.Util
 			{
 				foreach(string strTag in pwe.Tags)
 				{
-					if(string.IsNullOrEmpty(strTag)) { Debug.Assert(false); continue; }
-
-					if(strWindow.IndexOf(strTag, StrUtil.CaseIgnoreCmp) >= 0)
+					if(IsMatchSub(strWindow, strTag))
 					{
 						AddSequence(l, pwe.GetAutoTypeSequence());
 						break;
@@ -424,29 +426,29 @@ namespace KeePass.Util
 			return strSeq;
 		}
 
-		internal static bool IsOwnWindow(IntPtr hWindow)
+		public static bool IsValidAutoTypeWindow(IntPtr hWnd, bool bBeepIfNot)
 		{
-			return ((hWindow == Program.MainForm.Handle) ||
-				GlobalWindowManager.HasWindow(hWindow));
-		}
-
-		public static bool IsValidAutoTypeWindow(IntPtr hWindow, bool bBeepIfNot)
-		{
-			bool bValid = !IsOwnWindow(hWindow);
+			bool bValid = !GlobalWindowManager.HasWindowMW(hWnd);
 
 			if(!bValid && bBeepIfNot) SystemSounds.Beep.Play();
 
 			return bValid;
 		}
 
-		public static bool PerformGlobal(List<PwDatabase> vSources,
+		public static bool PerformGlobal(List<PwDatabase> lSources,
 			ImageList ilIcons)
 		{
-			Debug.Assert(vSources != null); if(vSources == null) return false;
+			return PerformGlobal(lSources, ilIcons, null);
+		}
 
-			if(KeePassLib.Native.NativeLib.IsUnix())
+		internal static bool PerformGlobal(List<PwDatabase> lSources,
+			ImageList ilIcons, string strSeq)
+		{
+			if(lSources == null) { Debug.Assert(false); return false; }
+
+			if(NativeLib.IsUnix())
 			{
-				if(!NativeMethods.TryXDoTool(true))
+				if(!NativeMethods.TryXDoTool(true) && !NativeLib.IsWayland())
 				{
 					MessageService.ShowWarning(KPRes.AutoTypeXDoToolRequiredGlobalVer);
 					return false;
@@ -455,13 +457,7 @@ namespace KeePass.Util
 
 			IntPtr hWnd;
 			string strWindow;
-			try
-			{
-				// hWnd = NativeMethods.GetForegroundWindowHandle();
-				// strWindow = NativeMethods.GetWindowText(hWnd);
-				NativeMethods.GetForegroundWindowInfo(out hWnd, out strWindow, true);
-			}
-			catch(Exception) { Debug.Assert(false); hWnd = IntPtr.Zero; strWindow = null; }
+			GetForegroundWindowInfo(out hWnd, out strWindow);
 
 			// if(string.IsNullOrEmpty(strWindow)) return false;
 			if(strWindow == null) { Debug.Assert(false); return false; }
@@ -482,19 +478,25 @@ namespace KeePass.Util
 
 				List<string> lSeq = GetSequencesForWindow(pe, hWnd, strWindow,
 					pdCurrent, evQueries.EventID);
-				foreach(string strSeq in lSeq)
-				{
+
+				if(!string.IsNullOrEmpty(strSeq) && (lSeq.Count != 0))
 					lCtxs.Add(new AutoTypeCtx(strSeq, pe, pdCurrent));
+				else
+				{
+					foreach(string strSeqCand in lSeq)
+					{
+						lCtxs.Add(new AutoTypeCtx(strSeqCand, pe, pdCurrent));
+					}
 				}
 
 				return true;
 			};
 
-			foreach(PwDatabase pwSource in vSources)
+			foreach(PwDatabase pd in lSources)
 			{
-				if(pwSource.IsOpen == false) continue;
-				pdCurrent = pwSource;
-				pwSource.RootGroup.TraverseTree(TraversalMethod.PreOrder, null, eh);
+				if((pd == null) || !pd.IsOpen) continue;
+				pdCurrent = pd;
+				pd.RootGroup.TraverseTree(TraversalMethod.PreOrder, null, eh);
 			}
 
 			GetSequencesForWindowEnd(evQueries);
@@ -569,7 +571,7 @@ namespace KeePass.Util
 
 			try
 			{
-				if(!NativeMethods.LoseFocus(fCurrent)) { Debug.Assert(false); }
+				if(!NativeMethods.LoseFocus(fCurrent, true)) { Debug.Assert(false); }
 
 				return PerformIntoCurrentWindow(pe, pdContext, strSeq);
 			}
@@ -602,13 +604,9 @@ namespace KeePass.Util
 
 			IntPtr hWnd;
 			string strWindow;
-			try
-			{
-				NativeMethods.GetForegroundWindowInfo(out hWnd, out strWindow, true);
-			}
-			catch(Exception) { hWnd = IntPtr.Zero; strWindow = null; }
+			GetForegroundWindowInfo(out hWnd, out strWindow);
 
-			if(!KeePassLib.Native.NativeLib.IsUnix())
+			if(!NativeLib.IsUnix())
 			{
 				if(strWindow == null) { Debug.Assert(false); return false; }
 			}
@@ -672,5 +670,48 @@ namespace KeePass.Util
 
 			return null;
 		} */
+
+		private static readonly char[] g_vNormToHyphen = new char[] {
+			// Sync with UI option name
+			'\u2010', // Hyphen
+			'\u2011', // Non-breaking hyphen
+			'\u2012', // Figure dash
+			'\u2013', // En dash
+			'\u2014', // Em dash
+			'\u2015', // Horizontal bar
+			'\u2212' // Minus sign
+		};
+		internal static string NormalizeWindowText(string str)
+		{
+			if(string.IsNullOrEmpty(str)) return string.Empty;
+
+			str = str.Trim();
+
+			if(Program.Config.Integration.AutoTypeMatchNormDashes &&
+				(str.IndexOfAny(g_vNormToHyphen) >= 0))
+			{
+				for(int i = 0; i < g_vNormToHyphen.Length; ++i)
+					str = str.Replace(g_vNormToHyphen[i], '-');
+			}
+
+			return str;
+		}
+
+		private static void GetForegroundWindowInfo(out IntPtr hWnd, out string strWindow)
+		{
+			try
+			{
+				NativeMethods.GetForegroundWindowInfo(out hWnd, out strWindow, false);
+			}
+			catch(Exception)
+			{
+				Debug.Assert(false);
+				hWnd = IntPtr.Zero;
+				strWindow = null;
+				return;
+			}
+
+			strWindow = NormalizeWindowText(strWindow);
+		}
 	}
 }

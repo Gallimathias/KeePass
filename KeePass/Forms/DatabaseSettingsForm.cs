@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,7 +36,9 @@ using KeePassLib.Cryptography.Cipher;
 using KeePassLib.Cryptography.KeyDerivation;
 using KeePassLib.Delegates;
 using KeePassLib.Keys;
+using KeePassLib.Resources;
 using KeePassLib.Security;
+using KeePassLib.Serialization;
 using KeePassLib.Utility;
 
 namespace KeePass.Forms
@@ -87,9 +89,14 @@ namespace KeePass.Forms
 
 			GlobalWindowManager.AddWindow(this);
 
+			IOConnectionInfo ioc = m_pwDatabase.IOConnectionInfo;
+			string strDisp = ioc.GetDisplayName();
+
+			string strDesc = KPRes.DatabaseSettingsDesc;
+			if(!string.IsNullOrEmpty(strDisp)) strDesc = strDisp;
+
 			BannerFactory.CreateBannerEx(this, m_bannerImage,
-				Properties.Resources.B48x48_Ark, KPRes.DatabaseSettings,
-				KPRes.DatabaseSettingsDesc);
+				Properties.Resources.B48x48_Ark, KPRes.DatabaseSettings, strDesc);
 			this.Icon = AppIcons.Default;
 
 			FontUtil.AssignDefaultItalic(m_lblHeaderCpAlgo);
@@ -105,7 +112,7 @@ namespace KeePass.Forms
 			m_tbDbName.PromptText = KPRes.DatabaseNamePrompt;
 			m_tbDbDesc.PromptText = KPRes.DatabaseDescPrompt;
 
-			if(m_bCreatingNew) this.Text = KPRes.ConfigureOnNewDatabase2;
+			if(m_bCreatingNew) this.Text = KPRes.ConfigureOnNewDatabase3;
 			else this.Text = KPRes.DatabaseSettings;
 
 			m_tbDbName.Text = m_pwDatabase.Name;
@@ -113,13 +120,14 @@ namespace KeePass.Forms
 			m_tbDefaultUser.Text = m_pwDatabase.DefaultUserName;
 
 			m_clr = m_pwDatabase.Color;
-			if(m_clr != Color.Empty)
+			bool bClr = !UIUtil.ColorsEqual(m_clr, Color.Empty);
+			if(bClr)
 			{
 				m_clr = AppIcons.RoundColor(m_clr);
 				UIUtil.OverwriteButtonImage(m_btnColor, ref m_imgColor,
 					UIUtil.CreateColorBitmap24(m_btnColor, m_clr));
 			}
-			m_cbColor.Checked = (m_clr != Color.Empty);
+			m_cbColor.Checked = bClr;
 
 			for(int inx = 0; inx < CipherPool.GlobalPool.EngineCount; ++inx)
 				m_cmbEncAlgo.Items.Add(CipherPool.GlobalPool[inx].DisplayName);
@@ -174,6 +182,7 @@ namespace KeePass.Forms
 
 			m_bInitializing = false;
 			EnableControlsEx();
+			UIUtil.SetFocus(m_tbDbName, this);
 		}
 
 		private void InitRecycleBinTab()
@@ -288,7 +297,7 @@ namespace KeePass.Forms
 		{
 			m_pwDatabase.SettingsChanged = DateTime.UtcNow;
 
-			if(!m_tbDbName.Text.Equals(m_pwDatabase.Name))
+			if(m_tbDbName.Text != m_pwDatabase.Name)
 			{
 				m_pwDatabase.Name = m_tbDbName.Text;
 				m_pwDatabase.NameChanged = DateTime.UtcNow;
@@ -297,13 +306,13 @@ namespace KeePass.Forms
 			string strNew = m_tbDbDesc.Text;
 			string strOrgFlt = StrUtil.NormalizeNewLines(m_pwDatabase.Description, false);
 			string strNewFlt = StrUtil.NormalizeNewLines(strNew, false);
-			if(!strNewFlt.Equals(strOrgFlt))
+			if(strNewFlt != strOrgFlt)
 			{
 				m_pwDatabase.Description = strNew;
 				m_pwDatabase.DescriptionChanged = DateTime.UtcNow;
 			}
 
-			if(!m_tbDefaultUser.Text.Equals(m_pwDatabase.DefaultUserName))
+			if(m_tbDefaultUser.Text != m_pwDatabase.DefaultUserName)
 			{
 				m_pwDatabase.DefaultUserName = m_tbDefaultUser.Text;
 				m_pwDatabase.DefaultUserNameChanged = DateTime.UtcNow;
@@ -848,7 +857,7 @@ namespace KeePass.Forms
 
 		private void KdfTestTh(object o)
 		{
-			string strMsg = KPRes.UnknownError;
+			string strMsg = KLRes.UnknownError;
 
 			try
 			{
@@ -900,11 +909,11 @@ namespace KeePass.Forms
 			{
 				Debug.Assert(!m_btnOK.InvokeRequired);
 
+				EnableControlsEx();
+
 				if(!string.IsNullOrEmpty(strMsg))
 					MessageService.ShowInfo(strMsg);
 				else { Debug.Assert(false); }
-
-				EnableControlsEx();
 			}
 			catch(Exception) { Debug.Assert(false); }
 		}

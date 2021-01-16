@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,20 +19,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-using System.ComponentModel;
-using System.Drawing;
-using System.Diagnostics;
 
+using KeePass.Native;
 using KeePass.Util;
 
-using KeePassLib.Native;
 using KeePassLib.Utility;
+
+using NativeLib = KeePassLib.Native.NativeLib;
 
 namespace KeePass.UI
 {
-	public sealed class CustomRichTextBoxEx : RichTextBox
+	// Non-sealed for plugins
+	public class CustomRichTextBoxEx : RichTextBox
 	{
 		private static bool? m_bForceRedrawOnScroll = null;
 
@@ -56,8 +60,45 @@ namespace KeePass.UI
 			set { m_bCtrlEnterAccepts = value; }
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		protected override CreateParams CreateParams
+		{
+			get
+			{
+				CreateParams cp = base.CreateParams;
+
+				if(!Program.DesignMode)
+				{
+					// Mono throws an exception when trying to get the
+					// Multiline property while constructing the object
+					if(!MonoWorkarounds.IsRequired())
+					{
+						if(this.Multiline) cp.Style |= NativeMethods.ES_WANTRETURN;
+					}
+				}
+
+				return cp;
+			}
+		}
+
+		[Localizable(true)]
+		[RefreshProperties(RefreshProperties.All)]
+		public override string Text
+		{
+			get { return base.Text; }
+			set
+			{
+				// TextBoxBase.Clear() sets Text to null
+				base.Text = (Program.DesignMode ? value :
+					StrUtil.RtfFilterText(value ?? string.Empty));
+			}
+		}
+
 		public CustomRichTextBoxEx() : base()
 		{
+			if(Program.DesignMode) return;
+
 			// We cannot use EnableAutoDragDrop, because moving some text
 			// using drag&drop can remove the selected text from the box
 			// (even when read-only is enabled!), which is usually not a
@@ -76,6 +117,7 @@ namespace KeePass.UI
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
+			if(Program.DesignMode) return;
 
 			// The following operations should not recreate the handle
 			if(m_csAutoProps.TryEnter())
@@ -132,8 +174,8 @@ namespace KeePass.UI
 				return;
 			}
 
-			if(m_bCtrlEnterAccepts && e.Control && ((e.KeyCode == Keys.Return) ||
-				(e.KeyCode == Keys.Enter)))
+			// Return == Enter
+			if(m_bCtrlEnterAccepts && e.Control && (e.KeyCode == Keys.Return))
 			{
 				UIUtil.SetHandled(e, true);
 				Debug.Assert(this.Multiline);
@@ -175,8 +217,8 @@ namespace KeePass.UI
 				return;
 			}
 
-			if(m_bCtrlEnterAccepts && e.Control && ((e.KeyCode == Keys.Return) ||
-				(e.KeyCode == Keys.Enter)))
+			// Return == Enter
+			if(m_bCtrlEnterAccepts && e.Control && (e.KeyCode == Keys.Return))
 			{
 				UIUtil.SetHandled(e, true);
 				return;
@@ -312,6 +354,72 @@ namespace KeePass.UI
 			catch(Exception) { Debug.Assert(false); }
 
 			return true;
+		}
+
+		protected override bool ProcessDialogKey(Keys keyData)
+		{
+			Keys k = (keyData & Keys.KeyCode);
+
+			Debug.Assert(Keys.Return == Keys.Enter);
+			if((k == Keys.Return) && ((keyData & (Keys.Control | Keys.Alt)) ==
+				Keys.None) && this.Multiline)
+				return false; // New line in rich text box
+
+			return base.ProcessDialogKey(keyData);
+		}
+
+		protected override bool ProcessCmdKey(ref Message m, Keys keyData)
+		{
+			bool bDown;
+			if(!NativeMethods.GetKeyMessageState(ref m, out bDown))
+				return base.ProcessCmdKey(ref m, keyData);
+
+			try
+			{
+				if(!m_bSimpleTextOnly && this.ShortcutsEnabled &&
+					this.RichTextShortcutsEnabled && !this.ReadOnly)
+				{
+					bool bHandled = true;
+
+					switch(keyData)
+					{
+						case (Keys.Control | Keys.B): // Without Shift
+							if(bDown) UIUtil.RtfToggleSelectionFormat(this, FontStyle.Bold);
+							break;
+						case (Keys.Control | Keys.I): // Without Shift
+							if(bDown) UIUtil.RtfToggleSelectionFormat(this, FontStyle.Italic);
+							break;
+						case (Keys.Control | Keys.U): // Without Shift
+							if(bDown) UIUtil.RtfToggleSelectionFormat(this, FontStyle.Underline);
+							break;
+
+						// The following keyboard shortcuts are implemented
+						// by the rich text box on Windows, but not by Mono;
+						// https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.textboxbase.shortcutsenabled
+						case (Keys.Control | Keys.L): // Without Shift
+							if(bDown) this.SelectionAlignment = HorizontalAlignment.Left;
+							break;
+						case (Keys.Control | Keys.E): // Without Shift
+							if(bDown) this.SelectionAlignment = HorizontalAlignment.Center;
+							break;
+						case (Keys.Control | Keys.R): // Without Shift
+							if(bDown) this.SelectionAlignment = HorizontalAlignment.Right;
+							break;
+
+						default: bHandled = false; break;
+					}
+
+					if(bHandled)
+					{
+						if(MonoWorkarounds.IsRequired(100002))
+							OnTextChanged(EventArgs.Empty);
+						return true;
+					}
+				}
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			return base.ProcessCmdKey(ref m, keyData);
 		}
 
 		// //////////////////////////////////////////////////////////////////
@@ -566,5 +674,56 @@ namespace KeePass.UI
 
 			if(m_bForceRedrawOnScroll.Value) Invalidate();
 		}
+
+		protected override void OnLinkClicked(LinkClickedEventArgs e)
+		{
+			try
+			{
+				string str = e.LinkText;
+				if(string.IsNullOrEmpty(str)) { Debug.Assert(false); return; }
+
+				// Open the URL if no handler has been associated with
+				// the LinkClicked event;
+				// if(this.LinkClicked == null) WinUtil.OpenUrl(str, null);
+				string strEv = (MonoWorkarounds.IsRequired() ? "LinkClickedEvent" :
+					"EVENT_LINKACTIVATE");
+				FieldInfo fi = typeof(RichTextBox).GetField(strEv,
+					BindingFlags.NonPublic | BindingFlags.Static);
+				object oEv = ((fi != null) ? fi.GetValue(null) : null);
+				if(oEv != null)
+				{
+					if(this.Events[oEv] == null) // No event handler associated
+					{
+						WinUtil.OpenUrl(str, null);
+						return;
+					}
+				}
+				else { Debug.Assert(false); }
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			base.OnLinkClicked(e);
+		}
+
+		/* protected override void OnSelectionChanged(EventArgs e)
+		{
+			base.OnSelectionChanged(e);
+
+			try
+			{
+				if((this.SelectionLength == 0) && Control.IsKeyLocked(Keys.Insert))
+				{
+					string str = (this.Text ?? string.Empty);
+					int i = this.SelectionStart;
+					if((i >= 0) && (i < str.Length))
+					{
+						char ch = str[i];
+						if((ch != '\r') && (ch != '\n') && !char.IsSurrogate(ch))
+							this.SelectionLength = 1;
+					}
+				}
+			}
+			catch(Exception) { Debug.Assert(false); }
+		} */
 	}
 }

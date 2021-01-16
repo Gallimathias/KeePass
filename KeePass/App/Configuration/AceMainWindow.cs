@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
@@ -50,6 +51,15 @@ namespace KeePass.App.Configuration
 		// Additional flags: use value > Primary
 
 		Primary = 0x0F // Auto/On/Off are primary states
+	}
+
+	public enum AceEscAction
+	{
+		None = 0,
+		Lock = 1,
+		Minimize = 2,
+		MinimizeToTray = 3,
+		Exit = 4
 	}
 
 	public sealed class AceMainWindow
@@ -109,6 +119,7 @@ namespace KeePass.App.Configuration
 		}
 
 		private AceMainWindowLayout m_layout = AceMainWindowLayout.Default;
+		[DefaultValue(AceMainWindowLayout.Default)]
 		public AceMainWindowLayout Layout
 		{
 			get { return m_layout; }
@@ -131,12 +142,21 @@ namespace KeePass.App.Configuration
 			set { m_bCloseMin = value; }
 		}
 
+		// For backward compatibility only; use EscAction instead
 		private bool m_bEscMin = false;
 		[DefaultValue(false)]
 		public bool EscMinimizesToTray
 		{
 			get { return m_bEscMin; }
 			set { m_bEscMin = value; }
+		}
+
+		private AceEscAction m_aEsc = AceEscAction.Lock;
+		[DefaultValue(AceEscAction.Lock)]
+		public AceEscAction EscAction
+		{
+			get { return m_aEsc; }
+			set { m_aEsc = value; }
 		}
 
 		private bool m_bMinToTray = false;
@@ -155,6 +175,22 @@ namespace KeePass.App.Configuration
 			set { m_bFullPath = value; }
 		}
 
+		// private bool m_bFullPathOnTab = false;
+		// [DefaultValue(false)]
+		// public bool ShowFullPathOnTab
+		// {
+		//	get { return m_bFullPathOnTab; }
+		//	set { m_bFullPathOnTab = value; }
+		// }
+
+		// private bool m_bDbNameOnTab = false;
+		// [DefaultValue(false)]
+		// public bool ShowDatabaseNameOnTab
+		// {
+		//	get { return m_bDbNameOnTab; }
+		//	set { m_bDbNameOnTab = value; }
+		// }
+
 		private bool m_bDropToBackAfterCopy = false;
 		[DefaultValue(false)]
 		public bool DropToBackAfterClipboardCopy
@@ -169,6 +205,14 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_bMinAfterCopy; }
 			set { m_bMinAfterCopy = value; }
+		}
+
+		private bool m_bMinAfterAutoType = false;
+		[DefaultValue(false)]
+		public bool MinimizeAfterAutoType
+		{
+			get { return m_bMinAfterAutoType; }
+			set { m_bMinAfterAutoType = value; }
 		}
 
 		private bool m_bMinAfterLocking = true;
@@ -309,15 +353,16 @@ namespace KeePass.App.Configuration
 			}
 		}
 
-		private List<AceColumn> m_aceColumns = new List<AceColumn>();
+		private List<AceColumn> m_lColumns = new List<AceColumn>();
 		[XmlArray("EntryListColumnCollection")]
+		[XmlArrayItem("Column")]
 		public List<AceColumn> EntryListColumns
 		{
-			get { return m_aceColumns; }
+			get { return m_lColumns; }
 			set
 			{
 				if(value == null) throw new ArgumentNullException("value");
-				m_aceColumns = value;
+				m_lColumns = value;
 			}
 		}
 
@@ -404,7 +449,7 @@ namespace KeePass.App.Configuration
 		}
 
 		private int m_iLgMain = (int)AceListGrouping.Auto;
-		[DefaultValue(0)]
+		[DefaultValue((int)AceListGrouping.Auto)]
 		public int ListGrouping // AceListGrouping
 		{
 			get { return m_iLgMain; }
@@ -421,12 +466,24 @@ namespace KeePass.App.Configuration
 
 		public AceColumn FindColumn(AceColumnType t)
 		{
-			foreach(AceColumn c in m_aceColumns)
+			foreach(AceColumn c in m_lColumns)
 			{
 				if(c.Type == t) return c;
 			}
 
 			return null;
+		}
+
+		internal List<AceColumn> FindColumns(AceColumnType t)
+		{
+			List<AceColumn> l = new List<AceColumn>();
+
+			foreach(AceColumn c in m_lColumns)
+			{
+				if(c.Type == t) l.Add(c);
+			}
+
+			return l;
 		}
 
 		public bool IsColumnHidden(AceColumnType t)
@@ -436,7 +493,7 @@ namespace KeePass.App.Configuration
 
 		public bool IsColumnHidden(AceColumnType t, bool bDefault)
 		{
-			foreach(AceColumn c in m_aceColumns)
+			foreach(AceColumn c in m_lColumns)
 			{
 				if(c.Type == t) return c.HideWithAsterisks;
 			}
@@ -447,7 +504,7 @@ namespace KeePass.App.Configuration
 		public bool ShouldHideCustomString(string strCustomName,
 			ProtectedString psValue)
 		{
-			foreach(AceColumn c in m_aceColumns)
+			foreach(AceColumn c in m_lColumns)
 			{
 				if((c.Type == AceColumnType.CustomString) &&
 					(c.CustomName == strCustomName))
@@ -533,7 +590,6 @@ namespace KeePass.App.Configuration
 		Count // Virtual identifier representing the number of types
 	}
 
-	[XmlType(TypeName = "Column")]
 	public sealed class AceColumn
 	{
 		private AceColumnType m_type = AceColumnType.Count;
@@ -632,6 +688,30 @@ namespace KeePass.App.Configuration
 			if(m_nWidth >= 0) return m_nWidth;
 			return nDefaultWidth;
 		}
+
+		internal string GetTypeNameEx()
+		{
+			try
+			{
+				string str = m_type.ToString();
+
+				if(!string.IsNullOrEmpty(m_strCustomName))
+					str += " - " + m_strCustomName;
+
+				return str;
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			return ((long)m_type).ToString(NumberFormatInfo.InvariantInfo);
+		}
+
+#if DEBUG
+		public override string ToString()
+		{
+			return (GetTypeNameEx() + ", Width: " + m_nWidth.ToString() +
+				", Hide: " + m_bHide.ToString());
+		}
+#endif
 
 		public static bool IsTimeColumn(AceColumnType t)
 		{

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -231,15 +231,15 @@ namespace KeePass.Ecas
 
 			foreach(EcasCondition c in m_conds)
 			{
-				if(Program.EcasPool.EvaluateCondition(c, ctx) == false)
+				if(!Program.EcasPool.EvaluateCondition(c, ctx))
 					return;
 			}
 
-			for(uint iAction = 0; iAction < m_acts.UCount; ++iAction)
+			foreach(EcasAction a in m_acts)
 			{
 				if(ctx.Cancel) break;
 
-				Program.EcasPool.ExecuteAction(m_acts.GetAt(iAction), ctx);
+				Program.EcasPool.ExecuteAction(a, ctx);
 			}
 
 			if(m_bTurnOffAfterAction) m_bOn = false;

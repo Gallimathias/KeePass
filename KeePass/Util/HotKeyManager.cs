@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Forms;
 
 using KeePass.App;
 using KeePass.Forms;
@@ -224,7 +224,7 @@ namespace KeePass.Util
 				// is aware of a possible conflict and intentionally wants
 				// to override any system key combination
 				if(Program.Config.Integration.HotKeyGlobalAutoType !=
-					(ulong)(Keys.Control | Keys.Alt | Keys.A)) return;
+					(long)(Keys.Control | Keys.Alt | Keys.A)) return;
 
 				// Check for a conflict only on Polish systems; other
 				// languages typically don't use Ctrl+Alt+A frequently
@@ -241,7 +241,6 @@ namespace KeePass.Util
 				// instead of LCtrl+LAlt
 				byte[] pbState = new byte[256];
 				pbState[NativeMethods.VK_CONTROL] = 0x80;
-				pbState[NativeMethods.VK_LCONTROL] = 0x80;
 				pbState[NativeMethods.VK_MENU] = 0x80;
 				pbState[NativeMethods.VK_RMENU] = 0x80;
 				pbState[NativeMethods.VK_NUMLOCK] = 0x01; // Toggled
@@ -275,6 +274,31 @@ namespace KeePass.Util
 				else MessageService.ShowWarning(str);
 			}
 			catch(Exception) { Debug.Assert(false); }
+		}
+
+		internal static bool HandleHotKeyIntoSelf(int wParam)
+		{
+			try
+			{
+				OptionsForm f = (GlobalWindowManager.TopWindow as OptionsForm);
+				if(f == null) return false;
+
+				IntPtr h = NativeMethods.GetForegroundWindowHandle();
+				if(h != f.Handle) return false;
+
+				HotKeyControlEx c = (f.ActiveControl as HotKeyControlEx);
+				if(c == null) return false;
+
+				Keys k;
+				if(!m_vRegKeys.TryGetValue(wParam, out k)) return false;
+				if(k == Keys.None) { Debug.Assert(false); return false; }
+
+				c.HotKey = k;
+				return true;
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			return false;
 		}
 	}
 }

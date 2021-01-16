@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -72,7 +72,8 @@ namespace KeePass.Util
 		}
 
 		/// <summary>
-		/// Edge executable cannot be run normally.
+		/// Path to the executable of the legacy Microsoft Edge (EdgeHTML).
+		/// The executable cannot be run normally.
 		/// </summary>
 		public static string EdgePath
 		{
@@ -88,16 +89,16 @@ namespace KeePass.Util
 					return m_obEdgeProtocol.Value;
 
 				bool b = false;
-				RegistryKey rk = null;
 				try
 				{
-					rk = Registry.ClassesRoot.OpenSubKey(
-						"microsoft-edge", false);
-					if(rk != null)
-						b = (rk.GetValue("URL Protocol") != null);
+					using(RegistryKey rk = Registry.ClassesRoot.OpenSubKey(
+						"microsoft-edge", false))
+					{
+						if(rk != null)
+							b = (rk.GetValue("URL Protocol") != null);
+					}
 				}
 				catch(Exception) { Debug.Assert(NativeLib.IsUnix()); }
-				finally { if(rk != null) rk.Close(); }
 
 				m_obEdgeProtocol = b;
 				return b;
@@ -436,7 +437,7 @@ namespace KeePass.Util
 			int iPrefix = str.IndexOf(':');
 			if(iPrefix >= 0) str = str.Substring(iPrefix + 1).Trim();
 
-			int iSep = str.IndexOfAny(new char[]{ ' ', '\t', '\r', '\n' });
+			int iSep = str.IndexOfAny(new char[] { ' ', '\t', '\r', '\n' });
 			if(iSep >= 0) str = str.Substring(0, iSep);
 
 			return ((str.Length > 0) ? str : null);

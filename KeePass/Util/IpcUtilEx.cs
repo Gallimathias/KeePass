@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,14 +19,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 using System.IO;
-using System.Xml.Serialization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 
 using KeePass.Forms;
-using KeePass.Native;
 using KeePass.UI;
 
 using KeePassLib;
@@ -55,7 +54,7 @@ namespace KeePass.Util
 			this.Param3 = string.Empty;
 			this.Param4 = string.Empty;
 		}
-		
+
 		public IpcParamEx(string strMessage, string strParam0, string strParam1,
 			string strParam2, string strParam3, string strParam4)
 		{
@@ -88,11 +87,15 @@ namespace KeePass.Util
 	public static class IpcUtilEx
 	{
 		internal const string IpcMsgFilePreID = "KeePassIPC-";
-		internal const string IpcMsgFilePostID = "-Msgs.tmp";
+		// internal const string IpcMsgFilePostID = "-Msgs.tmp";
 
-		public const string CmdOpenDatabase = "OpenDatabase";
-		public const string CmdOpenEntryUrl = "OpenEntryUrl";
-		public const string CmdIpcEvent = "IpcEvent";
+		public static readonly string CmdOpenDatabase = "OpenDatabase";
+		public static readonly string CmdOpenEntryUrl = "OpenEntryUrl";
+		public static readonly string CmdIpcEvent = "IpcEvent";
+
+		private static readonly byte[] IpcOptEnt = new byte[] {
+			0x51, 0xE4, 0xCA, 0x4B, 0xBB, 0x63, 0x57, 0x21
+		};
 
 		/// <summary>
 		/// Event that is raised e.g. when running KeePass with the
@@ -103,12 +106,17 @@ namespace KeePass.Util
 
 		public static void SendGlobalMessage(IpcParamEx ipcMsg)
 		{
+			SendGlobalMessage(ipcMsg, true); // Backward compatibility
+		}
+
+		public static void SendGlobalMessage(IpcParamEx ipcMsg, bool bOneInstance)
+		{
 			if(ipcMsg == null) throw new ArgumentNullException("ipcMsg");
 
 			int nId = (int)(MemUtil.BytesToUInt32(CryptoRandom.Instance.GetRandomBytes(
 				4)) & 0x7FFFFFFF);
 
-			if(WriteIpcInfoFile(nId, ipcMsg) == false) return;
+			if(!WriteIpcInfoFile(nId, ipcMsg)) return;
 
 			try
 			{
@@ -121,17 +129,22 @@ namespace KeePass.Util
 				//	Program.ApplicationMessage, (IntPtr)Program.AppMessage.IpcByFile,
 				//	(IntPtr)nId, NativeMethods.SMTO_ABORTIFHUNG, 5000, ref pResult);
 
-				IpcBroadcast.Send(Program.AppMessage.IpcByFile, nId, true);
+				IpcBroadcast.Send(bOneInstance ? Program.AppMessage.IpcByFile1 :
+					Program.AppMessage.IpcByFile, nId, true);
 			}
 			catch(Exception) { Debug.Assert(false); }
 
-			string strIpcFile = GetIpcFilePath(nId);
-			for(int r = 0; r < 50; ++r)
+			if(bOneInstance)
 			{
-				try { if(!File.Exists(strIpcFile)) break; }
-				catch(Exception) { }
-				Thread.Sleep(20);
+				string strIpcFile = GetIpcFilePath(nId);
+				for(int r = 0; r < 50; ++r)
+				{
+					try { if(!File.Exists(strIpcFile)) break; }
+					catch(Exception) { Debug.Assert(false); }
+					Thread.Sleep(20);
+				}
 			}
+			else Thread.Sleep(1000);
 
 			RemoveIpcInfoFile(nId);
 		}
@@ -157,14 +170,18 @@ namespace KeePass.Util
 
 			try
 			{
-				XmlSerializer xml = new XmlSerializer(typeof(IpcParamEx));
-				FileStream fs = new FileStream(strPath, FileMode.Create, FileAccess.Write,
-					FileShare.None);
+				using(MemoryStream ms = new MemoryStream())
+				{
+					XmlUtilEx.Serialize<IpcParamEx>(ms, ipcMsg);
 
-				try { xml.Serialize(fs, ipcMsg); }
-				catch(Exception) { Debug.Assert(false); }
+					byte[] pb = ms.ToArray();
+					byte[] pbCmp = MemUtil.Compress(pb);
+					byte[] pbEnc = CryptoUtil.ProtectData(pbCmp, IpcOptEnt,
+						DataProtectionScope.CurrentUser);
 
-				fs.Close();
+					File.WriteAllBytes(strPath, pbEnc);
+				}
+
 				return true;
 			}
 			catch(Exception) { Debug.Assert(false); }
@@ -181,43 +198,52 @@ namespace KeePass.Util
 			catch(Exception) { Debug.Assert(false); }
 		}
 
-		private static IpcParamEx LoadIpcInfoFile(int nId)
+		private static IpcParamEx LoadIpcInfoFile(int nId, bool bOneInstance)
 		{
 			string strPath = GetIpcFilePath(nId);
 			if(string.IsNullOrEmpty(strPath)) return null;
 
-			string strMtxName = (IpcMsgFilePreID + nId.ToString());
-			// Mutex m = Program.TrySingleInstanceLock(strMtxName, true);
-			bool bMutex = GlobalMutexPool.CreateMutex(strMtxName, true);
-			// if(m == null) return null;
-			if(!bMutex) return null;
+			string strMtxName = null;
+			if(bOneInstance)
+			{
+				strMtxName = IpcMsgFilePreID + nId.ToString();
+				if(!GlobalMutexPool.CreateMutex(strMtxName, true)) return null;
+			}
 
 			IpcParamEx ipcParam = null;
 			try
 			{
-				XmlSerializer xml = new XmlSerializer(typeof(IpcParamEx));
-				FileStream fs = new FileStream(strPath, FileMode.Open,
-					FileAccess.Read, FileShare.Read);
+				byte[] pbEnc = File.ReadAllBytes(strPath);
+				byte[] pbCmp = CryptoUtil.UnprotectData(pbEnc, IpcOptEnt,
+					DataProtectionScope.CurrentUser);
+				byte[] pb = MemUtil.Decompress(pbCmp);
 
-				try { ipcParam = (IpcParamEx)xml.Deserialize(fs); }
-				catch(Exception) { Debug.Assert(false); }
-
-				fs.Close();
+				using(MemoryStream ms = new MemoryStream(pb, false))
+				{
+					ipcParam = XmlUtilEx.Deserialize<IpcParamEx>(ms);
+				}
 			}
-			catch(Exception) { }
+			catch(Exception) { Debug.Assert(!File.Exists(strPath)); }
 
-			RemoveIpcInfoFile(nId);
+			if(bOneInstance)
+			{
+				RemoveIpcInfoFile(nId);
+				if(!GlobalMutexPool.ReleaseMutex(strMtxName)) { Debug.Assert(false); }
+			}
 
-			// Program.DestroyMutex(m, true);
-			if(!GlobalMutexPool.ReleaseMutex(strMtxName)) { Debug.Assert(false); }
 			return ipcParam;
 		}
 
 		public static void ProcessGlobalMessage(int nId, MainForm mf)
 		{
+			ProcessGlobalMessage(nId, mf, true); // Backward compatibility
+		}
+
+		public static void ProcessGlobalMessage(int nId, MainForm mf, bool bOneInstance)
+		{
 			if(mf == null) throw new ArgumentNullException("mf");
 
-			IpcParamEx ipcMsg = LoadIpcInfoFile(nId);
+			IpcParamEx ipcMsg = LoadIpcInfoFile(nId, bOneInstance);
 			if(ipcMsg == null) return;
 
 			if(ipcMsg.Message == CmdOpenDatabase)
@@ -225,10 +251,6 @@ namespace KeePass.Util
 				mf.UIBlockAutoUnlock(true);
 				mf.EnsureVisibleForegroundWindow(true, true);
 				mf.UIBlockAutoUnlock(false);
-
-				// Don't try to open another database while a dialog
-				// is displayed (3489098)
-				if(GlobalWindowManager.WindowCount > 0) return;
 
 				string[] vArgs = CommandLineArgs.SafeDeserialize(ipcMsg.Param0);
 				if(vArgs == null) { Debug.Assert(false); return; }
@@ -282,7 +304,7 @@ namespace KeePass.Util
 				PwEntry pe = pdb.RootGroup.FindEntry(pwUuid, true);
 				if(pe == null) continue;
 
-				mf.PerformDefaultUrlAction(new PwEntry[]{ pe }, true);
+				mf.PerformDefaultUrlAction(new PwEntry[] { pe }, true);
 				break;
 			}
 		}

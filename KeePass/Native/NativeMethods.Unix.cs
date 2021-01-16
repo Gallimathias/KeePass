@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -77,18 +77,20 @@ namespace KeePass.Native
 
 			try
 			{
+				if(!fCurrent.MinimizeBox || !fCurrent.Enabled) return false;
+
 				string strCurrent = RunXDoTool("getwindowfocus -f");
 				long lCurrent;
 				long.TryParse(strCurrent.Trim(), out lCurrent);
 
 				MainForm mf = Program.MainForm;
 				Debug.Assert(mf == fCurrent);
-				if(mf != null) mf.UIBlockWindowStateAuto(true);
+				if(mf != null) mf.UIBlockWindowStateAuto(true); // Lose focus only
 
 				UIUtil.SetWindowState(fCurrent, FormWindowState.Minimized);
 
-				int nStart = Environment.TickCount;
-				while((Environment.TickCount - nStart) < 1000)
+				int tStart = Environment.TickCount;
+				while((Environment.TickCount - tStart) < 1000)
 				{
 					Application.DoEvents();
 

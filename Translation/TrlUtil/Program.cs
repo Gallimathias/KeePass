@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,33 +19,64 @@
 
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using System.Text;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 
 using KeePassLib.Utility;
+
+using TrlUtil.App;
+using TrlUtil.App.Configuration;
 
 namespace TrlUtil
 {
 	public static class Program
 	{
+		private static TceConfig m_cfg = null;
+		public static TceConfig Config
+		{
+			get
+			{
+				if(m_cfg == null) { Debug.Assert(false); m_cfg = new TceConfig(); }
+				return m_cfg;
+			}
+		}
+
 		[STAThread]
 		public static void Main(string[] args)
 		{
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
+			try
+			{
+				Application.EnableVisualStyles();
+				Application.SetCompatibleTextRenderingDefault(false);
 
+				KeePass.Program.EnableTranslation = false; // We need English
+				if(!KeePass.Program.CommonInit()) return;
+
+				m_cfg = (TceConfig.Load() ?? new TceConfig());
+
+				MainPriv(args);
+			}
+			catch(Exception ex)
+			{
+				MessageBox.Show(ex.Message, TuDefs.ProductName,
+					MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			}
+
+			TceConfig.Save(m_cfg);
+
+			try { KeePass.Program.CommonTerminate(); }
+			catch(Exception) { Debug.Assert(false); }
+		}
+
+		private static void MainPriv(string[] args)
+		{
 			if((args != null) && (args.Length == 2))
 			{
-				try { ExecuteCmd(args[0], args[1]); }
-				catch(Exception exCmd)
-				{
-					MessageBox.Show(exCmd.Message, "TrlUtil",
-						MessageBoxButtons.OK, MessageBoxIcon.Warning);
-				}
-
+				ExecuteCmd(args[0], args[1]);
 				return;
 			}
 
@@ -59,7 +90,7 @@ namespace TrlUtil
 				StreamWriter swOut = new StreamWriter(strFile + ".lng.xml",
 					false, new UTF8Encoding(false));
 
-				XmlDocument xmlIn = new XmlDocument();
+				XmlDocument xmlIn = XmlUtilEx.CreateXmlDocument();
 				xmlIn.Load(strFile);
 
 				foreach(XmlNode xmlChild in xmlIn.DocumentElement.ChildNodes)
@@ -87,7 +118,7 @@ namespace TrlUtil
 			} */
 			else if(strCmd == "src_from_xml")
 			{
-				XmlDocument xmlIn = new XmlDocument();
+				XmlDocument xmlIn = XmlUtilEx.CreateXmlDocument();
 				xmlIn.Load(strFile);
 
 				foreach(XmlNode xmlTable in xmlIn.DocumentElement.SelectNodes("StringTable"))
@@ -106,7 +137,7 @@ namespace TrlUtil
 					swOut.WriteLine("\t/// <summary>");
 					swOut.WriteLine("\t/// A strongly-typed resource class, for looking up localized strings, etc.");
 					swOut.WriteLine("\t/// </summary>");
-					swOut.WriteLine("\tpublic static class " + xmlTable.Attributes["Name"].Value);
+					swOut.WriteLine("\tpublic static partial class " + xmlTable.Attributes["Name"].Value);
 					swOut.WriteLine("\t{");
 
 					swOut.WriteLine("\t\tprivate static string TryGetEx(Dictionary<string, string> dictNew,");
@@ -126,6 +157,9 @@ namespace TrlUtil
 					swOut.WriteLine("\t\t\tif(dictNew == null) throw new ArgumentNullException(\"dictNew\");");
 					swOut.WriteLine();
 
+#if DEBUG
+					string strLastName = string.Empty;
+#endif
 					foreach(XmlNode xmlData in xmlTable.SelectNodes("Data"))
 					{
 						string strName = xmlData.Attributes["Name"].Value;
@@ -133,6 +167,12 @@ namespace TrlUtil
 						swOut.WriteLine("\t\t\tm_str" + strName +
 							" = TryGetEx(dictNew, \"" + strName +
 							"\", m_str" + strName + ");");
+
+#if DEBUG
+						Debug.Assert((string.Compare(strLastName, strName, true) < 0),
+							"Data names not sorted: " + strLastName + " - " + strName + ".");
+						strLastName = strName;
+#endif
 					}
 
 					swOut.WriteLine("\t\t}");

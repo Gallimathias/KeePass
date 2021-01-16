@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 
 using KeePass.App;
+using KeePass.App.Configuration;
 using KeePass.Ecas;
 using KeePass.Resources;
 using KeePass.UI;
@@ -73,7 +74,7 @@ namespace KeePass.Forms
 
 		private void OnFormLoad(object sender, EventArgs e)
 		{
-			Debug.Assert(m_triggers != null); if(m_triggers == null) return;
+			if(m_triggers == null) { Debug.Assert(false); return; }
 
 			GlobalWindowManager.AddWindow(this);
 			GlobalWindowManager.CustomizeControl(m_ctxTools);
@@ -91,6 +92,12 @@ namespace KeePass.Forms
 
 			m_cbEnableTriggers.Checked = m_triggers.Enabled;
 			UpdateTriggerListEx(false);
+
+			EcasTriggerSystem ts = Program.TriggerSystem;
+			EcasTriggerSystem tsCfg = Program.Config.Application.TriggerSystem;
+			if(object.ReferenceEquals(m_triggersInOut, ts) &&
+				AppConfigEx.IsOptionEnforced(tsCfg, "Enabled"))
+				m_cbEnableTriggers.Enabled = false;
 		}
 
 		private void CleanUpEx()
@@ -116,13 +123,23 @@ namespace KeePass.Forms
 
 		private void EnableControlsEx()
 		{
+			bool bEnabled = m_cbEnableTriggers.Checked;
 			int nSelCount = m_lvTriggers.SelectedIndices.Count;
 
-			bool bCanMove = ((m_lvTriggers.Items.Count >= 2) && (nSelCount >= 1));
-			m_btnMoveUp.Enabled = m_btnMoveDown.Enabled = bCanMove;
+			m_lvTriggers.Enabled = bEnabled;
 
-			m_btnEdit.Enabled = (nSelCount == 1);
-			m_btnDelete.Enabled = (nSelCount >= 1);
+			m_btnAdd.Enabled = bEnabled;
+			m_btnEdit.Enabled = (bEnabled && (nSelCount == 1));
+			m_btnDelete.Enabled = (bEnabled && (nSelCount >= 1));
+
+			bool bMove = (bEnabled && (m_lvTriggers.Items.Count >= 2) &&
+				(nSelCount >= 1));
+			m_btnMoveUp.Enabled = bMove;
+			m_btnMoveDown.Enabled = bMove;
+
+			m_ctxToolsCopyTriggers.Enabled = bEnabled;
+			m_ctxToolsCopySelectedTriggers.Enabled = bEnabled;
+			m_ctxToolsPasteTriggers.Enabled = bEnabled;
 		}
 
 		private void UpdateTriggerListEx(bool bRestoreSelected)
@@ -211,23 +228,15 @@ namespace KeePass.Forms
 				for(int iTrigger = 0; iTrigger < vTriggers.Length; ++iTrigger)
 					v.Triggers.Add(vTriggers[iTrigger].Tag as EcasTrigger);
 
-				XmlWriterSettings xws = new XmlWriterSettings();
-				xws.Encoding = new UTF8Encoding(false);
-				xws.Indent = true;
-				xws.IndentChars = "\t";
+				using(MemoryStream ms = new MemoryStream())
+				{
+					XmlUtilEx.Serialize<EcasTriggerContainer>(ms, v);
 
-				MemoryStream ms = new MemoryStream();
-				XmlWriter xw = XmlWriter.Create(ms, xws);
-
-				XmlSerializer xmls = new XmlSerializer(typeof(EcasTriggerContainer));
-				xmls.Serialize(xw, v);
-
-				ClipboardUtil.Copy(StrUtil.Utf8.GetString(ms.ToArray()), false,
-					false, null, null, this.Handle);
-				xw.Close();
-				ms.Close();
+					ClipboardUtil.Copy(StrUtil.Utf8.GetString(ms.ToArray()),
+						false, false, null, null, this.Handle);
+				}
 			}
-			catch(Exception excp) { MessageService.ShowWarning(excp.Message); }
+			catch(Exception ex) { MessageService.ShowWarning(ex); }
 		}
 
 		private void OnCtxToolsCopyTriggers(object sender, EventArgs e)
@@ -248,23 +257,23 @@ namespace KeePass.Forms
 		{
 			try
 			{
-				string strData = ClipboardUtil.GetText();
-				XmlSerializer xmls = new XmlSerializer(typeof(EcasTriggerContainer));
-
+				string strData = (ClipboardUtil.GetText() ?? string.Empty);
 				byte[] pbData = StrUtil.Utf8.GetBytes(strData);
-				MemoryStream ms = new MemoryStream(pbData, false);
-				EcasTriggerContainer c = (EcasTriggerContainer)xmls.Deserialize(ms);
-				ms.Close();
 
-				foreach(EcasTrigger t in c.Triggers)
+				using(MemoryStream ms = new MemoryStream(pbData, false))
 				{
-					if(m_triggers.FindObjectByUuid(t.Uuid) != null)
-						t.Uuid = new PwUuid(true);
-					
-					m_triggers.TriggerCollection.Add(t);
+					EcasTriggerContainer c = XmlUtilEx.Deserialize<EcasTriggerContainer>(ms);
+
+					foreach(EcasTrigger t in c.Triggers)
+					{
+						if(m_triggers.FindObjectByUuid(t.Uuid) != null)
+							t.Uuid = new PwUuid(true);
+
+						m_triggers.TriggerCollection.Add(t);
+					}
 				}
 			}
-			catch(Exception excp) { MessageService.ShowWarning(excp.Message); }
+			catch(Exception ex) { MessageService.ShowWarning(ex); }
 
 			UpdateTriggerListEx(true);
 		}
@@ -275,6 +284,11 @@ namespace KeePass.Forms
 		}
 
 		private void OnTriggersSelectedIndexChanged(object sender, EventArgs e)
+		{
+			EnableControlsEx();
+		}
+
+		private void OnEnableTriggersCheckedChanged(object sender, EventArgs e)
 		{
 			EnableControlsEx();
 		}

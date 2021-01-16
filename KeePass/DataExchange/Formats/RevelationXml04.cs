@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ namespace KeePass.DataExchange.Formats
 			string strDoc = sr.ReadToEnd();
 			sr.Close();
 
-			XmlDocument doc = new XmlDocument();
+			XmlDocument doc = XmlUtilEx.CreateXmlDocument();
 			doc.LoadXml(strDoc);
 
 			ProcessEntries(pwStorage, pwStorage.RootGroup,
@@ -85,6 +85,7 @@ namespace KeePass.DataExchange.Formats
 		private static void ImportGroup(PwDatabase pd, PwGroup pgParent, XmlNode xmlNode)
 		{
 			PwGroup pg = new PwGroup(true, true);
+			pgParent.AddGroup(pg, true);
 
 			foreach(XmlNode xmlChild in xmlNode.ChildNodes)
 			{
@@ -97,8 +98,6 @@ namespace KeePass.DataExchange.Formats
 					pg.LastModificationTime = ImportTime(xmlChild);
 				else { Debug.Assert(false); }
 			}
-
-			pgParent.AddGroup(pg, true);
 
 			ProcessEntries(pd, pg, xmlNode.ChildNodes);
 		}

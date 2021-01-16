@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -132,10 +132,9 @@ namespace KeePass.Forms
 
 		private void OnTbUrlKeyDown(object sender, KeyEventArgs e)
 		{
-			if((e.KeyCode == Keys.Enter) || (e.KeyCode == Keys.Return))
+			if(e.KeyCode == Keys.Return) // Return == Enter
 			{
 				UIUtil.SetHandled(e, true);
-
 				OnBtnGo(sender, e);
 			}
 		}

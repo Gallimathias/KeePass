@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Drawing;
-using System.Threading;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Threading;
 
 using KeePass.Native;
 using KeePass.Resources;
@@ -45,7 +45,8 @@ namespace KeePass.DataExchange.Formats
 		private const string IniTypeKey = "Type";
 		private const string IniTypeValue = "WinFav-Export 1.0";
 
-		private const string LnkDescSuffix = (@" [" + PwDefs.ShortProductName + @"]");
+		private static readonly string LnkDescSuffix = " [" +
+			PwDefs.ShortProductName + "]";
 
 		public override bool SupportsImport { get { return false; } }
 		public override bool SupportsExport { get { return true; } }
@@ -160,10 +161,11 @@ namespace KeePass.DataExchange.Formats
 		private static void ExportEntry(PwEntry pe, string strDir, PwExportInfo pxi)
 		{
 			PwDatabase pd = ((pxi != null) ? pxi.ContextDatabase : null);
-			SprContext ctx = new SprContext(pe, pd, SprCompileFlags.NonActive, false, false);
+			SprContext ctxUrl = new SprContext(pe, pd, SprCompileFlags.NonActive, false, true);
+			SprContext ctx = ctxUrl.WithoutContentTransformations();
 
 			KeyValuePair<string, string>? okvpCmd = null;
-			string strUrl = SprEngine.Compile(pe.Strings.ReadSafe(PwDefs.UrlField), ctx);
+			string strUrl = SprEngine.Compile(pe.Strings.ReadSafe(PwDefs.UrlField), ctxUrl);
 			if(WinUtil.IsCommandLineUrl(strUrl))
 			{
 				strUrl = WinUtil.GetCommandLineFromUrl(strUrl);

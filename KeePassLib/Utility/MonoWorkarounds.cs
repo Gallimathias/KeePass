@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -58,6 +58,9 @@ namespace KeePassLib.Utility
 			return g_bReq.Value;
 		}
 
+		// 106:
+		//   Mono throws exceptions when no X server is running.
+		//   https://sourceforge.net/p/keepass/patches/106/
 		// 1219:
 		//   Mono prepends byte order mark (BOM) to StdIn.
 		//   https://sourceforge.net/p/keepass/bugs/1219/
@@ -104,16 +107,30 @@ namespace KeePassLib.Utility
 		// 1690:
 		//   Removing items from a list view doesn't work properly.
 		//   https://sourceforge.net/p/keepass/bugs/1690/
-		// 2139:
-		//   Shortcut keys are ignored.
-		//   https://sourceforge.net/p/keepass/feature-requests/2139/
+		// 1710:
+		//   Mono doesn't always raise the FormClosed event properly.
+		//   https://sourceforge.net/p/keepass/bugs/1710/
+		// 1716:
+		//   'Always on Top' doesn't work properly on the Cinnamon desktop.
+		//   https://sourceforge.net/p/keepass/bugs/1716/
+		// 1760:
+		//   Input focus is not restored when activating a form.
+		//   https://sourceforge.net/p/keepass/bugs/1760/
+		// 1976:
+		//   Input focus cannot be set after unlocking.
+		//   https://sourceforge.net/p/keepass/bugs/1976/
 		// 2140:
 		//   Explicit control focusing is ignored.
 		//   https://sourceforge.net/p/keepass/feature-requests/2140/
-		// 5795:
+		// 5795: [Fixed]
 		//   Text in input field is incomplete.
 		//   https://bugzilla.xamarin.com/show_bug.cgi?id=5795
 		//   https://sourceforge.net/p/keepass/discussion/329220/thread/d23dc88b/
+		//   https://github.com/mono/mono/commit/1a79065f8cd9f128e6e527e5d573111f794ce288
+		//   https://github.com/mono/mono/pull/5947
+		// 9604:
+		//   Trying to resolve a non-existing metadata token crashes Mono.
+		//   https://github.com/mono/mono/issues/9604
 		// 10163:
 		//   WebRequest GetResponse call missing, breaks WebDAV due to no PUT.
 		//   https://bugzilla.xamarin.com/show_bug.cgi?id=10163
@@ -126,9 +143,22 @@ namespace KeePassLib.Utility
 		//   PictureBox not rendered when bitmap height >= control height.
 		//   https://bugzilla.xamarin.com/show_bug.cgi?id=12525
 		//   https://sourceforge.net/p/keepass/discussion/329220/thread/54f61e9a/
+		// 19836:
+		//   URLs/documents cannot be opened using Process.Start anymore
+		//   (even when UseShellExecute = true).
+		//   https://github.com/mono/mono/issues/19836
 		// 100001:
 		//   Control locations/sizes are invalid/unexpected.
 		//   [NoRef]
+		// 100002:
+		//   TextChanged event isn't raised when the formatting changes.
+		//   [NoRef]
+		// 100003:
+		//   Icon.ExtractAssociatedIcon always returns the same icon.
+		//   [NoRef]
+		// 190417:
+		//   Mono's Process.Start method replaces '\\' by '/'.
+		//   https://github.com/mono/mono/blob/master/mono/metadata/w32process-unix.c
 		// 373134:
 		//   Control.InvokeRequired doesn't always return the correct value.
 		//   https://bugzilla.novell.com/show_bug.cgi?id=373134
@@ -144,6 +174,10 @@ namespace KeePassLib.Utility
 		// 686017:
 		//   Minimum sizes must be enforced.
 		//   https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=686017
+		// 688007: [Fixed]
+		//   Credentials are required for anonymous web requests.
+		//   https://bugzilla.novell.com/show_bug.cgi?id=688007
+		//   https://sourceforge.net/p/keepass/bugs/1950/
 		// 801414:
 		//   Mono recreates the main window incorrectly.
 		//   https://bugs.launchpad.net/ubuntu/+source/keepass2/+bug/801414
@@ -174,13 +208,29 @@ namespace KeePassLib.Utility
 			if(g_dForceReq.TryGetValue(uBugID, out bForce)) return bForce;
 
 			ulong v = NativeLib.MonoVersion;
-			if(v != 0)
+			if(v == 0) return true;
+
+			bool b = true;
+			switch(uBugID)
 			{
-				if(uBugID == 10163)
-					return (v >= 0x0002000B00000000UL); // >= 2.11
+				case 5795:
+					b = (v < 0x0005000A00000000UL); break;
+				case 10163:
+					b = (v >= 0x0002000B00000000UL); break;
+				case 688007:
+					b = (v < 0x0006000000000000UL); break;
+				default: break;
 			}
 
-			return true;
+			return b;
+		}
+
+		// Public for plugins
+		public static void SetEnabled(uint uBugID, bool? obEnabled)
+		{
+			if(obEnabled.HasValue)
+				g_dForceReq[uBugID] = obEnabled.Value;
+			else g_dForceReq.Remove(uBugID);
 		}
 
 		internal static void SetEnabled(string strIDs, bool bEnabled)
@@ -194,7 +244,7 @@ namespace KeePassLib.Utility
 
 				uint uID;
 				if(StrUtil.TryParseUInt(strID.Trim(), out uID))
-					g_dForceReq[uID] = bEnabled;
+					SetEnabled(uID, bEnabled);
 			}
 		}
 
@@ -560,7 +610,7 @@ namespace KeePassLib.Utility
 					{
 						// Mono's WriteRecentlyUsedFiles method also loads the
 						// XML file using XmlDocument
-						XmlDocument xd = new XmlDocument();
+						XmlDocument xd = XmlUtilEx.CreateXmlDocument();
 						xd.Load(strFile);
 					}
 					catch(Exception) // The XML file is invalid

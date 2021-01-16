@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Text;
 
@@ -34,6 +35,42 @@ namespace KeePassLib.Cryptography
 {
 	public static class CryptoUtil
 	{
+		private static bool? g_obProtData = null;
+		public static bool IsProtectedDataSupported
+		{
+			get
+			{
+				if(g_obProtData.HasValue) return g_obProtData.Value;
+
+				bool b = false;
+				try
+				{
+					Random r = CryptoRandom.NewWeakRandom();
+
+					byte[] pbData = new byte[137];
+					r.NextBytes(pbData);
+
+					byte[] pbEnt = new byte[41];
+					r.NextBytes(pbEnt);
+
+					byte[] pbEnc = ProtectedData.Protect(pbData, pbEnt,
+						DataProtectionScope.CurrentUser);
+					if((pbEnc != null) && !MemUtil.ArraysEqual(pbEnc, pbData))
+					{
+						byte[] pbDec = ProtectedData.Unprotect(pbEnc, pbEnt,
+							DataProtectionScope.CurrentUser);
+						if((pbDec != null) && MemUtil.ArraysEqual(pbDec, pbData))
+							b = true;
+					}
+				}
+				catch(Exception) { Debug.Assert(false); }
+
+				Debug.Assert(b); // Should be supported on all systems
+				g_obProtData = b;
+				return b;
+			}
+		}
+
 		public static byte[] HashSha256(byte[] pbData)
 		{
 			if(pbData == null) throw new ArgumentNullException("pbData");
@@ -64,6 +101,22 @@ namespace KeePassLib.Cryptography
 			byte[] pbZero = new byte[32];
 			Debug.Assert(!MemUtil.ArraysEqual(pbHash, pbZero));
 #endif
+
+			return pbHash;
+		}
+
+		internal static byte[] HashSha256(string strFilePath)
+		{
+			byte[] pbHash = null;
+
+			using(FileStream fs = new FileStream(strFilePath, FileMode.Open,
+				FileAccess.Read, FileShare.Read))
+			{
+				using(SHA256Managed h = new SHA256Managed())
+				{
+					pbHash = h.ComputeHash(fs);
+				}
+			}
 
 			return pbHash;
 		}
@@ -128,6 +181,7 @@ namespace KeePassLib.Cryptography
 			return pbRet;
 		}
 
+#if !KeePassUAP
 		private static bool? g_obAesCsp = null;
 		internal static SymmetricAlgorithm CreateAes()
 		{
@@ -161,6 +215,40 @@ namespace KeePassLib.Cryptography
 			catch(Exception) { Debug.Assert(false); }
 
 			return null;
+		}
+#endif
+
+		public static byte[] ProtectData(byte[] pb, byte[] pbOptEntropy,
+			DataProtectionScope s)
+		{
+			return ProtectDataPriv(pb, true, pbOptEntropy, s);
+		}
+
+		public static byte[] UnprotectData(byte[] pb, byte[] pbOptEntropy,
+			DataProtectionScope s)
+		{
+			return ProtectDataPriv(pb, false, pbOptEntropy, s);
+		}
+
+		private static byte[] ProtectDataPriv(byte[] pb, bool bProtect,
+			byte[] pbOptEntropy, DataProtectionScope s)
+		{
+			if(pb == null) throw new ArgumentNullException("pb");
+
+			if((pbOptEntropy != null) && (pbOptEntropy.Length == 0))
+				pbOptEntropy = null;
+
+			if(CryptoUtil.IsProtectedDataSupported)
+			{
+				if(bProtect)
+					return ProtectedData.Protect(pb, pbOptEntropy, s);
+				return ProtectedData.Unprotect(pb, pbOptEntropy, s);
+			}
+
+			Debug.Assert(false);
+			byte[] pbCopy = new byte[pb.Length];
+			Array.Copy(pb, pbCopy, pb.Length);
+			return pbCopy;
 		}
 	}
 }

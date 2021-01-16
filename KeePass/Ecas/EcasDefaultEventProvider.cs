@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -44,6 +44,14 @@ namespace KeePass.Ecas
 			0xB3, 0xA8, 0xFD, 0xFE, 0x78, 0x13, 0x4A, 0x6A,
 			0x9C, 0x5D, 0xD5, 0xBA, 0x84, 0x3A, 0x9B, 0x8E
 		});
+		public static readonly PwUuid SynchronizingDatabaseFile = new PwUuid(new byte[] {
+			0x06, 0x7E, 0x27, 0xA7, 0x20, 0xB0, 0x47, 0x71,
+			0x8F, 0x14, 0x68, 0xD5, 0x01, 0x5C, 0x76, 0x6A
+		});
+		public static readonly PwUuid SynchronizedDatabaseFile = new PwUuid(new byte[] {
+			0xB5, 0xA1, 0xE0, 0xD5, 0xA2, 0xF6, 0x44, 0xB3,
+			0x8A, 0xA1, 0x84, 0xC6, 0x86, 0xC2, 0xA9, 0x60
+		});
 		public static readonly PwUuid ClosingDatabaseFilePre = new PwUuid(new byte[] {
 			0x8C, 0xEA, 0xDE, 0x9A, 0xA8, 0x17, 0x49, 0x19,
 			0xA3, 0x2F, 0xF4, 0x1E, 0x3B, 0x1D, 0xEC, 0x49
@@ -72,7 +80,13 @@ namespace KeePass.Ecas
 			0x47, 0x47, 0x59, 0x92, 0x97, 0xA7, 0x43, 0xA2,
 			0xB9, 0x68, 0x1F, 0x1F, 0xC2, 0xF7, 0x9B, 0x92
 		});
-		public static readonly PwUuid UpdatedUIState = new PwUuid(new byte[] {
+		public static readonly PwUuid TimePeriodic = new PwUuid(new byte[] {
+			0x6C, 0x44, 0xBB, 0x5D, 0xF1, 0x8B, 0x4C, 0x0D,
+			0x88, 0xCE, 0x65, 0xE6, 0xE9, 0xAD, 0x29, 0x8A
+		});
+
+		// Obsolete
+		internal static readonly PwUuid UpdatedUIState = new PwUuid(new byte[] {
 			0x8D, 0x12, 0xD4, 0x9A, 0xF2, 0xCB, 0x4F, 0xF7,
 			0xA8, 0xEF, 0xCF, 0xDA, 0xAC, 0x62, 0x68, 0x99
 		});
@@ -108,6 +122,12 @@ namespace KeePass.Ecas
 			m_events.Add(new EcasEventType(EcasEventIDs.SavedDatabaseFile,
 				KPRes.SavedDatabaseFile, PwIcon.Disk, epFileFilter,
 				IsMatchIocDbEvent));
+			m_events.Add(new EcasEventType(EcasEventIDs.SynchronizingDatabaseFile,
+				KPRes.SynchronizingDatabaseFile, PwIcon.Disk, epFileFilter,
+				IsMatchIocDbEvent));
+			m_events.Add(new EcasEventType(EcasEventIDs.SynchronizedDatabaseFile,
+				KPRes.SynchronizedDatabaseFile, PwIcon.Disk, epFileFilter,
+				IsMatchIocDbEvent));
 			m_events.Add(new EcasEventType(EcasEventIDs.ClosingDatabaseFilePre,
 				KPRes.ClosingDatabaseFile + " (" + KPRes.SavingPre + ")",
 				PwIcon.PaperQ, epFileFilter, IsMatchIocDbEvent));
@@ -117,8 +137,13 @@ namespace KeePass.Ecas
 			m_events.Add(new EcasEventType(EcasEventIDs.CopiedEntryInfo,
 				KPRes.CopiedEntryData, PwIcon.ClipboardReady, epValueFilter,
 				IsMatchTextEvent));
-			m_events.Add(new EcasEventType(EcasEventIDs.UpdatedUIState,
-				KPRes.UpdatedUIState, PwIcon.PaperReady, null, null));
+			// m_events.Add(new EcasEventType(EcasEventIDs.UpdatedUIState,
+			//	KPRes.UpdatedUIState, PwIcon.PaperReady, null, null));
+			m_events.Add(new EcasEventType(EcasEventIDs.TimePeriodic,
+				KPRes.Time + " - " + KPRes.Periodic, PwIcon.Clock, new EcasParameter[] {
+					new EcasParameter(KPRes.Interval + " [s]", EcasValueType.UInt64, null),
+					new EcasParameter(KPRes.TimerRestartOnActivity, EcasValueType.Bool, null) },
+				IsMatchTimePeriodicEvent));
 			m_events.Add(new EcasEventType(EcasEventIDs.CustomTbButtonClicked,
 				KPRes.CustomTbButtonClicked, PwIcon.Star, new EcasParameter[] {
 					new EcasParameter(KPRes.Id, EcasValueType.String, null) },
@@ -173,6 +198,27 @@ namespace KeePass.Ecas
 			if(string.IsNullOrEmpty(strIdCur)) return false;
 
 			return strIdRef.Equals(strIdCur, StrUtil.CaseIgnoreCmp);
+		}
+
+		private static bool IsMatchTimePeriodicEvent(EcasEvent e, EcasContext ctx)
+		{
+			long lRun = e.RunAtTicks;
+			bool bRestart = true, bRun = false;
+
+			if(lRun >= 0)
+			{
+				DateTime dtNow = DateTime.UtcNow;
+
+				if(dtNow.Ticks >= lRun) bRun = true;
+				else bRestart = false;
+			}
+
+			if(bRestart)
+			{
+				if(!e.RestartTimer()) return false;
+			}
+
+			return bRun;
 		}
 	}
 }

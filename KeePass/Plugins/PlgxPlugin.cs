@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,17 +18,18 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.IO.Compression;
-using System.Diagnostics;
-using System.Windows.Forms;
 using System.CodeDom;
 using System.CodeDom.Compiler;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.Resources;
 using System.Security.Cryptography;
+using System.Text;
+using System.Windows.Forms;
 
 using Microsoft.CSharp;
 // using Microsoft.VisualBasic;
@@ -67,7 +68,7 @@ namespace KeePass.Plugins
 
 	public static class PlgxPlugin
 	{
-		public const string PlgxExtension = "plgx";
+		public static readonly string PlgxExtension = "plgx";
 
 		private const uint PlgxSignature1 = 0x65D90719;
 		private const uint PlgxSignature2 = 0x3DDD0503;
@@ -176,7 +177,7 @@ namespace KeePass.Plugins
 
 			string strPluginPath = null;
 			string strTmpRoot = null;
-			bool? bContent = null;
+			bool? obContent = null;
 			string strBuildPre = null, strBuildPost = null;
 
 			while(true)
@@ -223,7 +224,7 @@ namespace KeePass.Plugins
 					strBuildPost = StrUtil.Utf8.GetString(kvp.Value);
 				else if(kvp.Key == PlgxBeginContent)
 				{
-					if(bContent.HasValue)
+					if(obContent.HasValue)
 						throw new PlgxException(KLRes.FileCorrupted);
 
 					string strCached = PlgxCache.GetCacheFile(plgx, true, false);
@@ -237,12 +238,12 @@ namespace KeePass.Plugins
 						slStatus.SetText(KPRes.PluginsCompilingAndLoading,
 							LogStatusType.Info);
 
-					bContent = true;
+					obContent = true;
 					if(plgx.LogStream != null) plgx.LogStream.WriteLine("Content:");
 				}
 				else if(kvp.Key == PlgxFile)
 				{
-					if(!bContent.HasValue || !bContent.Value)
+					if(!obContent.HasValue || !obContent.Value)
 						throw new PlgxException(KLRes.FileCorrupted);
 
 					if(strTmpRoot == null) strTmpRoot = CreateTempDirectory();
@@ -250,10 +251,10 @@ namespace KeePass.Plugins
 				}
 				else if(kvp.Key == PlgxEndContent)
 				{
-					if(!bContent.HasValue || !bContent.Value)
+					if(!obContent.HasValue || !obContent.Value)
 						throw new PlgxException(KLRes.FileCorrupted);
 
-					bContent = false;
+					obContent = false;
 				}
 				else { Debug.Assert(false); }
 			}
@@ -338,10 +339,12 @@ namespace KeePass.Plugins
 
 				if(plgx.LogStream != null)
 				{
-					MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-					byte[] pbMD5 = md5.ComputeHash(pbDecompressed);
-					plgx.LogStream.Write(MemUtil.ByteArrayToHexString(pbMD5));
-					plgx.LogStream.WriteLine(" " + strPath);
+					using(MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
+					{
+						byte[] pbMD5 = md5.ComputeHash(pbDecompressed);
+						plgx.LogStream.Write(MemUtil.ByteArrayToHexString(pbMD5));
+						plgx.LogStream.WriteLine(" " + strPath);
+					}
 				}
 			}
 			else { Debug.Assert(false); }
@@ -470,7 +473,9 @@ namespace KeePass.Plugins
 		private static void RecursiveFileAdd(BinaryWriter bw, string strRootDir,
 			DirectoryInfo di)
 		{
+			if(di.Name.Equals(".git", StrUtil.CaseIgnoreCmp)) return; // Skip Git
 			if(di.Name.Equals(".svn", StrUtil.CaseIgnoreCmp)) return; // Skip SVN
+			if(di.Name.Equals(".vs", StrUtil.CaseIgnoreCmp)) return; // Skip VS
 
 			foreach(FileInfo fi in di.GetFiles())
 			{
@@ -514,6 +519,8 @@ namespace KeePass.Plugins
 			cp.ReferencedAssemblies.Add(WinUtil.GetExecutable());
 			foreach(string strCustomRef in vCustomRefs)
 				cp.ReferencedAssemblies.Add(strCustomRef);
+
+			cp.CompilerOptions = "-define:" + GetDefines();
 
 			CompileEmbeddedRes(plgx);
 			PrepareSourceFiles(plgx);
@@ -680,9 +687,27 @@ namespace KeePass.Plugins
 			string strFile = Path.GetTempFileName();
 			File.WriteAllText(strFile, sb.ToString(), StrUtil.Utf8);
 
-			MessageService.ShowWarning(plgx.BaseFileName,
+			string strMsg = plgx.BaseFileName + MessageService.NewParagraph +
 				"Compilation failed. Compiler results have been saved to:" +
-				Environment.NewLine + strFile);
+				MessageService.NewLine;
+
+			VistaTaskDialog dlg = new VistaTaskDialog();
+			dlg.Content = strMsg + VistaTaskDialog.CreateLink("F", strFile);
+			dlg.DefaultButtonID = (int)DialogResult.Cancel;
+			dlg.EnableHyperlinks = true;
+			dlg.SetIcon(VtdIcon.Warning);
+			dlg.WindowTitle = PwDefs.ShortProductName;
+
+			dlg.AddButton((int)DialogResult.Cancel, KPRes.Ok, null);
+			dlg.LinkClicked += delegate(object sender, LinkClickedEventArgs e)
+			{
+				if((e != null) && (e.LinkText == "F") && !NativeLib.IsUnix())
+					NativeLib.StartProcess(WinUtil.LocateSystemApp("Notepad.exe"),
+						"\"" + SprEncoding.EncodeForCommandLine(strFile) + "\"");
+			};
+
+			if(!dlg.ShowDialog())
+				MessageService.ShowWarning(strMsg + strFile);
 		}
 
 		// Windows 98 only supports the parameterless constructor, therefore
@@ -692,6 +717,22 @@ namespace KeePass.Plugins
 			string> iOpts)
 		{
 			return new CSharpCodeProvider(iOpts);
+		}
+
+		private static string GetDefines()
+		{
+			StringBuilder sb = new StringBuilder();
+			NumberFormatInfo nfi = NumberFormatInfo.InvariantInfo;
+
+			sb.Append("KP_V_");
+			sb.Append((PwDefs.FileVersion64 >> 48).ToString(nfi));
+			sb.Append('_');
+			sb.Append(((PwDefs.FileVersion64 >> 32) & 0xFFFFU).ToString(nfi));
+			sb.Append('_');
+			sb.Append(((PwDefs.FileVersion64 >> 16) & 0xFFFFU).ToString(nfi));
+			// sb.Append(';');
+
+			return sb.ToString();
 		}
 
 		private static void CompileEmbeddedRes(PlgxPluginInfo plgx)
@@ -780,27 +821,24 @@ namespace KeePass.Plugins
 
 			string str = strCmd;
 			if(strTmpDir != null)
-				str = StrUtil.ReplaceCaseInsensitive(str, @"{PLGX_TEMP_DIR}", strTmpDir);
+				str = StrUtil.ReplaceCaseInsensitive(str, @"{PLGX_TEMP_DIR}",
+					SprEncoding.EncodeForCommandLine(strTmpDir));
 			if(strCacheDir != null)
-				str = StrUtil.ReplaceCaseInsensitive(str, @"{PLGX_CACHE_DIR}", strCacheDir);
+				str = StrUtil.ReplaceCaseInsensitive(str, @"{PLGX_CACHE_DIR}",
+					SprEncoding.EncodeForCommandLine(strCacheDir));
 
-			// str = UrlUtil.ConvertSeparators(str);
-			str = SprEngine.Compile(str, null);
+			// str = UrlUtil.ConvertSeparators(str); // Would convert args
+			str = SprEngine.Compile(str, new SprContext(null, null,
+				SprCompileFlags.NonActive, false, true));
 
 			string strApp, strArgs;
 			StrUtil.SplitCommandLine(str, out strApp, out strArgs);
 
-			try
-			{
-				if((strArgs != null) && (strArgs.Length > 0))
-					Process.Start(strApp, strArgs);
-				else
-					Process.Start(strApp);
-			}
-			catch(Exception exRun)
+			try { NativeLib.StartProcess(strApp, strArgs); }
+			catch(Exception ex)
 			{
 				if(Program.CommandLineArgs[AppDefs.CommandLineOptions.Debug] != null)
-					throw new PlgxException(exRun.Message);
+					throw new PlgxException(ex.Message);
 				throw;
 			}
 		}

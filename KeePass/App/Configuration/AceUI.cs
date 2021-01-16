@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Drawing;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
+using System.Text;
 
 using KeePass.UI;
 
@@ -61,10 +61,13 @@ namespace KeePass.App.Configuration
 		DisableKeyChangeDays = 0x8,
 		HidePwQuality = 0x10,
 		DisableUpdateCheck = 0x20,
+		DisableXmlReplace = 0x40,
+		DisableDbSettings = 0x80,
 
 		HideBuiltInPwGenPrfInEntryDlg = 0x10000,
 		ShowLastAccessTime = 0x20000,
-		HideNewDbInfoDialogs = 0x40000
+		HideNewDbInfoDialogs = 0x40000,
+		HideAutoTypeObfInfo = 0x80000
 	}
 
 	[Flags]
@@ -156,8 +159,8 @@ namespace KeePass.App.Configuration
 			set { m_bannerStyle = value; }
 		}
 
-		private bool m_bShowImportStatusDlg = true;
-		[DefaultValue(true)]
+		private bool m_bShowImportStatusDlg = false;
+		[DefaultValue(false)]
 		public bool ShowImportStatusDialog
 		{
 			get { return m_bShowImportStatusDlg; }
@@ -206,6 +209,14 @@ namespace KeePass.App.Configuration
 				if(value == null) throw new ArgumentNullException("value");
 				m_strToolStripRenderer = value;
 			}
+		}
+
+		private bool m_bTreeViewShowLines = false;
+		[DefaultValue(false)]
+		public bool TreeViewShowLines
+		{
+			get { return m_bTreeViewShowLines; }
+			set { m_bTreeViewShowLines = value; }
 		}
 
 		private bool m_bOptScreenReader = false;
@@ -352,6 +363,14 @@ namespace KeePass.App.Configuration
 	{
 		public AceHiding()
 		{
+		}
+
+		private bool m_bRememberHidePwsMain = true;
+		[DefaultValue(true)]
+		public bool RememberHidingPasswordsMain
+		{
+			get { return m_bRememberHidePwsMain; }
+			set { m_bRememberHidePwsMain = value; }
 		}
 
 		private bool m_bSepHiding = false;

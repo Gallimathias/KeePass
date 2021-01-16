@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 #if KeePassLibSD
@@ -33,7 +34,7 @@ using System.IO.Compression;
 namespace KeePassLib.Utility
 {
 	/// <summary>
-	/// Contains static buffer manipulation and string conversion routines.
+	/// Buffer manipulation and conversion routines.
 	/// </summary>
 	public static class MemUtil
 	{
@@ -41,6 +42,13 @@ namespace KeePassLib.Utility
 
 		internal static readonly ArrayHelperEx<char> ArrayHelperExOfChar =
 			new ArrayHelperEx<char>();
+
+		private const MethodImplOptions MioNoOptimize =
+#if KeePassLibSD
+			MethodImplOptions.NoInlining;
+#else
+			(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining);
+#endif
 
 		private static readonly uint[] m_vSBox = new uint[256] {
 			0xCD2FACB3, 0xE78A7F5C, 0x6F0803FC, 0xBCF6E230,
@@ -146,11 +154,11 @@ namespace KeePassLib.Utility
 
 				ch = strHex[i + 1];
 				if((ch >= '0') && (ch <= '9'))
-					bt += (byte)(ch - '0');
+					bt |= (byte)(ch - '0');
 				else if((ch >= 'a') && (ch <= 'f'))
-					bt += (byte)(ch - 'a' + 10);
+					bt |= (byte)(ch - 'a' + 10);
 				else if((ch >= 'A') && (ch <= 'F'))
-					bt += (byte)(ch - 'A' + 10);
+					bt |= (byte)(ch - 'A' + 10);
 				else { Debug.Assert(false); }
 
 				pb[i >> 1] = bt;
@@ -254,15 +262,10 @@ namespace KeePassLib.Utility
 		/// </summary>
 		/// <param name="pbArray">Input array. All bytes of this array
 		/// will be set to zero.</param>
-#if KeePassLibSD
-		[MethodImpl(MethodImplOptions.NoInlining)]
-#else
-		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-#endif
+		[MethodImpl(MioNoOptimize)]
 		public static void ZeroByteArray(byte[] pbArray)
 		{
-			Debug.Assert(pbArray != null);
-			if(pbArray == null) throw new ArgumentNullException("pbArray");
+			if(pbArray == null) { Debug.Assert(false); return; }
 
 			Array.Clear(pbArray, 0, pbArray.Length);
 		}
@@ -271,14 +274,10 @@ namespace KeePassLib.Utility
 		/// Set all elements of an array to the default value.
 		/// </summary>
 		/// <param name="v">Input array.</param>
-#if KeePassLibSD
-		[MethodImpl(MethodImplOptions.NoInlining)]
-#else
-		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-#endif
+		[MethodImpl(MioNoOptimize)]
 		public static void ZeroArray<T>(T[] v)
 		{
-			if(v == null) { Debug.Assert(false); throw new ArgumentNullException("v"); }
+			if(v == null) { Debug.Assert(false); return; }
 
 			Array.Clear(v, 0, v.Length);
 		}
@@ -501,9 +500,19 @@ namespace KeePassLib.Utility
 			return UInt32ToBytes((uint)iValue);
 		}
 
+		public static void Int32ToBytesEx(int iValue, byte[] pb, int iOffset)
+		{
+			UInt32ToBytesEx((uint)iValue, pb, iOffset);
+		}
+
 		public static byte[] Int64ToBytes(long lValue)
 		{
 			return UInt64ToBytes((ulong)lValue);
+		}
+
+		public static void Int64ToBytesEx(long lValue, byte[] pb, int iOffset)
+		{
+			UInt64ToBytesEx((ulong)lValue, pb, iOffset);
 		}
 
 		public static uint RotateLeft32(uint u, int nBits)
@@ -589,18 +598,32 @@ namespace KeePassLib.Utility
 			if(sSource == null) throw new ArgumentNullException("sSource");
 			if(sTarget == null) throw new ArgumentNullException("sTarget");
 
-			const int nBufSize = 4096;
-			byte[] pbBuf = new byte[nBufSize];
+			const int cbBuf = 4096;
+			byte[] pbBuf = new byte[cbBuf];
 
 			while(true)
 			{
-				int nRead = sSource.Read(pbBuf, 0, nBufSize);
-				if(nRead == 0) break;
+				int cbRead = sSource.Read(pbBuf, 0, cbBuf);
+				if(cbRead == 0) break;
 
-				sTarget.Write(pbBuf, 0, nRead);
+				sTarget.Write(pbBuf, 0, cbRead);
 			}
 
 			// Do not close any of the streams
+		}
+
+		public static byte[] Read(Stream s)
+		{
+			if(s == null) throw new ArgumentNullException("s");
+
+			byte[] pb;
+			using(MemoryStream ms = new MemoryStream())
+			{
+				MemUtil.CopyStream(s, ms);
+				pb = ms.ToArray();
+			}
+
+			return pb;
 		}
 
 		public static byte[] Read(Stream s, int nCount)
@@ -788,6 +811,61 @@ namespace KeePassLib.Utility
 			}
 
 			yield break;
+		}
+
+		[MethodImpl(MioNoOptimize)]
+		internal static void DisposeIfPossible(object o)
+		{
+			if(o == null) { Debug.Assert(false); return; }
+
+			IDisposable d = (o as IDisposable);
+			if(d != null) d.Dispose();
+		}
+
+		internal static T BytesToStruct<T>(byte[] pb, int iOffset)
+			where T : struct
+		{
+			if(pb == null) throw new ArgumentNullException("pb");
+			if(iOffset < 0) throw new ArgumentOutOfRangeException("iOffset");
+
+			int cb = Marshal.SizeOf(typeof(T));
+			if(cb <= 0) { Debug.Assert(false); return default(T); }
+
+			if(iOffset > (pb.Length - cb)) throw new ArgumentOutOfRangeException("iOffset");
+
+			IntPtr p = Marshal.AllocCoTaskMem(cb);
+			if(p == IntPtr.Zero) throw new OutOfMemoryException();
+
+			object o;
+			try
+			{
+				Marshal.Copy(pb, iOffset, p, cb);
+				o = Marshal.PtrToStructure(p, typeof(T));
+			}
+			finally { Marshal.FreeCoTaskMem(p); }
+
+			return (T)o;
+		}
+
+		internal static byte[] StructToBytes<T>(ref T t)
+			where T : struct
+		{
+			int cb = Marshal.SizeOf(typeof(T));
+			if(cb <= 0) { Debug.Assert(false); return MemUtil.EmptyByteArray; }
+
+			byte[] pb = new byte[cb];
+
+			IntPtr p = Marshal.AllocCoTaskMem(cb);
+			if(p == IntPtr.Zero) throw new OutOfMemoryException();
+
+			try
+			{
+				Marshal.StructureToPtr(t, p, false);
+				Marshal.Copy(p, pb, 0, cb);
+			}
+			finally { Marshal.FreeCoTaskMem(p); }
+
+			return pb;
 		}
 	}
 

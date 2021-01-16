@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ namespace KeePassLib.Utility
 				{
 					if(bFullExceptions)
 						strAppend = StrUtil.FormatException(exObj);
-					else if((exObj.Message != null) && (exObj.Message.Length > 0))
+					else if(!string.IsNullOrEmpty(exObj.Message))
 						strAppend = exObj.Message;
 				}
 #if !KeePassLibSD
@@ -177,6 +177,8 @@ namespace KeePassLib.Utility
 		internal static DialogResult SafeShowMessageBox(string strText, string strTitle,
 			MessageBoxButtons mb, MessageBoxIcon mi, MessageBoxDefaultButton mdb)
 		{
+			// strText += MessageService.NewParagraph + (new StackTrace(true)).ToString();
+
 #if KeePassLibSD
 			return MessageBox.Show(strText, strTitle, mb, mi, mdb);
 #else

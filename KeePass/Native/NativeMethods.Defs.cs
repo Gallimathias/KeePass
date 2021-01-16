@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
 */
 
 using System;
-using System.Text;
-using System.Security;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
 using System.Windows.Forms;
 
 namespace KeePass.Native
@@ -30,8 +30,11 @@ namespace KeePass.Native
 	{
 		internal const int WM_SETFOCUS = 0x0007;
 		internal const int WM_KILLFOCUS = 0x0008;
+		internal const int WM_CONTEXTMENU = 0x007B;
 		internal const int WM_KEYDOWN = 0x0100;
 		internal const int WM_KEYUP = 0x0101;
+		internal const int WM_SYSKEYDOWN = 0x0104;
+		internal const int WM_SYSKEYUP = 0x0105;
 		internal const int WM_DRAWCLIPBOARD = 0x0308;
 		internal const int WM_CHANGECBCHAIN = 0x030D;
 		internal const int WM_HOTKEY = 0x0312;
@@ -98,6 +101,8 @@ namespace KeePass.Native
 		internal const uint KEYEVENTF_KEYUP = 2;
 		internal const uint KEYEVENTF_UNICODE = 4;
 
+		// private const int KL_NAMELENGTH = 9;
+
 		internal const ushort LANG_CZECH = 0x05;
 		internal const ushort LANG_POLISH = 0x15;
 
@@ -156,6 +161,9 @@ namespace KeePass.Native
 		internal const uint FSCTL_LOCK_VOLUME = 589848;
 		internal const uint FSCTL_UNLOCK_VOLUME = 589852;
 
+		// private const uint NM_FIRST = 0;
+		// internal const uint NM_RCLICK = unchecked(NM_FIRST - 5);
+
 		internal const int LVM_FIRST = 0x1000;
 		// internal const int LVM_ENSUREVISIBLE = LVM_FIRST + 19;
 		internal const int LVM_SCROLL = LVM_FIRST + 20;
@@ -181,6 +189,8 @@ namespace KeePass.Native
 		internal const int SHCNE_ASSOCCHANGED = 0x08000000;
 		internal const uint SHCNF_IDLIST = 0x0000;
 
+		// internal const int SHCNRF_SHELLLEVEL = 0x0002;
+
 		// internal const uint SW_INVALIDATE = 0x0002;
 
 		internal const uint TVS_FULLROWSELECT = 0x1000;
@@ -198,12 +208,12 @@ namespace KeePass.Native
 		internal const int HDM_SETITEMA = HDM_FIRST + 4;
 		internal const int HDM_SETITEMW = HDM_FIRST + 12;
 
-		internal const int OFN_DONTADDTORECENT = 0x02000000;
+		// internal const int OFN_DONTADDTORECENT = 0x02000000;
 
 		internal const uint SHGFI_DISPLAYNAME = 0x000000200;
 		internal const uint SHGFI_ICON = 0x000000100;
-		internal const uint SHGFI_TYPENAME = 0x000000400;
 		internal const uint SHGFI_SMALLICON = 0x000000001;
+		// internal const uint SHGFI_TYPENAME = 0x000000400;
 
 		internal const uint MOD_ALT = 1;
 		internal const uint MOD_CONTROL = 2;
@@ -235,6 +245,15 @@ namespace KeePass.Native
 		internal const uint ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID = 0x04;
 
 		internal const int INFOTIPSIZE = 1024;
+
+		// Value directly in NOTIFYICONDATA definition, no name;
+		// the tip size is 128 when NTDDI_VERSION >= NTDDI_WIN2K,
+		// but in the NotifyIcon.cs file of the .NET Framework,
+		// 63 is defined as inclusive upper bound
+		internal const int NOTIFYICONDATA_TIP_SIZE = 64;
+
+		// Value directly in NOTIFYICONDATA definition, no name
+		internal const int NOTIFYICONDATA_INFO_SIZE = 256;
 
 		// internal const uint DI_NORMAL = 0x0003;
 
@@ -270,6 +289,9 @@ namespace KeePass.Native
 		// private const int TTN_FIRST = -520;
 		// internal const int TTN_NEEDTEXTA = TTN_FIRST;
 		// internal const int TTN_NEEDTEXTW = TTN_FIRST - 10;
+
+		internal const uint WDA_NONE = 0x00000000;
+		internal const uint WDA_MONITOR = 0x00000001;
 
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
@@ -337,7 +359,7 @@ namespace KeePass.Native
 			SIF_POS = 0x4,
 			SIF_DISABLENOSCROLL = 0x8,
 			SIF_TRACKPOS = 0x10,
-			SIF_ALL = SIF_RANGE + SIF_PAGE + SIF_POS + SIF_TRACKPOS
+			SIF_ALL = (SIF_RANGE | SIF_PAGE | SIF_POS | SIF_TRACKPOS)
 		}
 
 		[Flags]

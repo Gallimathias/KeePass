@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,17 +19,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Reflection;
-using System.Diagnostics;
 
 using KeePass.App.Configuration;
 
 using KeePassLib.Interfaces;
-using KeePassLib.Serialization;
 using KeePassLib.Translation;
 using KeePassLib.Utility;
 
@@ -57,27 +56,28 @@ namespace KeePass.Util.XmlSerialization
 		public object Deserialize(Stream s)
 		{
 			object oResult = null;
-			if((m_t == typeof(AppConfigEx)) || (m_t == typeof(KPTranslation)))
+			using(XmlReader xr = XmlUtilEx.CreateXmlReader(s))
 			{
-				XmlReaderSettings xrs = KdbxFile.CreateStdXmlReaderSettings();
-				XmlReader xr = XmlReader.Create(s, xrs);
+				if((m_t == typeof(AppConfigEx)) || (m_t == typeof(KPTranslation)))
+				{
+					string strRootName = GetXmlName(m_t);
+					bool bRootFound = SkipToRoot(xr, strRootName);
 
-				string strRootName = GetXmlName(m_t);
-				bool bRootFound = SkipToRoot(xr, strRootName);
-
-				if(!bRootFound) { Debug.Assert(false); }
-				else if(m_t == typeof(AppConfigEx))
-					oResult = ReadAppConfigEx(xr);
-				else if(m_t == typeof(KPTranslation))
-					oResult = ReadKPTranslation(xr);
-				else { Debug.Assert(false); } // See top-level 'if'
-
-				xr.Close();
+					if(!bRootFound) { Debug.Assert(false); }
+					else if(m_t == typeof(AppConfigEx))
+						oResult = ReadAppConfigEx(xr);
+					else if(m_t == typeof(KPTranslation))
+						oResult = ReadKPTranslation(xr);
+					else { Debug.Assert(false); } // See top-level 'if'
+				}
+				else
+				{
+					XmlSerializer xs = new XmlSerializer(m_t);
+					oResult = xs.Deserialize(xr);
+				}
 			}
-			if(oResult != null) return oResult;
 
-			XmlSerializer xs = new XmlSerializer(m_t);
-			return xs.Deserialize(s);
+			return oResult;
 		}
 
 		private static bool SkipToRoot(XmlReader xr, string strRootName)
@@ -175,8 +175,8 @@ namespace KeePass.Util.XmlSerialization
 			AppendLine(sb);
 			AppendLine(sb, "using System;", ref t);
 			AppendLine(sb, "using System.Collections.Generic;", ref t);
-			AppendLine(sb, "using System.Xml;", ref t);
 			AppendLine(sb, "using System.Diagnostics;", ref t);
+			AppendLine(sb, "using System.Xml;", ref t);
 			AppendLine(sb);
 			AppendLine(sb, "using KeePassLib.Interfaces;", ref t);
 			AppendLine(sb);
@@ -434,7 +434,7 @@ namespace KeePass.Util.XmlSerialization
 				AppendLine(sbr, "{", ref ir, 0, 1);
 				AppendLine(sbr, "XmlNodeType nt = xr.NodeType;", ref ir);
 				AppendLine(sbr, "if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;", ref ir);
-				AppendLine(sbr, "if(nt != XmlNodeType.Element) { Debug.Assert(false); continue; }", ref ir);
+				AppendLine(sbr, "if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }", ref ir);
 				AppendLine(sbr);
 
 				if(bIsList || bIsArray)

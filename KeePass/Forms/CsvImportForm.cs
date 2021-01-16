@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -113,7 +113,11 @@ namespace KeePass.Forms
 			Debug.Assert(this.StartPosition == FormStartPosition.CenterScreen);
 
 			this.Icon = AppIcons.Default;
-			this.Text = KPRes.GenericCsvImporter + " - " + PwDefs.ShortProductName;
+			this.Text = KPRes.GenericCsvImporter;
+
+			BannerFactory.CreateBannerEx(this, m_bannerImage,
+				Properties.Resources.B48x48_Binary, KPRes.GenericCsvImporter,
+				KPRes.CsvImportDesc);
 
 			// FontUtil.AssignDefaultBold(m_grpSyntax);
 			// FontUtil.AssignDefaultBold(m_grpSem);
@@ -279,7 +283,8 @@ namespace KeePass.Forms
 		{
 			if(m_bInitializing) return;
 
-			PerformImport(new PwGroup(true, true), true);
+			try { PerformImport(new PwGroup(true, true), true); }
+			catch(Exception) { Debug.Assert(false); }
 		}
 
 		private void ProcessResize()
@@ -454,8 +459,7 @@ namespace KeePass.Forms
 			// }
 			else { Debug.Assert(false); return; }
 
-			try { Process.Start(strUrl); }
-			catch(Exception ex) { MessageService.ShowWarning(strUrl, ex.Message); }
+			WinUtil.OpenUrl(strUrl, null);
 		}
 
 		private void OnBtnFieldAdd(object sender, EventArgs e)
@@ -774,7 +778,8 @@ namespace KeePass.Forms
 
 		private void OnBtnOK(object sender, EventArgs e)
 		{
-			PerformImport(m_pwDatabase.RootGroup, false);
+			try { PerformImport(m_pwDatabase.RootGroup, false); }
+			catch(Exception ex) { MessageService.ShowWarning(ex); }
 		}
 
 		private void OnFieldSepSelectedIndexChanged(object sender, EventArgs e)

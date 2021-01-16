@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -105,8 +105,6 @@ namespace KeePass.Forms
 
 			if(UIUtil.VistaStyleListsSupported)
 			{
-				m_tvFolders.ShowLines = false;
-
 				UIUtil.SetExplorerTheme(m_tvFolders, true);
 				UIUtil.SetExplorerTheme(m_lvFiles, true);
 			}
@@ -214,8 +212,8 @@ namespace KeePass.Forms
 			try
 			{
 				string strName;
-				NativeMethods.SHGetFileInfo(strPath, m_nIconDim, out img,
-					out strName);
+				NativeMethods.SHGetFileInfo(strPath, m_nIconDim, m_nIconDim,
+					out img, out strName);
 
 				if(!string.IsNullOrEmpty(strName) && (strName.IndexOf(
 					Path.DirectorySeparatorChar) < 0))
@@ -512,7 +510,7 @@ namespace KeePass.Forms
 			try
 			{
 				DirectoryInfo di = new DirectoryInfo(strPath);
-				string[] vPath = di.FullName.Split(new char[]{ Path.DirectorySeparatorChar });
+				string[] vPath = di.FullName.Split(Path.DirectorySeparatorChar);
 				if((vPath == null) || (vPath.Length == 0)) { Debug.Assert(false); return; }
 
 				TreeNode tn = null;

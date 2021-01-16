@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Xml;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Xml;
 
 using KeePass.Resources;
 using KeePass.Util;
@@ -97,10 +97,7 @@ namespace KeePass.DataExchange.Formats
 		public override void Import(PwDatabase pwStorage, Stream sInput,
 			IStatusLogger slLogger)
 		{
-			MemoryStream ms = new MemoryStream();
-			MemUtil.CopyStream(sInput, ms);
-			byte[] pbData = ms.ToArray();
-			ms.Close();
+			byte[] pbData = MemUtil.Read(sInput);
 
 			try
 			{
@@ -121,9 +118,11 @@ namespace KeePass.DataExchange.Formats
 			}
 			catch(Exception) { Debug.Assert(false); }
 
-			ms = new MemoryStream(pbData, false);
-			XmlDocument xmlDoc = new XmlDocument();
-			xmlDoc.Load(ms);
+			XmlDocument xmlDoc = XmlUtilEx.CreateXmlDocument();
+			using(MemoryStream ms = new MemoryStream(pbData, false))
+			{
+				xmlDoc.Load(ms);
+			}
 
 			XmlNode xmlRoot = xmlDoc.DocumentElement;
 
@@ -156,13 +155,11 @@ namespace KeePass.DataExchange.Formats
 					if((xn != null) && (pwStorage.DefaultUserName.Length == 0))
 					{
 						pwStorage.DefaultUserName = XmlUtil.SafeInnerText(xn);
-						if(pwStorage.DefaultUserName.Length > 0)
+						if(pwStorage.DefaultUserName.Length != 0)
 							pwStorage.DefaultUserNameChanged = DateTime.UtcNow;
 					}
 				}
 			}
-
-			ms.Close();
 		}
 
 		private static void ImportEntry(XmlNode xmlNode, PwDatabase pwStorage,
@@ -263,7 +260,7 @@ namespace KeePass.DataExchange.Formats
 			PwGroup pgContainer = pwStorage.RootGroup;
 			if(strGroupName.Length != 0)
 				pgContainer = pwStorage.RootGroup.FindCreateSubTree(strGroupName,
-					new string[1]{ "." }, true);
+					new string[1] { "." }, true);
 			pgContainer.AddEntry(pe, true);
 			pgContainer.IsExpanded = true;
 		}

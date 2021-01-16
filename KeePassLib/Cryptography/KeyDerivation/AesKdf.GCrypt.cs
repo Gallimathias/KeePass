@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -71,9 +71,6 @@ namespace KeePassLib.Cryptography.KeyDerivation
 
 		private static bool GCryptInitLib()
 		{
-			Debug.Assert(Marshal.SizeOf(typeof(int)) == 4); // Also on 64-bit systems
-			Debug.Assert(Marshal.SizeOf(typeof(uint)) == 4);
-
 			if(!NativeLib.IsUnix()) return false; // Independent of workaround state
 			if(!MonoWorkarounds.IsRequired(1468)) return false; // Can be turned off
 

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ namespace KeePass.Util.Spr
 		PickChars = 0x2, // {PICKCHARS}, {PICKFIELD}
 		EntryStrings = 0x4,
 		EntryStringsSpecial = 0x8, // {URL:RMVSCM}, ...
+		EntryProperties = 0x200000, // {UUID}, ...
 		PasswordEnc = 0x10,
 		Group = 0x20,
 		Paths = 0x40, // App-dir, doc-dir, path sep, ...
@@ -44,24 +45,26 @@ namespace KeePass.Util.Spr
 		References = 0x200,
 		EnvVars = 0x400,
 		NewPassword = 0x800,
-		HmacOtp = 0x1000,
+		HmacOtp = 0x1000, // {HMACOTP}, {TIMEOTP}, ...
 		Comments = 0x2000,
 		TextTransforms = 0x10000,
 		Env = 0x20000, // {BASE}, ...
 		Run = 0x40000, // Running other (console) applications
+		DataActive = 0x80000, // {CLIPBOARD-SET:/.../}, ...
+		DataNonActive = 0x100000, // {CLIPBOARD}, ...
 
 		ExtActive = 0x4000, // Active transformations provided by plugins
 		ExtNonActive = 0x8000, // Non-active transformations provided by plugins
 
-		// Next free: 0x80000
-		All = 0x7FFFF,
+		// Next free: 0x400000
+		All = 0x3FFFFF,
 
 		// Internal:
 		UIInteractive = (SprCompileFlags.PickChars | SprCompileFlags.Run),
 		StateChanging = (SprCompileFlags.NewPassword | SprCompileFlags.HmacOtp),
 
 		Active = (SprCompileFlags.UIInteractive | SprCompileFlags.StateChanging |
-			SprCompileFlags.ExtActive),
+			SprCompileFlags.DataActive | SprCompileFlags.ExtActive),
 		NonActive = (SprCompileFlags.All & ~SprCompileFlags.Active),
 
 		Deref = (SprCompileFlags.EntryStrings | SprCompileFlags.EntryStringsSpecial |
@@ -141,16 +144,6 @@ namespace KeePass.Util.Spr
 		{
 			get { return m_refCache; }
 		}
-
-		// private bool m_bNoUrlSchemeOnce = false;
-		// /// <summary>
-		// /// Used internally by <c>SprEngine</c>; don't modify it.
-		// /// </summary>
-		// internal bool UrlRemoveSchemeOnce
-		// {
-		//	get { return m_bNoUrlSchemeOnce; }
-		//	set { m_bNoUrlSchemeOnce = value; }
-		// }
 
 		public SprContext() { }
 

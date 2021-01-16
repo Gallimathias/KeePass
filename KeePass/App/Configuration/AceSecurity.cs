@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2018 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.ComponentModel;
+using System.Text;
 
 namespace KeePass.App.Configuration
 {
@@ -107,11 +107,24 @@ namespace KeePass.App.Configuration
 			set { m_nClipClearSeconds = value; }
 		}
 
-		// Disabled by default, because Office's clipboard tools
-		// crash with the Clipboard Viewer Ignore format
-		// (when it is set using OleSetClipboard)
-		private bool m_bUseClipboardViewerIgnoreFmt = false;
-		[DefaultValue(false)]
+		private bool m_bClipNoPersist = true;
+		[DefaultValue(true)]
+		public bool ClipboardNoPersist
+		{
+			get { return m_bClipNoPersist; }
+			set { m_bClipNoPersist = value; }
+		}
+
+		// The clipboard tools of old Office versions crash when
+		// storing the 'Clipboard Viewer Ignore' format using the
+		// OleSetClipboard function.
+		// Therefore, the default value of the option to use this
+		// format should be true if and only if KeePass uses the
+		// SetClipboardData function only (i.e. no OLE).
+		// Note that the .NET Framework and the UWP seem to use
+		// OLE internally.
+		private bool m_bUseClipboardViewerIgnoreFmt = true;
+		[DefaultValue(true)]
 		public bool UseClipboardViewerIgnoreFormat
 		{
 			get { return m_bUseClipboardViewerIgnoreFmt; }
@@ -132,6 +145,24 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_bSslCertsAcceptInvalid; }
 			set { m_bSslCertsAcceptInvalid = value; }
+		}
+
+		// https://keepass.info/help/v2_dev/customize.html#opt
+		private bool m_bPreventScreenCapture = false;
+		[DefaultValue(false)]
+		public bool PreventScreenCapture
+		{
+			get { return m_bPreventScreenCapture; }
+			set { m_bPreventScreenCapture = value; }
+		}
+
+		// https://keepass.info/help/v2_dev/customize.html#opt
+		private bool m_bProtectProcessWithDacl = false;
+		[DefaultValue(false)]
+		public bool ProtectProcessWithDacl
+		{
+			get { return m_bProtectProcessWithDacl; }
+			set { m_bProtectProcessWithDacl = value; }
 		}
 	}
 
@@ -230,6 +261,14 @@ namespace KeePass.App.Configuration
 		{
 			get { return m_uMinQuality; }
 			set { m_uMinQuality = value; }
+		}
+
+		private bool m_bRememberWhileOpen = true;
+		[DefaultValue(true)]
+		public bool RememberWhileOpen
+		{
+			get { return m_bRememberWhileOpen; }
+			set { m_bRememberWhileOpen = value; }
 		}
 	}
 }

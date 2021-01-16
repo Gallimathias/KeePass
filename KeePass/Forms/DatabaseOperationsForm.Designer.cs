@@ -64,7 +64,7 @@
 			this.m_btnClose.Name = "m_btnClose";
 			this.m_btnClose.Size = new System.Drawing.Size(75, 23);
 			this.m_btnClose.TabIndex = 0;
-			this.m_btnClose.Text = "&Close";
+			this.m_btnClose.Text = "Close";
 			this.m_btnClose.UseVisualStyleBackColor = true;
 			this.m_btnClose.Click += new System.EventHandler(this.OnBtnClose);
 			// 
@@ -136,7 +136,7 @@
 			this.m_lblHistoryEntriesDays.Name = "m_lblHistoryEntriesDays";
 			this.m_lblHistoryEntriesDays.Size = new System.Drawing.Size(189, 13);
 			this.m_lblHistoryEntriesDays.TabIndex = 2;
-			this.m_lblHistoryEntriesDays.Text = "Delete history entries older than (days):";
+			this.m_lblHistoryEntriesDays.Text = "Delete &history entries older than (days):";
 			// 
 			// m_lblDeleteHistoryEntries
 			// 
