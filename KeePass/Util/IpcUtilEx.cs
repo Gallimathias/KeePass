@@ -28,10 +28,10 @@ using System.Threading;
 using KeePass.Forms;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

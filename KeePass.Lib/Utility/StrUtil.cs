@@ -30,13 +30,13 @@ using System.Drawing;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Collections;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Native;
-using KeePassLib.Security;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Native;
+using KeePass.Lib.Security;
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
     /// <summary>
     /// Character stream class.

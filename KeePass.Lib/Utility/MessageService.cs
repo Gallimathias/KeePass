@@ -27,10 +27,10 @@ using System.Text;
 using System.Windows.Forms;
 #endif
 
-using KeePassLib.Resources;
-using KeePassLib.Serialization;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Serialization;
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
     public sealed class MessageServiceEventArgs : EventArgs
     {

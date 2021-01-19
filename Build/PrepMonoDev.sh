@@ -38,7 +38,7 @@ fnPrepKeePass()
 fnPrepKeePassLib()
 {
 	cd "${kpRoot}/KeePassLib"
-	local kpCsProj="KeePassLib.csproj"
+	local kpCsProj="KeePass.Lib.csproj"
 	local kpXmlUtilEx="Utility/XmlUtilEx.cs"
 
 	sed -i 's! ToolsVersion="3\.5"!!g' "${kpCsProj}"

@@ -29,11 +29,11 @@ using System.Windows.Forms;
 using KeePass.Native;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Delegates;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.UI
 {

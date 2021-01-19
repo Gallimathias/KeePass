@@ -31,14 +31,14 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Keys;
-using KeePassLib.Native;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Native;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

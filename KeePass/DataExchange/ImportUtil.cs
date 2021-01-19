@@ -35,13 +35,13 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
-using KeePassLib.Keys;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.DataExchange
 {

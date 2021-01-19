@@ -29,11 +29,11 @@ using KeePass.Native;
 using KeePass.Resources;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Utility;
 
-// using KpLibNativeMethods = KeePassLib.Native.NativeMethods;
+// using KpLibNativeMethods = KeePass.Lib.Native.NativeMethods;
 
 namespace KeePass.UI
 {

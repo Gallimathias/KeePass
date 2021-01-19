@@ -21,9 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using KeePassLib.Delegates;
+using KeePass.Lib.Delegates;
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
 	public static class TypeOverridePool
 	{

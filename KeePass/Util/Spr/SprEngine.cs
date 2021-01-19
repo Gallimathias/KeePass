@@ -29,11 +29,11 @@ using System.Text.RegularExpressions;
 using KeePass.App.Configuration;
 using KeePass.Forms;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Native;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Native;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util.Spr
 {

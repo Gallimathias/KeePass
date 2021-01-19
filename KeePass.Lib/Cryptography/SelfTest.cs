@@ -34,20 +34,20 @@ using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.Hash;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Keys;
-using KeePassLib.Native;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.Hash;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Native;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 #if (KeePassUAP && KeePassLibSD)
 #error KeePassUAP and KeePassLibSD are mutually exclusive.
 #endif
 
-namespace KeePassLib.Cryptography
+namespace KeePass.Lib.Cryptography
 {
 	/// <summary>
 	/// Class containing self-test methods.

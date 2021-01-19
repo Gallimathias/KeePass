@@ -25,17 +25,17 @@ using System.Threading;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 using System.Security;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
-namespace KeePassLib.Security
+namespace KeePass.Lib.Security
 {
 	[Flags]
 	public enum PbCryptFlags

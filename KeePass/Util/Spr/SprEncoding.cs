@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Native;
+using KeePass.Lib.Native;
 
 namespace KeePass.Util.Spr
 {

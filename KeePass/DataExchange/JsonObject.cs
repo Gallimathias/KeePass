@@ -25,8 +25,8 @@ using System.Text;
 
 using KeePass.Resources;
 
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
 namespace KeePass.DataExchange
 {

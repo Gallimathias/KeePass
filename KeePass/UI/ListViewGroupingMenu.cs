@@ -28,8 +28,8 @@ using KeePass.Forms;
 using KeePass.Resources;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Collections;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
 
 namespace KeePass.UI
 {

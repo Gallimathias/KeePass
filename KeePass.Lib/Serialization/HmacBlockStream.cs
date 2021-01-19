@@ -27,10 +27,10 @@ using System.Text;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	public sealed class HmacBlockStream : Stream
 	{

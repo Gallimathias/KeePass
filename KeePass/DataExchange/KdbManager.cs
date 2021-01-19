@@ -30,7 +30,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.DataExchange
 {

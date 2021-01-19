@@ -23,9 +23,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using KeePassLib.Resources;
+using KeePass.Lib.Resources;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	public sealed class ChaCha20Engine : ICipherEngine2
 	{

@@ -27,7 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 using TrlUtil.App;
 using TrlUtil.App.Configuration;

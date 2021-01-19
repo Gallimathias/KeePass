@@ -36,9 +36,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 #endif
 
-using KeePassLib.Native;
+using KeePass.Lib.Native;
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
     public static class MonoWorkarounds
     {

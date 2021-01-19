@@ -25,7 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.UI
 {

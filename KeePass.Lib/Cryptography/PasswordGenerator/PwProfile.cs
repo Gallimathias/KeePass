@@ -24,11 +24,11 @@ using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Diagnostics;
 
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.PasswordGenerator
+namespace KeePass.Lib.Cryptography.PasswordGenerator
 {
 	/// <summary>
 	/// Type of the password generator. Different types like generators

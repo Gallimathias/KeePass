@@ -24,8 +24,8 @@ using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 
-using KeePassLib;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
 
 namespace KeePass.UI
 {

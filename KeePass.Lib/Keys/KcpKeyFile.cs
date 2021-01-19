@@ -23,13 +23,13 @@ using System.IO;
 using System.Security;
 using System.Text;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
 	public sealed class KcpKeyFile : IUserKey
 	{

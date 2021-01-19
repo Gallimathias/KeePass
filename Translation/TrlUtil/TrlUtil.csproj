@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\KeePassLib\KeePass.Lib.csproj" />
     <ProjectReference Include="..\..\KeePass\KeePass.csproj" />
   </ItemGroup>
 

@@ -26,11 +26,11 @@ using System.Text;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.PasswordGenerator
+namespace KeePass.Lib.Cryptography.PasswordGenerator
 {
 	public enum PwgError
 	{

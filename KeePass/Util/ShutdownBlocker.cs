@@ -24,7 +24,7 @@ using System.Text;
 
 using KeePass.Native;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Util
 {

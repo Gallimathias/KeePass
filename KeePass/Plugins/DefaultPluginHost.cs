@@ -29,11 +29,11 @@ using KeePass.Forms;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Keys;
-using KeePassLib.Security;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Security;
 
 namespace KeePass.Plugins
 {

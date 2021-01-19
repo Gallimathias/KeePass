@@ -26,7 +26,7 @@ using System.Text;
 #if !KeePassUAP
 using System.Security.Cryptography;
 
-namespace KeePassLib.Cryptography
+namespace KeePass.Lib.Cryptography
 {
 	public sealed class CryptoStreamEx : CryptoStream
 	{

@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.Ecas
 {

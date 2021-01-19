@@ -24,7 +24,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.UI
 {

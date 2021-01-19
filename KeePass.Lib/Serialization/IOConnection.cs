@@ -34,10 +34,10 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 #endif
 
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 #if !KeePassLibSD
 	internal sealed class IOWebClient : WebClient

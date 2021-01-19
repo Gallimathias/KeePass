@@ -33,15 +33,15 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePass.Util.XmlSerialization;
 
-using KeePassLib;
-using KeePassLib.Resources;
-using KeePassLib.Serialization;
-using KeePassLib.Translation;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Translation;
+using KeePass.Lib.Utility;
 
 using TrlUtil.App;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace TrlUtil
 {
@@ -127,7 +127,7 @@ namespace TrlUtil
 			kpstP.Name = "KeePass.Resources.KPRes";
 			m_trl.StringTables.Add(kpstP);
 			KPStringTable kpstL = new KPStringTable();
-			kpstL.Name = "KeePassLib.Resources.KLRes";
+			kpstL.Name = "KeePass.Lib.Resources.KLRes";
 			m_trl.StringTables.Add(kpstL);
 			KPStringTable kpstM = new KPStringTable();
 			kpstM.Name = "KeePass.Forms.MainForm.m_menuMain";
@@ -166,7 +166,7 @@ namespace TrlUtil
 			kpstDE.Name = "KeePass.Forms.DataEditorForm.m_menuMain";
 			m_trl.StringTables.Add(kpstDE);
 			KPStringTable kpstSD = new KPStringTable();
-			kpstSD.Name = "KeePassLib.Resources.KSRes";
+			kpstSD.Name = "KeePass.Lib.Resources.KSRes";
 			m_trl.StringTables.Add(kpstSD);
 
 			Type tKP = typeof(KPRes);

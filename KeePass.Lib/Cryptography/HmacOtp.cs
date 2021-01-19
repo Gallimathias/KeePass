@@ -27,10 +27,10 @@ using System.Text;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 #if !KeePassLibSD
-namespace KeePassLib.Cryptography
+namespace KeePass.Lib.Cryptography
 {
 	/// <summary>
 	/// Generate HMAC-based one-time passwords as specified in RFC 4226.

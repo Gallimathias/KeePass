@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace KeePassLib.Resources
+namespace KeePass.Lib.Resources
 {
 	public static partial class KLRes
 	{

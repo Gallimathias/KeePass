@@ -25,9 +25,9 @@ using System.Diagnostics;
 using System.Drawing;
 #endif
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib
+namespace KeePass.Lib
 {
 	/// <summary>
 	/// Custom icon. <c>PwCustomIcon</c> objects are immutable.

@@ -27,9 +27,9 @@ using System.IO;
 
 using KeePass.Resources;
 
-using KeePassLib;
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Plugins
 {

@@ -25,9 +25,9 @@ using System.Text;
 
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Delegates;
-using KeePassLib.Native;
+using KeePass.Lib;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Native;
 
 namespace KeePass.Util
 {

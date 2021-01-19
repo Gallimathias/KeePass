@@ -25,9 +25,9 @@ using System.Diagnostics;
 
 using KeePass.App.Configuration;
 
-using KeePassLib;
-using KeePassLib.Delegates;
-using KeePassLib.Serialization;
+using KeePass.Lib;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Serialization;
 
 namespace KeePass.UI
 {

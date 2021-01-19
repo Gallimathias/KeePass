@@ -30,8 +30,8 @@ using System.Xml.Serialization;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Security;
+using KeePass.Lib;
+using KeePass.Lib.Security;
 
 namespace KeePass.App.Configuration
 {

@@ -30,10 +30,10 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

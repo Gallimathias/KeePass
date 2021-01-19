@@ -26,8 +26,8 @@ using System.ComponentModel;
 using KeePass.App;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Serialization;
+using KeePass.Lib;
+using KeePass.Lib.Serialization;
 
 namespace KeePass.Forms
 {

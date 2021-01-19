@@ -27,8 +27,8 @@ using System.Xml.Serialization;
 using KeePass.Ecas;
 using KeePass.Util;
 
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.App.Configuration
 {

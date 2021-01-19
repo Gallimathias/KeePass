@@ -22,13 +22,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Collections;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib
+namespace KeePass.Lib
 {
 	/// <summary>
 	/// A group containing subgroups and entries.

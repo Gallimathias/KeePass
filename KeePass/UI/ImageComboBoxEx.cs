@@ -26,7 +26,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Windows.Forms;
 
-using KeePassLib.Native;
+using KeePass.Lib.Native;
 
 namespace KeePass.UI
 {

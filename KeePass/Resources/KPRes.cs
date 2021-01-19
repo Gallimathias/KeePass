@@ -23,7 +23,7 @@ using System.Text;
 
 using KeePass.App;
 
-using KeePassLib.Resources;
+using KeePass.Lib.Resources;
 
 namespace KeePass.Resources
 {

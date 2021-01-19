@@ -34,13 +34,13 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Security;
-using KeePassLib.Collections;
-using KeePassLib.Delegates;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Security;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Util
 {

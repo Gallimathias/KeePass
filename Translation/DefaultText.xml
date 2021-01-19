@@ -2601,7 +2601,7 @@
 		</Data>
 	</StringTable>
 
-	<StringTable Name="KLRes" Namespace="KeePassLib.Resources">
+	<StringTable Name="KLRes" Namespace="KeePass.Lib.Resources">
 		<Data Name="AlgorithmUnknown">
 			<Value>The algorithm is unknown.</Value>
 		</Data>

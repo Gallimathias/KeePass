@@ -28,10 +28,10 @@ using System.Text;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography
+namespace KeePass.Lib.Cryptography
 {
     public static class CryptoUtil
     {

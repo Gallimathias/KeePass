@@ -22,8 +22,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
 
 namespace KeePass.Util.Spr
 {

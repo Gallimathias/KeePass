@@ -24,7 +24,7 @@ using System.Diagnostics;
 
 using KeePass.Util.Spr;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.Util
 {

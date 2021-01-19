@@ -23,15 +23,15 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Interfaces;
-using KeePassLib.Native;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Native;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
     /// <summary>
     /// Represents a key. A key can be build up using several user key data sources

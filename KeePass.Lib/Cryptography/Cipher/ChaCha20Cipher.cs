@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	/// <summary>
 	/// Implementation of the ChaCha20 cipher with a 96-bit nonce,

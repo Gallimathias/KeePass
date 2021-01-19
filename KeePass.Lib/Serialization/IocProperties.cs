@@ -24,12 +24,12 @@ using System.Globalization;
 using System.Text;
 using System.Xml;
 
-using KeePassLib.Interfaces;
-using KeePassLib.Utility;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Utility;
 
 using StrDict = System.Collections.Generic.Dictionary<string, string>;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	public interface IHasIocProperties
 	{

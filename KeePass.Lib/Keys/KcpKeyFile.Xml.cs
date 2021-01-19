@@ -25,12 +25,12 @@ using System.IO;
 using System.Text;
 using System.Xml.Serialization;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Resources;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
 	[XmlType("KeyFile")]
 	public sealed class KfxFile

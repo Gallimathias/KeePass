@@ -25,7 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Windows.Forms;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.UI.ToolStripRendering
 {

@@ -24,8 +24,8 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
-using KeePassLib;
-using KeePassLib.Native;
+using KeePass.Lib;
+using KeePass.Lib.Native;
 
 namespace KeePass.Util
 {

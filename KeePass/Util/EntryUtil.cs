@@ -33,15 +33,15 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

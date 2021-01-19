@@ -30,7 +30,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 #endif
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
 	public static class GfxUtil
 	{

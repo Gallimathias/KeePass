@@ -25,9 +25,9 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using KeePassLib.Native;
+using KeePass.Lib.Native;
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
 	/// <summary>
 	/// A class containing various static path utility helper methods (like

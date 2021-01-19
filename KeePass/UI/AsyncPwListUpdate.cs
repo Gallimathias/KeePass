@@ -27,7 +27,7 @@ using System.Diagnostics;
 using KeePass.Forms;
 using KeePass.Util.Spr;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.UI
 {

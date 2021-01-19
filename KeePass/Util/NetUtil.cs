@@ -24,7 +24,7 @@ using System.Net;
 using System.IO;
 using System.IO.Compression;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

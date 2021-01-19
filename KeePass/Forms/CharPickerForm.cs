@@ -31,11 +31,11 @@ using KeePass.Native;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Forms
 {

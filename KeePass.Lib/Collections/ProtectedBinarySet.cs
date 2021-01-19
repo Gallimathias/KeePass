@@ -23,10 +23,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Delegates;
-using KeePassLib.Security;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Security;
 
-namespace KeePassLib.Collections
+namespace KeePass.Lib.Collections
 {
 	internal sealed class ProtectedBinarySet : IEnumerable<KeyValuePair<int, ProtectedBinary>>
 	{

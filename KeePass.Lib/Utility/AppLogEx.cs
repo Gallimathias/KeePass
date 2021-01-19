@@ -27,7 +27,7 @@ using System.Text;
 using System.IO.Compression;
 #endif
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
 	/// <summary>
 	/// Application-wide logging services.

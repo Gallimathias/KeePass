@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography
+namespace KeePass.Lib.Cryptography
 {
 	public static class PopularPasswords
 	{

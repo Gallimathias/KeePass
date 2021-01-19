@@ -25,8 +25,8 @@ using System.Windows.Forms;
 
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Native;
+using KeePass.Lib;
+using KeePass.Lib.Native;
 
 namespace KeePass.UI.ToolStripRendering
 {

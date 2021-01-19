@@ -25,9 +25,9 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Utility;
 
 namespace KeePass.App.Configuration
 {

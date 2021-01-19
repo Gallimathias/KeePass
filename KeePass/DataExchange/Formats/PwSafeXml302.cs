@@ -28,10 +28,10 @@ using System.Xml;
 using KeePass.Resources;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {

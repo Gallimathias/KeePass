@@ -26,7 +26,7 @@ using System.Diagnostics;
 
 using KeePass.Resources;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.UI
 {

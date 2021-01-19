@@ -28,10 +28,10 @@ using System.Threading;
 using KeePass.App.Configuration;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Plugins
 {

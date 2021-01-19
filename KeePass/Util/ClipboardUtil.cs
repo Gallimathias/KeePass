@@ -32,12 +32,12 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Util
 {

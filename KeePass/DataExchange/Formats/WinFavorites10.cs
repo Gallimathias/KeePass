@@ -30,11 +30,11 @@ using KeePass.Resources;
 using KeePass.Util;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.DataExchange.Formats
 {

@@ -32,9 +32,9 @@ using KeePass.App;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

@@ -24,9 +24,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	public sealed class Salsa20Cipher : CtrBlockCipher
 	{

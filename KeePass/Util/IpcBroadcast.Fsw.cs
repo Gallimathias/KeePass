@@ -28,8 +28,8 @@ using System.Threading;
 using KeePass.App;
 using KeePass.Forms;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

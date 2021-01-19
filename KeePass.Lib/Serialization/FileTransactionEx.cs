@@ -30,13 +30,13 @@ using System.Security.AccessControl;
 
 using Microsoft.Win32;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Delegates;
-using KeePassLib.Native;
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Native;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	public sealed class FileTransactionEx : IDisposable
 	{

@@ -28,9 +28,9 @@ using KeePass.App;
 using KeePass.App.Configuration;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

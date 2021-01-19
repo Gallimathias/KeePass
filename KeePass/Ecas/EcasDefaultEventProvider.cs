@@ -24,9 +24,9 @@ using System.Diagnostics;
 
 using KeePass.Resources;
 
-using KeePassLib;
-using KeePassLib.Utility;
-using KeePassLib.Serialization;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
+using KeePass.Lib.Serialization;
 
 namespace KeePass.Ecas
 {

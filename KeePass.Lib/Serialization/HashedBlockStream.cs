@@ -23,15 +23,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	public sealed class HashedBlockStream : Stream
 	{

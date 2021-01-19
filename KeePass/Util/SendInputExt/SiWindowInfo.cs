@@ -24,7 +24,7 @@ using System.Text;
 
 using KeePass.Native;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util.SendInputExt
 {

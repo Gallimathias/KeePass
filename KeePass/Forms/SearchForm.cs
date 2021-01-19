@@ -31,10 +31,10 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Interfaces;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

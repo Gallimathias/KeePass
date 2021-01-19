@@ -24,11 +24,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	public sealed class FileLockException : Exception
 	{

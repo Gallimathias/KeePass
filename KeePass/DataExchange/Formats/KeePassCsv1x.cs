@@ -24,11 +24,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-using KeePassLib;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.DataExchange.Formats
 {

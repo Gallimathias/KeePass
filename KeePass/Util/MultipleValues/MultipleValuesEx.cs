@@ -28,8 +28,8 @@ using System.Windows.Forms;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util.MultipleValues
 {

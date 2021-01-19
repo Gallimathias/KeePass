@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	public abstract class CtrBlockCipher : IDisposable
 	{

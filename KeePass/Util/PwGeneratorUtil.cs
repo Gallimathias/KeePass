@@ -28,10 +28,10 @@ using KeePass.Resources;
 using KeePass.Util.Spr;
 #endif
 
-using KeePassLib;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

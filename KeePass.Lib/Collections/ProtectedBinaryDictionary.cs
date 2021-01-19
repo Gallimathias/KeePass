@@ -23,14 +23,14 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
-namespace KeePassLib.Collections
+namespace KeePass.Lib.Collections
 {
 	/// <summary>
 	/// A list of <c>ProtectedBinary</c> objects (dictionary).

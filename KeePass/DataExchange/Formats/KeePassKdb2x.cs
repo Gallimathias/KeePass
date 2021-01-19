@@ -27,13 +27,13 @@ using System.IO;
 using KeePass.App;
 using KeePass.Resources;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Serialization;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Serialization;
 
 namespace KeePass.DataExchange.Formats
 {

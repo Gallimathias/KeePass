@@ -31,11 +31,11 @@ using System.IO;
 using System.Threading;
 #endif
 
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 using System.Windows.Forms;
 
-namespace KeePassLib.Native
+namespace KeePass.Lib.Native
 {
     /// <summary>
     /// Interface to native library (library containing fast versions of

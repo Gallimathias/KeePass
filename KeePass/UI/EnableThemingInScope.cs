@@ -43,7 +43,7 @@ namespace KeePass.UI
 		public EnableThemingInScope(bool bEnable)
 		{
 			if(!bEnable) return;
-			if(KeePassLib.Native.NativeLib.IsUnix()) return;
+			if(KeePass.Lib.Native.NativeLib.IsUnix()) return;
 
 			try
 			{

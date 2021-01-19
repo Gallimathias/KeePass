@@ -37,10 +37,10 @@ using ICSharpCode.SharpZipLib.GZip;
 using System.IO.Compression;
 #endif
 
-using KeePassLib.Interfaces;
-using KeePassLib.Utility;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Translation
+namespace KeePass.Lib.Translation
 {
     [XmlRoot("Translation")]
     public sealed class KPTranslation

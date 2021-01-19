@@ -22,10 +22,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Security;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Security;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
 	public sealed class KcpCustomKey : IUserKey
 	{

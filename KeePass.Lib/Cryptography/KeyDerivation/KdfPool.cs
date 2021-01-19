@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.KeyDerivation
+namespace KeePass.Lib.Cryptography.KeyDerivation
 {
 	public static class KdfPool
 	{

@@ -28,9 +28,9 @@ using System.Xml.Serialization;
 
 using KeePass.App.Configuration;
 
-using KeePassLib.Interfaces;
-using KeePassLib.Translation;
-using KeePassLib.Utility;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Translation;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util.XmlSerialization
 {
@@ -178,7 +178,7 @@ namespace KeePass.Util.XmlSerialization
 			AppendLine(sb, "using System.Diagnostics;", ref t);
 			AppendLine(sb, "using System.Xml;", ref t);
 			AppendLine(sb);
-			AppendLine(sb, "using KeePassLib.Interfaces;", ref t);
+			AppendLine(sb, "using KeePass.Lib.Interfaces;", ref t);
 			AppendLine(sb);
 			AppendLine(sb, "namespace KeePass.Util.XmlSerialization", ref t);
 			AppendLine(sb, "{", ref t, 0, 1);

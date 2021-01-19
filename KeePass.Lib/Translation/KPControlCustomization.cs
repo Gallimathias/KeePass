@@ -30,10 +30,10 @@ using System.Drawing;
 using System.Windows.Forms;
 #endif
 
-using KeePassLib.Cryptography;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Translation
+namespace KeePass.Lib.Translation
 {
     public sealed class KpccLayout
     {

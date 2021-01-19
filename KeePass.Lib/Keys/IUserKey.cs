@@ -19,9 +19,9 @@
 
 using System;
 
-using KeePassLib.Security;
+using KeePass.Lib.Security;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
 	/// <summary>
 	/// Interface to a user key, like a password, key file data, etc.

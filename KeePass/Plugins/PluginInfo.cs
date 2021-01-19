@@ -25,8 +25,8 @@ using System.Diagnostics;
 
 using KeePass.App;
 
-using KeePassLib;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Plugins
 {

@@ -30,11 +30,11 @@ using Org.BouncyCastle.Crypto.Parameters;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Cryptography;
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.KeyDerivation
+namespace KeePass.Lib.Cryptography.KeyDerivation
 {
 	public sealed partial class AesKdf : KdfEngine
 	{

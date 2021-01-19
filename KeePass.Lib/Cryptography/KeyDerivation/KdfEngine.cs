@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace KeePassLib.Cryptography.KeyDerivation
+namespace KeePass.Lib.Cryptography.KeyDerivation
 {
 	public abstract class KdfEngine
 	{

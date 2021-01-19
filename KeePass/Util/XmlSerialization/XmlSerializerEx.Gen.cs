@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Xml;
 
-using KeePassLib.Interfaces;
+using KeePass.Lib.Interfaces;
 
 namespace KeePass.Util.XmlSerialization
 {
@@ -84,9 +84,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Translation.KPTranslation ReadKPTranslation(XmlReader xr)
+		private static KeePass.Lib.Translation.KPTranslation ReadKPTranslation(XmlReader xr)
 		{
-			KeePassLib.Translation.KPTranslation o = new KeePassLib.Translation.KPTranslation();
+			KeePass.Lib.Translation.KPTranslation o = new KeePass.Lib.Translation.KPTranslation();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -1002,9 +1002,9 @@ namespace KeePass.Util.XmlSerialization
 			return l.ToArray();
 		}
 
-		private static KeePassLib.Translation.KPTranslationProperties ReadKPTranslationProperties(XmlReader xr)
+		private static KeePass.Lib.Translation.KPTranslationProperties ReadKPTranslationProperties(XmlReader xr)
 		{
-			KeePassLib.Translation.KPTranslationProperties o = new KeePassLib.Translation.KPTranslationProperties();
+			KeePass.Lib.Translation.KPTranslationProperties o = new KeePass.Lib.Translation.KPTranslationProperties();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -1067,9 +1067,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.Translation.KPStringTable> ReadListOfKPStringTable(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.Translation.KPStringTable> ReadListOfKPStringTable(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.Translation.KPStringTable> o = new System.Collections.Generic.List<KeePassLib.Translation.KPStringTable>();
+			System.Collections.Generic.List<KeePass.Lib.Translation.KPStringTable> o = new System.Collections.Generic.List<KeePass.Lib.Translation.KPStringTable>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -1083,7 +1083,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.Translation.KPStringTable oElem = ReadKPStringTable(xr);
+				KeePass.Lib.Translation.KPStringTable oElem = ReadKPStringTable(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -1094,9 +1094,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.Translation.KPFormCustomization> ReadListOfKPFormCustomization(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.Translation.KPFormCustomization> ReadListOfKPFormCustomization(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.Translation.KPFormCustomization> o = new System.Collections.Generic.List<KeePassLib.Translation.KPFormCustomization>();
+			System.Collections.Generic.List<KeePass.Lib.Translation.KPFormCustomization> o = new System.Collections.Generic.List<KeePass.Lib.Translation.KPFormCustomization>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -1110,7 +1110,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.Translation.KPFormCustomization oElem = ReadKPFormCustomization(xr);
+				KeePass.Lib.Translation.KPFormCustomization oElem = ReadKPFormCustomization(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -1138,9 +1138,9 @@ namespace KeePass.Util.XmlSerialization
 			return XmlConvert.ToDouble(strValue);
 		}
 
-		private static KeePassLib.Serialization.IOConnectionInfo ReadIOConnectionInfo(XmlReader xr)
+		private static KeePass.Lib.Serialization.IOConnectionInfo ReadIOConnectionInfo(XmlReader xr)
 		{
-			KeePassLib.Serialization.IOConnectionInfo o = new KeePassLib.Serialization.IOConnectionInfo();
+			KeePass.Lib.Serialization.IOConnectionInfo o = new KeePass.Lib.Serialization.IOConnectionInfo();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2010,9 +2010,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Cryptography.PasswordGenerator.PwProfile ReadPwProfile(XmlReader xr)
+		private static KeePass.Lib.Cryptography.PasswordGenerator.PwProfile ReadPwProfile(XmlReader xr)
 		{
-			KeePassLib.Cryptography.PasswordGenerator.PwProfile o = new KeePassLib.Cryptography.PasswordGenerator.PwProfile();
+			KeePass.Lib.Cryptography.PasswordGenerator.PwProfile o = new KeePass.Lib.Cryptography.PasswordGenerator.PwProfile();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2081,9 +2081,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.Cryptography.PasswordGenerator.PwProfile> ReadListOfPwProfile(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.Cryptography.PasswordGenerator.PwProfile> ReadListOfPwProfile(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.Cryptography.PasswordGenerator.PwProfile> o = new System.Collections.Generic.List<KeePassLib.Cryptography.PasswordGenerator.PwProfile>();
+			System.Collections.Generic.List<KeePass.Lib.Cryptography.PasswordGenerator.PwProfile> o = new System.Collections.Generic.List<KeePass.Lib.Cryptography.PasswordGenerator.PwProfile>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2097,7 +2097,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.Cryptography.PasswordGenerator.PwProfile oElem = ReadPwProfile(xr);
+				KeePass.Lib.Cryptography.PasswordGenerator.PwProfile oElem = ReadPwProfile(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -2108,9 +2108,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.SearchParameters ReadSearchParameters(XmlReader xr)
+		private static KeePass.Lib.SearchParameters ReadSearchParameters(XmlReader xr)
 		{
-			KeePassLib.SearchParameters o = new KeePassLib.SearchParameters();
+			KeePass.Lib.SearchParameters o = new KeePass.Lib.SearchParameters();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2197,9 +2197,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.SearchParameters> ReadListOfSearchParameters(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.SearchParameters> ReadListOfSearchParameters(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.SearchParameters> o = new System.Collections.Generic.List<KeePassLib.SearchParameters>();
+			System.Collections.Generic.List<KeePass.Lib.SearchParameters> o = new System.Collections.Generic.List<KeePass.Lib.SearchParameters>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2213,7 +2213,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.SearchParameters oElem = ReadSearchParameters(xr);
+				KeePass.Lib.SearchParameters oElem = ReadSearchParameters(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -2295,38 +2295,38 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static Dictionary<string, KeePassLib.ProxyServerType> m_dictProxyServerType = null;
-		private static KeePassLib.ProxyServerType ReadProxyServerType(XmlReader xr)
+		private static Dictionary<string, KeePass.Lib.ProxyServerType> m_dictProxyServerType = null;
+		private static KeePass.Lib.ProxyServerType ReadProxyServerType(XmlReader xr)
 		{
 			if(m_dictProxyServerType == null)
 			{
-				m_dictProxyServerType = new Dictionary<string, KeePassLib.ProxyServerType>();
-				m_dictProxyServerType["None"] = KeePassLib.ProxyServerType.None;
-				m_dictProxyServerType["System"] = KeePassLib.ProxyServerType.System;
-				m_dictProxyServerType["Manual"] = KeePassLib.ProxyServerType.Manual;
+				m_dictProxyServerType = new Dictionary<string, KeePass.Lib.ProxyServerType>();
+				m_dictProxyServerType["None"] = KeePass.Lib.ProxyServerType.None;
+				m_dictProxyServerType["System"] = KeePass.Lib.ProxyServerType.System;
+				m_dictProxyServerType["Manual"] = KeePass.Lib.ProxyServerType.Manual;
 			}
 
 			string strValue = xr.ReadElementString();
-			KeePassLib.ProxyServerType eResult;
+			KeePass.Lib.ProxyServerType eResult;
 			if(!m_dictProxyServerType.TryGetValue(strValue, out eResult))
 				{ Debug.Assert(false); }
 			return eResult;
 		}
 
-		private static Dictionary<string, KeePassLib.ProxyAuthType> m_dictProxyAuthType = null;
-		private static KeePassLib.ProxyAuthType ReadProxyAuthType(XmlReader xr)
+		private static Dictionary<string, KeePass.Lib.ProxyAuthType> m_dictProxyAuthType = null;
+		private static KeePass.Lib.ProxyAuthType ReadProxyAuthType(XmlReader xr)
 		{
 			if(m_dictProxyAuthType == null)
 			{
-				m_dictProxyAuthType = new Dictionary<string, KeePassLib.ProxyAuthType>();
-				m_dictProxyAuthType["None"] = KeePassLib.ProxyAuthType.None;
-				m_dictProxyAuthType["Default"] = KeePassLib.ProxyAuthType.Default;
-				m_dictProxyAuthType["Manual"] = KeePassLib.ProxyAuthType.Manual;
-				m_dictProxyAuthType["Auto"] = KeePassLib.ProxyAuthType.Auto;
+				m_dictProxyAuthType = new Dictionary<string, KeePass.Lib.ProxyAuthType>();
+				m_dictProxyAuthType["None"] = KeePass.Lib.ProxyAuthType.None;
+				m_dictProxyAuthType["Default"] = KeePass.Lib.ProxyAuthType.Default;
+				m_dictProxyAuthType["Manual"] = KeePass.Lib.ProxyAuthType.Manual;
+				m_dictProxyAuthType["Auto"] = KeePass.Lib.ProxyAuthType.Auto;
 			}
 
 			string strValue = xr.ReadElementString();
-			KeePassLib.ProxyAuthType eResult;
+			KeePass.Lib.ProxyAuthType eResult;
 			if(!m_dictProxyAuthType.TryGetValue(strValue, out eResult))
 				{ Debug.Assert(false); }
 			return eResult;
@@ -2370,9 +2370,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Translation.KPStringTable ReadKPStringTable(XmlReader xr)
+		private static KeePass.Lib.Translation.KPStringTable ReadKPStringTable(XmlReader xr)
 		{
-			KeePassLib.Translation.KPStringTable o = new KeePassLib.Translation.KPStringTable();
+			KeePass.Lib.Translation.KPStringTable o = new KeePass.Lib.Translation.KPStringTable();
 
 			while(xr.MoveToNextAttribute())
 			{
@@ -2418,9 +2418,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Translation.KPFormCustomization ReadKPFormCustomization(XmlReader xr)
+		private static KeePass.Lib.Translation.KPFormCustomization ReadKPFormCustomization(XmlReader xr)
 		{
-			KeePassLib.Translation.KPFormCustomization o = new KeePassLib.Translation.KPFormCustomization();
+			KeePass.Lib.Translation.KPFormCustomization o = new KeePass.Lib.Translation.KPFormCustomization();
 
 			while(xr.MoveToNextAttribute())
 			{
@@ -2469,44 +2469,44 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static Dictionary<string, KeePassLib.Serialization.IOCredProtMode> m_dictIOCredProtMode = null;
-		private static KeePassLib.Serialization.IOCredProtMode ReadIOCredProtMode(XmlReader xr)
+		private static Dictionary<string, KeePass.Lib.Serialization.IOCredProtMode> m_dictIOCredProtMode = null;
+		private static KeePass.Lib.Serialization.IOCredProtMode ReadIOCredProtMode(XmlReader xr)
 		{
 			if(m_dictIOCredProtMode == null)
 			{
-				m_dictIOCredProtMode = new Dictionary<string, KeePassLib.Serialization.IOCredProtMode>();
-				m_dictIOCredProtMode["None"] = KeePassLib.Serialization.IOCredProtMode.None;
-				m_dictIOCredProtMode["Obf"] = KeePassLib.Serialization.IOCredProtMode.Obf;
+				m_dictIOCredProtMode = new Dictionary<string, KeePass.Lib.Serialization.IOCredProtMode>();
+				m_dictIOCredProtMode["None"] = KeePass.Lib.Serialization.IOCredProtMode.None;
+				m_dictIOCredProtMode["Obf"] = KeePass.Lib.Serialization.IOCredProtMode.Obf;
 			}
 
 			string strValue = xr.ReadElementString();
-			KeePassLib.Serialization.IOCredProtMode eResult;
+			KeePass.Lib.Serialization.IOCredProtMode eResult;
 			if(!m_dictIOCredProtMode.TryGetValue(strValue, out eResult))
 				{ Debug.Assert(false); }
 			return eResult;
 		}
 
-		private static Dictionary<string, KeePassLib.Serialization.IOCredSaveMode> m_dictIOCredSaveMode = null;
-		private static KeePassLib.Serialization.IOCredSaveMode ReadIOCredSaveMode(XmlReader xr)
+		private static Dictionary<string, KeePass.Lib.Serialization.IOCredSaveMode> m_dictIOCredSaveMode = null;
+		private static KeePass.Lib.Serialization.IOCredSaveMode ReadIOCredSaveMode(XmlReader xr)
 		{
 			if(m_dictIOCredSaveMode == null)
 			{
-				m_dictIOCredSaveMode = new Dictionary<string, KeePassLib.Serialization.IOCredSaveMode>();
-				m_dictIOCredSaveMode["NoSave"] = KeePassLib.Serialization.IOCredSaveMode.NoSave;
-				m_dictIOCredSaveMode["UserNameOnly"] = KeePassLib.Serialization.IOCredSaveMode.UserNameOnly;
-				m_dictIOCredSaveMode["SaveCred"] = KeePassLib.Serialization.IOCredSaveMode.SaveCred;
+				m_dictIOCredSaveMode = new Dictionary<string, KeePass.Lib.Serialization.IOCredSaveMode>();
+				m_dictIOCredSaveMode["NoSave"] = KeePass.Lib.Serialization.IOCredSaveMode.NoSave;
+				m_dictIOCredSaveMode["UserNameOnly"] = KeePass.Lib.Serialization.IOCredSaveMode.UserNameOnly;
+				m_dictIOCredSaveMode["SaveCred"] = KeePass.Lib.Serialization.IOCredSaveMode.SaveCred;
 			}
 
 			string strValue = xr.ReadElementString();
-			KeePassLib.Serialization.IOCredSaveMode eResult;
+			KeePass.Lib.Serialization.IOCredSaveMode eResult;
 			if(!m_dictIOCredSaveMode.TryGetValue(strValue, out eResult))
 				{ Debug.Assert(false); }
 			return eResult;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.Serialization.IOConnectionInfo> ReadListOfIOConnectionInfo(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.Serialization.IOConnectionInfo> ReadListOfIOConnectionInfo(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.Serialization.IOConnectionInfo> o = new System.Collections.Generic.List<KeePassLib.Serialization.IOConnectionInfo>();
+			System.Collections.Generic.List<KeePass.Lib.Serialization.IOConnectionInfo> o = new System.Collections.Generic.List<KeePass.Lib.Serialization.IOConnectionInfo>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2520,7 +2520,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.Serialization.IOConnectionInfo oElem = ReadIOConnectionInfo(xr);
+				KeePass.Lib.Serialization.IOConnectionInfo oElem = ReadIOConnectionInfo(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -2674,38 +2674,38 @@ namespace KeePass.Util.XmlSerialization
 			return eResult;
 		}
 
-		private static Dictionary<string, KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType> m_dictPasswordGeneratorType = null;
-		private static KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType ReadPasswordGeneratorType(XmlReader xr)
+		private static Dictionary<string, KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType> m_dictPasswordGeneratorType = null;
+		private static KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType ReadPasswordGeneratorType(XmlReader xr)
 		{
 			if(m_dictPasswordGeneratorType == null)
 			{
-				m_dictPasswordGeneratorType = new Dictionary<string, KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType>();
-				m_dictPasswordGeneratorType["CharSet"] = KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType.CharSet;
-				m_dictPasswordGeneratorType["Pattern"] = KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType.Pattern;
-				m_dictPasswordGeneratorType["Custom"] = KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType.Custom;
+				m_dictPasswordGeneratorType = new Dictionary<string, KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType>();
+				m_dictPasswordGeneratorType["CharSet"] = KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType.CharSet;
+				m_dictPasswordGeneratorType["Pattern"] = KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType.Pattern;
+				m_dictPasswordGeneratorType["Custom"] = KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType.Custom;
 			}
 
 			string strValue = xr.ReadElementString();
-			KeePassLib.Cryptography.PasswordGenerator.PasswordGeneratorType eResult;
+			KeePass.Lib.Cryptography.PasswordGenerator.PasswordGeneratorType eResult;
 			if(!m_dictPasswordGeneratorType.TryGetValue(strValue, out eResult))
 				{ Debug.Assert(false); }
 			return eResult;
 		}
 
-		private static Dictionary<string, KeePassLib.PwSearchMode> m_dictPwSearchMode = null;
-		private static KeePassLib.PwSearchMode ReadPwSearchMode(XmlReader xr)
+		private static Dictionary<string, KeePass.Lib.PwSearchMode> m_dictPwSearchMode = null;
+		private static KeePass.Lib.PwSearchMode ReadPwSearchMode(XmlReader xr)
 		{
 			if(m_dictPwSearchMode == null)
 			{
-				m_dictPwSearchMode = new Dictionary<string, KeePassLib.PwSearchMode>();
-				m_dictPwSearchMode["None"] = KeePassLib.PwSearchMode.None;
-				m_dictPwSearchMode["Simple"] = KeePassLib.PwSearchMode.Simple;
-				m_dictPwSearchMode["Regular"] = KeePassLib.PwSearchMode.Regular;
-				m_dictPwSearchMode["XPath"] = KeePassLib.PwSearchMode.XPath;
+				m_dictPwSearchMode = new Dictionary<string, KeePass.Lib.PwSearchMode>();
+				m_dictPwSearchMode["None"] = KeePass.Lib.PwSearchMode.None;
+				m_dictPwSearchMode["Simple"] = KeePass.Lib.PwSearchMode.Simple;
+				m_dictPwSearchMode["Regular"] = KeePass.Lib.PwSearchMode.Regular;
+				m_dictPwSearchMode["XPath"] = KeePass.Lib.PwSearchMode.XPath;
 			}
 
 			string strValue = xr.ReadElementString();
-			KeePassLib.PwSearchMode eResult;
+			KeePass.Lib.PwSearchMode eResult;
 			if(!m_dictPwSearchMode.TryGetValue(strValue, out eResult))
 				{ Debug.Assert(false); }
 			return eResult;
@@ -2806,9 +2806,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.Translation.KPStringTableItem> ReadListOfKPStringTableItem(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.Translation.KPStringTableItem> ReadListOfKPStringTableItem(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.Translation.KPStringTableItem> o = new System.Collections.Generic.List<KeePassLib.Translation.KPStringTableItem>();
+			System.Collections.Generic.List<KeePass.Lib.Translation.KPStringTableItem> o = new System.Collections.Generic.List<KeePass.Lib.Translation.KPStringTableItem>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2822,7 +2822,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.Translation.KPStringTableItem oElem = ReadKPStringTableItem(xr);
+				KeePass.Lib.Translation.KPStringTableItem oElem = ReadKPStringTableItem(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -2833,9 +2833,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Translation.KPControlCustomization ReadKPControlCustomization(XmlReader xr)
+		private static KeePass.Lib.Translation.KPControlCustomization ReadKPControlCustomization(XmlReader xr)
 		{
-			KeePassLib.Translation.KPControlCustomization o = new KeePassLib.Translation.KPControlCustomization();
+			KeePass.Lib.Translation.KPControlCustomization o = new KeePass.Lib.Translation.KPControlCustomization();
 
 			while(xr.MoveToNextAttribute())
 			{
@@ -2887,9 +2887,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static System.Collections.Generic.List<KeePassLib.Translation.KPControlCustomization> ReadListOfKPControlCustomization(XmlReader xr)
+		private static System.Collections.Generic.List<KeePass.Lib.Translation.KPControlCustomization> ReadListOfKPControlCustomization(XmlReader xr)
 		{
-			System.Collections.Generic.List<KeePassLib.Translation.KPControlCustomization> o = new System.Collections.Generic.List<KeePassLib.Translation.KPControlCustomization>();
+			System.Collections.Generic.List<KeePass.Lib.Translation.KPControlCustomization> o = new System.Collections.Generic.List<KeePass.Lib.Translation.KPControlCustomization>();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -2903,7 +2903,7 @@ namespace KeePass.Util.XmlSerialization
 				if((nt == XmlNodeType.EndElement) || (nt == XmlNodeType.None)) break;
 				if(nt != XmlNodeType.Element) { Debug.Assert(false); xr.Skip(); continue; }
 
-				KeePassLib.Translation.KPControlCustomization oElem = ReadKPControlCustomization(xr);
+				KeePass.Lib.Translation.KPControlCustomization oElem = ReadKPControlCustomization(xr);
 				o.Add(oElem);
 
 				xr.MoveToContent();
@@ -3050,9 +3050,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Translation.KPStringTableItem ReadKPStringTableItem(XmlReader xr)
+		private static KeePass.Lib.Translation.KPStringTableItem ReadKPStringTableItem(XmlReader xr)
 		{
-			KeePassLib.Translation.KPStringTableItem o = new KeePassLib.Translation.KPStringTableItem();
+			KeePass.Lib.Translation.KPStringTableItem o = new KeePass.Lib.Translation.KPStringTableItem();
 
 			if(SkipEmptyElement(xr)) return o;
 
@@ -3088,9 +3088,9 @@ namespace KeePass.Util.XmlSerialization
 			return o;
 		}
 
-		private static KeePassLib.Translation.KpccLayout ReadKpccLayout(XmlReader xr)
+		private static KeePass.Lib.Translation.KpccLayout ReadKpccLayout(XmlReader xr)
 		{
-			KeePassLib.Translation.KpccLayout o = new KeePassLib.Translation.KpccLayout();
+			KeePass.Lib.Translation.KpccLayout o = new KeePass.Lib.Translation.KpccLayout();
 
 			while(xr.MoveToNextAttribute())
 			{

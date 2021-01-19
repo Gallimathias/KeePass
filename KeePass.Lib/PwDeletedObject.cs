@@ -21,9 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using KeePassLib.Interfaces;
+using KeePass.Lib.Interfaces;
 
-namespace KeePassLib
+namespace KeePass.Lib
 {
 	/// <summary>
 	/// Represents an object that has been deleted.

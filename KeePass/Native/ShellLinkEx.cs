@@ -24,7 +24,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Diagnostics;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Native
 {
@@ -85,7 +85,7 @@ namespace KeePass.Native
 				pf.Load(strLnkFilePath, (int)(NativeMethods.STGM.Read |
 					NativeMethods.STGM.ShareDenyWrite));
 
-				const int ccMaxPath = KeePassLib.Native.NativeMethods.MAX_PATH;
+				const int ccMaxPath = KeePass.Lib.Native.NativeMethods.MAX_PATH;
 				const int ccInfoTip = NativeMethods.INFOTIPSIZE;
 
 				ShellLinkEx r = new ShellLinkEx();

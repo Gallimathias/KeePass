@@ -10,6 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\KeePass.Lib.UI.WindowsForms\KeePass.Lib.UI.WindowsForms.csproj" />
-    <ProjectReference Include="..\KeePassLib\KeePass.Lib.csproj" />
+    <ProjectReference Include="..\KeePass.Lib\KeePass.Lib.csproj" />
   </ItemGroup>
 </Project>

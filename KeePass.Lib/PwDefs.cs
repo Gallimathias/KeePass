@@ -24,11 +24,11 @@ using System.Diagnostics;
 using System.Net;
 using System.Xml.Serialization;
 
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Serialization;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Serialization;
 
-namespace KeePassLib
+namespace KeePass.Lib
 {
 	/// <summary>
 	/// Contains KeePassLib-global definitions and enums.

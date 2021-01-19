@@ -28,7 +28,7 @@ using System.Xml.Serialization;
 
 using KeePass.Util.XmlSerialization;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

@@ -29,9 +29,9 @@ using KeePass.Native;
 using KeePass.Resources;
 using KeePass.Util.SendInputExt;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Util
 {

@@ -26,19 +26,19 @@ using System.IO;
 using System.Drawing;
 #endif
 
-using KeePassLib.Collections;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Keys;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib
+namespace KeePass.Lib
 {
 	/// <summary>
 	/// The core password manager class. It contains a number of groups, which

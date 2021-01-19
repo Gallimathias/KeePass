@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	/// <summary>
 	/// Pool of encryption/decryption algorithms (ciphers).

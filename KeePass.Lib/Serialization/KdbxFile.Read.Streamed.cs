@@ -28,14 +28,14 @@ using System.Xml;
 using System.Drawing;
 #endif
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Interfaces;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	/// <summary>
 	/// Serialization to KeePass KDBX files.

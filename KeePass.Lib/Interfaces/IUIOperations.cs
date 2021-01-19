@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace KeePassLib.Interfaces
+namespace KeePass.Lib.Interfaces
 {
 	public interface IUIOperations
 	{

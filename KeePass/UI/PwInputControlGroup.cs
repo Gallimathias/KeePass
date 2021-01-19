@@ -32,10 +32,10 @@ using KeePass.Resources;
 using KeePass.Util.MultipleValues;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.UI
 {

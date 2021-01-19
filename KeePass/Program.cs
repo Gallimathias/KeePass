@@ -50,18 +50,18 @@ using KeePass.Util;
 using KeePass.Util.Archive;
 using KeePass.Util.XmlSerialization;
 
-using KeePassLib;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Keys;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Translation;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Translation;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass
 {
@@ -622,7 +622,7 @@ namespace KeePass
 			AppPolicy.ApplyToConfig();
 
 			if(m_appConfig.Security.ProtectProcessWithDacl)
-				KeePassLib.Native.NativeMethods.ProtectProcessWithDacl();
+				KeePass.Lib.Native.NativeMethods.ProtectProcessWithDacl();
 
 			m_appConfig.Apply(AceApplyFlags.All);
 
@@ -851,7 +851,7 @@ namespace KeePass
 					"KeePass.Resources.KPRes"));
 				KLRes.SetTranslatedStrings(
 					m_kpTranslation.SafeGetStringTableDictionary(
-					"KeePassLib.Resources.KLRes"));
+					"KeePass.Lib.Resources.KLRes"));
 
 				StrUtil.RightToLeft = m_kpTranslation.Properties.RightToLeft;
 			}

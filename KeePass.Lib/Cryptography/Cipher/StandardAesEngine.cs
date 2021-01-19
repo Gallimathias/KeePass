@@ -28,9 +28,9 @@ using System.Text;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Resources;
+using KeePass.Lib.Resources;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	public sealed class StandardAesEngine : ICipherEngine
 	{

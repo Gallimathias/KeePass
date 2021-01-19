@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
 
-using KeePassLib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Cryptography.PasswordGenerator;
 
 namespace KeePass.App.Configuration
 {

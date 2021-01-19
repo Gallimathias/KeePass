@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using KeePassLib.Serialization;
+using KeePass.Lib.Serialization;
 
 namespace TrlUtil.App.Configuration
 {

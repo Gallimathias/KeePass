@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.Ecas
 {

@@ -29,8 +29,8 @@ using Microsoft.Win32;
 using KeePass.UI;
 using KeePass.Util.Spr;
 
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

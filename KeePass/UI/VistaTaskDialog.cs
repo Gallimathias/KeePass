@@ -30,7 +30,7 @@ using KeePass.Native;
 using KeePass.Resources;
 using KeePass.Util;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.UI
 {

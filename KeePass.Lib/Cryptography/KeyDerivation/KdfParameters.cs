@@ -23,10 +23,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using KeePassLib.Collections;
-using KeePassLib.Utility;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.KeyDerivation
+namespace KeePass.Lib.Cryptography.KeyDerivation
 {
 	public sealed class KdfParameters : VariantDictionary
 	{

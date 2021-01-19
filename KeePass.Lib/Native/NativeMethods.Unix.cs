@@ -28,7 +28,7 @@ using System.Text;
 using System.Windows.Forms;
 #endif
 
-namespace KeePassLib.Native
+namespace KeePass.Lib.Native
 {
     internal static partial class NativeMethods
     {

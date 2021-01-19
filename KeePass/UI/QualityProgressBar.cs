@@ -30,7 +30,7 @@ using System.Windows.Forms.VisualStyles;
 using KeePass.App;
 using KeePass.Util;
 
-using KeePassLib.Native;
+using KeePass.Lib.Native;
 
 namespace KeePass.UI
 {

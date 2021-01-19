@@ -31,8 +31,8 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {
@@ -168,7 +168,7 @@ namespace KeePass.Forms
 
 		private void OpenUrl(string strUrl)
 		{
-			/* if(!KeePassLib.Native.NativeLib.IsUnix())
+			/* if(!KeePass.Lib.Native.NativeLib.IsUnix())
 			{
 				// Process.Start has a considerable delay when opening URLs
 				// here (different thread, etc.), therefore try the native

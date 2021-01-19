@@ -23,9 +23,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Native
+namespace KeePass.Lib.Native
 {
     internal static partial class NativeMethods
     {

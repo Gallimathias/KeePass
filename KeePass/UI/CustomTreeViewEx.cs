@@ -26,7 +26,7 @@ using System.Windows.Forms;
 using KeePass.Native;
 using KeePass.Util;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.UI
 {

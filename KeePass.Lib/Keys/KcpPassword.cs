@@ -21,11 +21,11 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
 	/// <summary>
 	/// Master password/passphrase as provided by the user.

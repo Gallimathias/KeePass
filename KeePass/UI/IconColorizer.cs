@@ -27,7 +27,7 @@ using System.Text;
 
 using KeePass.Native;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 using ICONDIR = KeePass.Native.NativeMethods.ICONDIR;
 using ICONDIRENTRY = KeePass.Native.NativeMethods.ICONDIRENTRY;

@@ -26,12 +26,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #else
 using System.IO.Compression;
 #endif
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
 	/// <summary>
 	/// Buffer manipulation and conversion routines.

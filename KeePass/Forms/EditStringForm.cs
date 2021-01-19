@@ -30,11 +30,11 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.MultipleValues;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Delegates;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

@@ -12,7 +12,7 @@ RMDIR /S /Q ..\KeePass\obj
 DEL ..\KeePass\KeePass.csproj.user
 
 RMDIR /S /Q ..\KeePassLib\obj
-DEL ..\KeePassLib\KeePassLib.csproj.user
+DEL ..\KeePassLib\KeePass.Lib.csproj.user
 
 REM RMDIR /S /Q ..\KeePassLibSD\obj
 REM DEL ..\KeePassLibSD\KeePassLibSD.csproj.user

@@ -29,10 +29,10 @@ using KeePass.Forms;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
-using KeePassLib.Resources;
-using KeePassLib.Security;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
 
 namespace KeePass.DataExchange.Formats
 {

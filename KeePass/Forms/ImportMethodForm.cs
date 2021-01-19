@@ -29,7 +29,7 @@ using KeePass.App;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib;
+using KeePass.Lib;
 
 namespace KeePass.Forms
 {

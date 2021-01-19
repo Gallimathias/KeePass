@@ -25,9 +25,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

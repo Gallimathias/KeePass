@@ -3983,7 +3983,7 @@
   are displayed now
 - Completely new exception handling mechanism in the Kdb4File
   class (allows to show more detailed messages)
-- New message service class (KeePassLib.Utility.MessageService)
+- New message service class (KeePass.Lib.Utility.MessageService)
 - Added option to disable remembering the password hiding
   setting in the 'Edit Entry' window
 - Added menu shortcuts for opening the current entry URL

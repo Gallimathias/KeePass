@@ -19,7 +19,7 @@
 
 using System;
 
-namespace KeePassLib
+namespace KeePass.Lib
 {
 	/// <summary>
 	/// Compression algorithm specifiers.

@@ -35,10 +35,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-using KeePassLib.Cryptography.Hash;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography.Hash;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.KeyDerivation
+namespace KeePass.Lib.Cryptography.KeyDerivation
 {
 	public sealed partial class Argon2Kdf : KdfEngine
 	{

@@ -32,15 +32,15 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Native;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Translation;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Native;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Translation;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

@@ -25,9 +25,9 @@ using System.Drawing;
 
 using KeePass.Resources;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
 
 namespace KeePass.DataExchange.Formats
 {

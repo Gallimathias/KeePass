@@ -220,7 +220,7 @@ namespace KeePass.Native
 			public uint dwAttributes;
 
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst =
-				KeePassLib.Native.NativeMethods.MAX_PATH)]
+				KeePass.Lib.Native.NativeMethods.MAX_PATH)]
 			public string szDisplayName;
 
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
@@ -312,7 +312,7 @@ namespace KeePass.Native
 			public uint dwFlags;
 
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst =
-				KeePassLib.Native.NativeMethods.MAX_PATH)]
+				KeePass.Lib.Native.NativeMethods.MAX_PATH)]
 			public string szExeFile;
 		}
 

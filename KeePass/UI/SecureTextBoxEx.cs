@@ -25,9 +25,9 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-using KeePassLib.Delegates;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.UI
 {

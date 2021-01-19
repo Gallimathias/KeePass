@@ -30,17 +30,17 @@ using System.Xml;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Collections;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	/// <summary>
 	/// The <c>KdbxFile</c> class supports saving the data to various

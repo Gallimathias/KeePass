@@ -23,13 +23,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-using KeePassLib.Interfaces;
+using KeePass.Lib.Interfaces;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
-namespace KeePassLib.Collections
+namespace KeePass.Lib.Collections
 {
 	public sealed class StringDictionaryEx : IDeepCloneable<StringDictionaryEx>,
 		IEnumerable<KeyValuePair<string, string>>, IEquatable<StringDictionaryEx>

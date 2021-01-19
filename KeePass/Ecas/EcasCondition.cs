@@ -22,8 +22,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
 
 namespace KeePass.Ecas
 {

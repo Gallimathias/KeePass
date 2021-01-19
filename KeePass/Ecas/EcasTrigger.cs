@@ -24,9 +24,9 @@ using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Diagnostics;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Interfaces;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Interfaces;
 
 namespace KeePass.Ecas
 {

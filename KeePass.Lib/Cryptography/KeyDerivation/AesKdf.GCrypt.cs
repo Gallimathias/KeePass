@@ -24,10 +24,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.KeyDerivation
+namespace KeePass.Lib.Cryptography.KeyDerivation
 {
 	public sealed partial class AesKdf : KdfEngine
 	{

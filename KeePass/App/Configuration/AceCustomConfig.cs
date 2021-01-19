@@ -23,7 +23,7 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Globalization;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.App.Configuration
 {

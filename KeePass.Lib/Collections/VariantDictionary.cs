@@ -23,10 +23,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using KeePassLib.Resources;
-using KeePassLib.Utility;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Collections
+namespace KeePass.Lib.Collections
 {
 	public class VariantDictionary : ICloneable
 	{

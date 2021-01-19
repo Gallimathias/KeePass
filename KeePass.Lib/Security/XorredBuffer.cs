@@ -20,9 +20,9 @@
 using System;
 using System.Diagnostics;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Security
+namespace KeePass.Lib.Security
 {
 	/// <summary>
 	/// A <c>XorredBuffer</c> object stores data that is encrypted

@@ -25,10 +25,10 @@ using System.IO;
 using System.Text;
 using System.Xml.Serialization;
 
-using KeePassLib.Interfaces;
-using KeePassLib.Utility;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	public enum IOCredSaveMode
 	{

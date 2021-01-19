@@ -25,10 +25,10 @@ using System.Xml.Serialization;
 
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Keys;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.App.Configuration
 {

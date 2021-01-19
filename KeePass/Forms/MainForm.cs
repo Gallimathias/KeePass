@@ -38,17 +38,17 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Interfaces;
-using KeePassLib.Keys;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Forms
 {
@@ -410,7 +410,7 @@ namespace KeePass.Forms
 			Program.Config.CustomConfig.SetULong("TestItem2", 13);
 			Program.Config.CustomConfig.SetString("TestItem3", "TestValue");
 
-			Program.KeyProviderPool.Add(new KeePassLib.Keys.SampleKeyProvider());
+			Program.KeyProviderPool.Add(new KeePass.Lib.Keys.SampleKeyProvider());
 #endif
 
 			m_sessionLockNotifier.Install(this.OnSessionLock);

@@ -30,8 +30,8 @@ using System.Diagnostics;
 using KeePass.UI;
 using KeePass.Util.Archive;
 
-using KeePassLib;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

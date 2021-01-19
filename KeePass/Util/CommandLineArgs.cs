@@ -23,8 +23,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using KeePassLib.Native;
-using KeePassLib.Utility;
+using KeePass.Lib.Native;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

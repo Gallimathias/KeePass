@@ -27,9 +27,9 @@ using System.Windows.Forms;
 
 using KeePass.Native;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.UI
 {
@@ -86,7 +86,7 @@ namespace KeePass.UI
 			try
 			{
 				if(!WinUtil.IsAtLeastWindowsVista) return;
-				if(KeePassLib.Native.NativeLib.IsUnix()) return;
+				if(KeePass.Lib.Native.NativeLib.IsUnix()) return;
 				if(!this.ShowGroups) return;
 				if(this.MultiSelect) return;
 

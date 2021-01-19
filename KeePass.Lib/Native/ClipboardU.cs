@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
-namespace KeePassLib.Native
+namespace KeePass.Lib.Native
 {
 	internal static class ClipboardU
 	{

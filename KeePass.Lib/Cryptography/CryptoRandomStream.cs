@@ -24,10 +24,10 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography
+namespace KeePass.Lib.Cryptography
 {
 	/// <summary>
 	/// Algorithms supported by <c>CryptoRandomStream</c>.

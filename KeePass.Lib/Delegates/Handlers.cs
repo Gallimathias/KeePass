@@ -19,7 +19,7 @@
 
 using System;
 
-namespace KeePassLib.Delegates
+namespace KeePass.Lib.Delegates
 {
 	/// <summary>
 	/// Function definition of a method that performs an action on a group.

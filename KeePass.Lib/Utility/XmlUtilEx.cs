@@ -26,11 +26,11 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Xml.XPath;
 
-using KeePassLib.Delegates;
-using KeePassLib.Interfaces;
-using KeePassLib.Serialization;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Serialization;
 
-namespace KeePassLib.Utility
+namespace KeePass.Lib.Utility
 {
 	public static class XmlUtilEx
 	{

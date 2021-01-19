@@ -26,8 +26,8 @@ using System.Windows.Forms;
 using KeePass.Native;
 using KeePass.Resources;
 
-using KeePassLib;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
 
 using Microsoft.Win32;
 

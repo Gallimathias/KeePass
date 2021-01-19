@@ -29,9 +29,9 @@ using System.Text;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Cryptography.Hash
+namespace KeePass.Lib.Cryptography.Hash
 {
 	public sealed class Blake2b : HashAlgorithm
 	{

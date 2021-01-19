@@ -29,11 +29,11 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Archive;
 
-using KeePassLib;
-using KeePassLib.Delegates;
-using KeePassLib.Keys;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {

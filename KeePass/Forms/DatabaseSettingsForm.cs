@@ -32,15 +32,15 @@ using KeePass.App.Configuration;
 using KeePass.Resources;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Delegates;
-using KeePassLib.Keys;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Forms
 {

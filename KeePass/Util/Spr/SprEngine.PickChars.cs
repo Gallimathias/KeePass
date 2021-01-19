@@ -26,9 +26,9 @@ using System.Diagnostics;
 using KeePass.Forms;
 using KeePass.UI;
 
-using KeePassLib;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util.Spr
 {

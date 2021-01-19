@@ -25,8 +25,8 @@ using System.Windows.Forms;
 
 using KeePass.Forms;
 
-using KeePassLib;
-using KeePassLib.Interfaces;
+using KeePass.Lib;
+using KeePass.Lib.Interfaces;
 
 namespace KeePass.UI
 {

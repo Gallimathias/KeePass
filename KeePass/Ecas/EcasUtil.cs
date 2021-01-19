@@ -30,8 +30,8 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Ecas
 {

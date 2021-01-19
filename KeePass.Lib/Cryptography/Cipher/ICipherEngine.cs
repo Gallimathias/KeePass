@@ -20,7 +20,7 @@
 using System;
 using System.IO;
 
-namespace KeePassLib.Cryptography.Cipher
+namespace KeePass.Lib.Cryptography.Cipher
 {
 	public interface ICipherEngine
 	{

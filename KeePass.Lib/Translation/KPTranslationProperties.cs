@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace KeePassLib.Translation
+namespace KeePass.Lib.Translation
 {
 	public sealed class KPTranslationProperties
 	{

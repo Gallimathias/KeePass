@@ -33,12 +33,12 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePass.Util.Spr;
 
-using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-using NativeLib = KeePassLib.Native.NativeLib;
+using NativeLib = KeePass.Lib.Native.NativeLib;
 
 namespace KeePass.Forms
 {

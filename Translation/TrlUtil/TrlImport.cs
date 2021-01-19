@@ -23,8 +23,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-using KeePassLib.Translation;
-using KeePassLib.Utility;
+using KeePass.Lib.Translation;
+using KeePass.Lib.Utility;
 
 namespace TrlUtil
 {

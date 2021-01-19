@@ -27,7 +27,7 @@ using System.Windows.Forms;
 using KeePass.Forms;
 using KeePass.UI;
 
-using KeePassLib.Translation;
+using KeePass.Lib.Translation;
 
 namespace TrlUtil
 {

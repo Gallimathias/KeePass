@@ -31,10 +31,10 @@ using KeePass.Forms;
 using KeePass.UI;
 using KeePass.Util;
 
-using KeePassLib;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.PasswordGenerator;
-using KeePassLib.Keys;
+using KeePass.Lib;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.PasswordGenerator;
+using KeePass.Lib.Keys;
 
 namespace KeePass.Plugins
 {

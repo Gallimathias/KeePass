@@ -23,7 +23,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util.Archive
 {

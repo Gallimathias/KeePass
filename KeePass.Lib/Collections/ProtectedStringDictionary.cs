@@ -23,15 +23,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Interfaces;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
-namespace KeePassLib.Collections
+namespace KeePass.Lib.Collections
 {
 	/// <summary>
 	/// A list of <c>ProtectedString</c> objects (dictionary).

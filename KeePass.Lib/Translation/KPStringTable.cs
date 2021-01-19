@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 using System.Windows.Forms;
 #endif
 
-namespace KeePassLib.Translation
+namespace KeePass.Lib.Translation
 {
     public sealed class KPStringTable
     {

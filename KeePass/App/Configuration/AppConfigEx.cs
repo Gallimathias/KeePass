@@ -32,11 +32,11 @@ using KeePass.UI;
 using KeePass.Util;
 using KeePass.Util.XmlSerialization;
 
-using KeePassLib;
-using KeePassLib.Delegates;
-using KeePassLib.Native;
-using KeePassLib.Serialization;
-using KeePassLib.Utility;
+using KeePass.Lib;
+using KeePass.Lib.Delegates;
+using KeePass.Lib.Native;
+using KeePass.Lib.Serialization;
+using KeePass.Lib.Utility;
 
 namespace KeePass.App.Configuration
 {

@@ -21,16 +21,16 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-using KeePassLib.Cryptography;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Utility;
 
 #if KeePassLibSD
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
 // SecureString objects are limited to 65536 characters, don't use
 
-namespace KeePassLib.Security
+namespace KeePass.Lib.Security
 {
 	/// <summary>
 	/// A string that is protected in process memory.

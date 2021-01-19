@@ -34,20 +34,20 @@ using System.Security.Cryptography;
 #if !KeePassLibSD
 using System.IO.Compression;
 #else
-using KeePassLibSD;
+using KeePass.LibSD;
 #endif
 
-using KeePassLib.Collections;
-using KeePassLib.Cryptography;
-using KeePassLib.Cryptography.Cipher;
-using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Interfaces;
-using KeePassLib.Keys;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Collections;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Cryptography.Cipher;
+using KeePass.Lib.Cryptography.KeyDerivation;
+using KeePass.Lib.Interfaces;
+using KeePass.Lib.Keys;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Serialization
+namespace KeePass.Lib.Serialization
 {
 	/// <summary>
 	/// Serialization to KeePass KDBX files.

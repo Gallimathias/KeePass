@@ -25,7 +25,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 
-namespace KeePassLib.Native
+namespace KeePass.Lib.Native
 {
 	internal sealed class SimpleStat
 	{

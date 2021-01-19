@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
 
-using KeePassLib.Interfaces;
+using KeePass.Lib.Interfaces;
 
 namespace KeePass.UI
 {

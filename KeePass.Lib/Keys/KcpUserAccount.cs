@@ -26,12 +26,12 @@ using System.Security;
 using System.Security.Cryptography;
 #endif
 
-using KeePassLib.Cryptography;
-using KeePassLib.Resources;
-using KeePassLib.Security;
-using KeePassLib.Utility;
+using KeePass.Lib.Cryptography;
+using KeePass.Lib.Resources;
+using KeePass.Lib.Security;
+using KeePass.Lib.Utility;
 
-namespace KeePassLib.Keys
+namespace KeePass.Lib.Keys
 {
 	/// <summary>
 	/// A user key depending on the currently logged on Windows user account.

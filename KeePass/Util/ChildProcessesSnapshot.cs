@@ -27,7 +27,7 @@ using System.Diagnostics;
 using KeePass.Native;
 using KeePass.Util;
 
-using KeePassLib.Utility;
+using KeePass.Lib.Utility;
 
 namespace KeePass.Util
 {
@@ -47,7 +47,7 @@ namespace KeePass.Util
 		private List<uint> GetChildPids()
 		{
 			List<uint> lPids = new List<uint>();
-			if(KeePassLib.Native.NativeLib.IsUnix()) return lPids;
+			if(KeePass.Lib.Native.NativeLib.IsUnix()) return lPids;
 
 			try
 			{
