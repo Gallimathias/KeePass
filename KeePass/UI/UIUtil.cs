@@ -3342,7 +3342,7 @@ namespace KeePass.UI
 
 				if(bOp)
 				{
-					ContextMenu cm = cCtx.ContextMenu;
+					var cm = cCtx.ContextMenuStrip;
 					ContextMenuStrip cms = cCtx.ContextMenuStrip;
 
 					if(cms != null) cms.Show(Cursor.Position);

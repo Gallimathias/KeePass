@@ -557,8 +557,8 @@ namespace KeePass.Forms
 
 					ColorMenuItem mi = new ColorMenuItem(clr, qSize);
 
-					if((i > 0) && ((i % nBreakAt) == 0))
-						mi.Break = true;
+					//if((i > 0) && ((i % nBreakAt) == 0))
+					//	mi.Break = true;
 					//	fls.SetFlowBreak(btn, true);
 
 					mi.Click += this.HandleColorButtonClicked;
@@ -567,7 +567,7 @@ namespace KeePass.Forms
 					m_vColorItems.Add(mi);
 				}
 
-				m_ctxColor.MenuItems.AddRange(m_vColorItems.ToArray());
+				m_ctxColor.Items.AddRange(m_vColorItems.ToArray());
 
 				// m_ctxColor.ResumeLayout(true);
 				// this.Controls.Add(m_ctxColor);

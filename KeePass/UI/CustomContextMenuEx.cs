@@ -26,21 +26,20 @@ using System.Windows.Forms;
 
 namespace KeePass.UI
 {
-	public sealed class CustomContextMenuEx : ContextMenu
-	{
-		public CustomContextMenuEx() : base() { }
+    public sealed class CustomContextMenuEx : ContextMenuStrip
+    {
+        public CustomContextMenuEx() : base() { }
 
-		public void ShowEx(Control cParent)
-		{
-			if(cParent == null) { Debug.Assert(false); return; }
+        public void ShowEx(Control cParent)
+        {
+            if (cParent == null) { Debug.Assert(false); return; }
 
-			if(cParent.RightToLeft == RightToLeft.Yes)
-			{
-				this.RightToLeft = RightToLeft.Yes;
-				Show(cParent, new Point(cParent.Width, cParent.Height),
-					LeftRightAlignment.Left);
-			}
-			else Show(cParent, new Point(0, cParent.Height));
-		}
-	}
+            if (cParent.RightToLeft == RightToLeft.Yes)
+            {
+                this.RightToLeft = RightToLeft.Yes;
+                Show(cParent, new Point(cParent.Width, cParent.Height), ToolStripDropDownDirection.Left);
+            }
+            else Show(cParent, new Point(0, cParent.Height));
+        }
+    }
 }
