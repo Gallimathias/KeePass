@@ -5,6 +5,7 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Resources\KeePass.ico</ApplicationIcon>
+    <Nullable>warnings</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

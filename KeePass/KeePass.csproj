@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>KeePass.ico</ApplicationIcon>
     <AssemblyOriginatorKeyFile>KeePass.pfx</AssemblyOriginatorKeyFile>
+    <Nullable>warnings</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\KeePassLib\KeePassLib.csproj" />
