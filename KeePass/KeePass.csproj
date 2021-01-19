@@ -9,7 +9,7 @@
     <Nullable>warnings</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KeePass.Lib.UI.WindowsForms\KeePass.Lib.UI.WindowsForms.csproj" />
+    <ProjectReference Include="..\KeePass.Lib.Windows\KeePass.Lib.Windows.csproj" />
     <ProjectReference Include="..\KeePass.Lib\KeePass.Lib.csproj" />
   </ItemGroup>
 </Project>
