@@ -42,193 +42,193 @@ using KeePassLib.Utility;
 
 namespace KeePassLib.Translation
 {
-	[XmlRoot("Translation")]
-	public sealed class KPTranslation
-	{
-		public static readonly string FileExtension = "lngx";
-		internal const string FileExtension1x = "lng";
+    [XmlRoot("Translation")]
+    public sealed class KPTranslation
+    {
+        public static readonly string FileExtension = "lngx";
+        internal const string FileExtension1x = "lng";
 
-		private KPTranslationProperties m_props = new KPTranslationProperties();
-		public KPTranslationProperties Properties
-		{
-			get { return m_props; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
+        private KPTranslationProperties m_props = new KPTranslationProperties();
+        public KPTranslationProperties Properties
+        {
+            get => m_props;
+            set
+            {
+                if (value == null) throw new ArgumentNullException("value");
 
-				m_props = value;
-			}
-		}
+                m_props = value;
+            }
+        }
 
-		private List<KPStringTable> m_vStringTables = new List<KPStringTable>();
+        private List<KPStringTable> m_vStringTables = new List<KPStringTable>();
 
-		[XmlArrayItem("StringTable")]
-		public List<KPStringTable> StringTables
-		{
-			get { return m_vStringTables; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
+        [XmlArrayItem("StringTable")]
+        public List<KPStringTable> StringTables
+        {
+            get => m_vStringTables;
+            set
+            {
+                if (value == null) throw new ArgumentNullException("value");
 
-				m_vStringTables = value;
-			}
-		}
+                m_vStringTables = value;
+            }
+        }
 
-		private List<KPFormCustomization> m_vForms = new List<KPFormCustomization>();
+        private List<KPFormCustomization> m_vForms = new List<KPFormCustomization>();
 
-		[XmlArrayItem("Form")]
-		public List<KPFormCustomization> Forms
-		{
-			get { return m_vForms; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
+        [XmlArrayItem("Form")]
+        public List<KPFormCustomization> Forms
+        {
+            get => m_vForms;
+            set
+            {
+                if (value == null) throw new ArgumentNullException("value");
 
-				m_vForms = value;
-			}
-		}
+                m_vForms = value;
+            }
+        }
 
-		private string m_strUnusedText = string.Empty;
-		[DefaultValue("")]
-		public string UnusedText
-		{
-			get { return m_strUnusedText; }
-			set
-			{
-				if(value == null) throw new ArgumentNullException("value");
+        private string m_strUnusedText = string.Empty;
+        [DefaultValue("")]
+        public string UnusedText
+        {
+            get => m_strUnusedText;
+            set
+            {
+                if (value == null) throw new ArgumentNullException("value");
 
-				m_strUnusedText = value;
-			}
-		}
+                m_strUnusedText = value;
+            }
+        }
 
-		public static void Save(KPTranslation kpTrl, string strFileName,
-			IXmlSerializerEx xs)
-		{
-			using(FileStream fs = new FileStream(strFileName, FileMode.Create,
-				FileAccess.Write, FileShare.None))
-			{
-				Save(kpTrl, fs, xs);
-			}
-		}
+        public static void Save(KPTranslation kpTrl, string strFileName,
+            IXmlSerializerEx xs)
+        {
+            using (var fs = new FileStream(strFileName, FileMode.Create,
+                FileAccess.Write, FileShare.None))
+            {
+                Save(kpTrl, fs, xs);
+            }
+        }
 
-		public static void Save(KPTranslation kpTrl, Stream sOut,
-			IXmlSerializerEx xs)
-		{
-			if(xs == null) throw new ArgumentNullException("xs");
+        public static void Save(KPTranslation kpTrl, Stream sOut,
+            IXmlSerializerEx xs)
+        {
+            if (xs == null) throw new ArgumentNullException("xs");
 
 #if !KeePassLibSD
-			using(GZipStream gz = new GZipStream(sOut, CompressionMode.Compress))
+            using (var gz = new GZipStream(sOut, CompressionMode.Compress))
 #else
 			using(GZipOutputStream gz = new GZipOutputStream(sOut))
 #endif
-			{
-				using(XmlWriter xw = XmlUtilEx.CreateXmlWriter(gz))
-				{
-					xs.Serialize(xw, kpTrl);
-				}
-			}
+            {
+                using (XmlWriter xw = XmlUtilEx.CreateXmlWriter(gz))
+                {
+                    xs.Serialize(xw, kpTrl);
+                }
+            }
 
-			sOut.Close();
-		}
+            sOut.Close();
+        }
 
-		public static KPTranslation Load(string strFile, IXmlSerializerEx xs)
-		{
-			KPTranslation kpTrl = null;
+        public static KPTranslation Load(string strFile, IXmlSerializerEx xs)
+        {
+            KPTranslation kpTrl = null;
 
-			using(FileStream fs = new FileStream(strFile, FileMode.Open,
-				FileAccess.Read, FileShare.Read))
-			{
-				kpTrl = Load(fs, xs);
-			}
+            using (var fs = new FileStream(strFile, FileMode.Open,
+                FileAccess.Read, FileShare.Read))
+            {
+                kpTrl = Load(fs, xs);
+            }
 
-			return kpTrl;
-		}
+            return kpTrl;
+        }
 
-		public static KPTranslation Load(Stream s, IXmlSerializerEx xs)
-		{
-			if(xs == null) throw new ArgumentNullException("xs");
+        public static KPTranslation Load(Stream s, IXmlSerializerEx xs)
+        {
+            if (xs == null) throw new ArgumentNullException("xs");
 
-			KPTranslation kpTrl = null;
+            KPTranslation kpTrl = null;
 
 #if !KeePassLibSD
-			using(GZipStream gz = new GZipStream(s, CompressionMode.Decompress))
+            using (var gz = new GZipStream(s, CompressionMode.Decompress))
 #else
 			using(GZipInputStream gz = new GZipInputStream(s))
 #endif
-			{
-				kpTrl = (xs.Deserialize(gz) as KPTranslation);
-			}
+            {
+                kpTrl = (xs.Deserialize(gz) as KPTranslation);
+            }
 
-			s.Close();
-			return kpTrl;
-		}
+            s.Close();
+            return kpTrl;
+        }
 
-		public Dictionary<string, string> SafeGetStringTableDictionary(
-			string strTableName)
-		{
-			foreach(KPStringTable kpst in m_vStringTables)
-			{
-				if(kpst.Name == strTableName) return kpst.ToDictionary();
-			}
+        public Dictionary<string, string> SafeGetStringTableDictionary(
+            string strTableName)
+        {
+            foreach (KPStringTable kpst in m_vStringTables)
+            {
+                if (kpst.Name == strTableName) return kpst.ToDictionary();
+            }
 
-			return new Dictionary<string, string>();
-		}
+            return new Dictionary<string, string>();
+        }
 
 #if (!KeePassLibSD && !KeePassUAP)
-		public void ApplyTo(Form form)
-		{
-			if(form == null) throw new ArgumentNullException("form");
+        public void ApplyTo(Form form)
+        {
+            if (form == null) throw new ArgumentNullException("form");
 
-			if(m_props.RightToLeft)
-			{
-				try
-				{
-					form.RightToLeft = RightToLeft.Yes;
-					form.RightToLeftLayout = true;
-				}
-				catch(Exception) { Debug.Assert(false); }
-			}
+            if (m_props.RightToLeft)
+            {
+                try
+                {
+                    form.RightToLeft = RightToLeft.Yes;
+                    form.RightToLeftLayout = true;
+                }
+                catch (Exception) { Debug.Assert(false); }
+            }
 
-			string strTypeName = form.GetType().FullName;
-			foreach(KPFormCustomization kpfc in m_vForms)
-			{
-				if(kpfc.FullName == strTypeName)
-				{
-					kpfc.ApplyTo(form);
-					break;
-				}
-			}
+            var strTypeName = form.GetType().FullName;
+            foreach (KPFormCustomization kpfc in m_vForms)
+            {
+                if (kpfc.FullName == strTypeName)
+                {
+                    kpfc.ApplyTo(form);
+                    break;
+                }
+            }
 
-			if(m_props.RightToLeft)
-			{
-				try { RtlApplyToControls(form.Controls); }
-				catch(Exception) { Debug.Assert(false); }
-			}
-		}
+            if (m_props.RightToLeft)
+            {
+                try { RtlApplyToControls(form.Controls); }
+                catch (Exception) { Debug.Assert(false); }
+            }
+        }
 
-		private static void RtlApplyToControls(Control.ControlCollection cc)
-		{
-			foreach(Control c in cc)
-			{
-				if(c.Controls.Count > 0) RtlApplyToControls(c.Controls);
+        private static void RtlApplyToControls(Control.ControlCollection cc)
+        {
+            foreach (Control c in cc)
+            {
+                if (c.Controls.Count > 0) RtlApplyToControls(c.Controls);
 
-				if(c is DateTimePicker)
-					((DateTimePicker)c).RightToLeftLayout = true;
-				else if(c is ListView)
-					((ListView)c).RightToLeftLayout = true;
-				else if(c is MonthCalendar)
-					((MonthCalendar)c).RightToLeftLayout = true;
-				else if(c is ProgressBar)
-					((ProgressBar)c).RightToLeftLayout = true;
-				else if(c is TabControl)
-					((TabControl)c).RightToLeftLayout = true;
-				else if(c is TrackBar)
-					((TrackBar)c).RightToLeftLayout = true;
-				else if(c is TreeView)
-					((TreeView)c).RightToLeftLayout = true;
-				// else if(c is ToolStrip)
-				//	RtlApplyToToolStripItems(((ToolStrip)c).Items);
-				/* else if(c is Button) // Also see Label
+                if (c is DateTimePicker)
+                    ((DateTimePicker)c).RightToLeftLayout = true;
+                else if (c is ListView)
+                    ((ListView)c).RightToLeftLayout = true;
+                else if (c is MonthCalendar)
+                    ((MonthCalendar)c).RightToLeftLayout = true;
+                else if (c is ProgressBar)
+                    ((ProgressBar)c).RightToLeftLayout = true;
+                else if (c is TabControl)
+                    ((TabControl)c).RightToLeftLayout = true;
+                else if (c is TrackBar)
+                    ((TrackBar)c).RightToLeftLayout = true;
+                else if (c is TreeView)
+                    ((TreeView)c).RightToLeftLayout = true;
+                // else if(c is ToolStrip)
+                //	RtlApplyToToolStripItems(((ToolStrip)c).Items);
+                /* else if(c is Button) // Also see Label
 				{
 					Button btn = (c as Button);
 					Image img = btn.Image;
@@ -251,37 +251,37 @@ namespace KeePassLib.Translation
 					}
 				} */
 
-				if(IsRtlMoveChildsRequired(c)) RtlMoveChildControls(c);
-			}
-		}
+                if (IsRtlMoveChildsRequired(c)) RtlMoveChildControls(c);
+            }
+        }
 
-		internal static bool IsRtlMoveChildsRequired(Control c)
-		{
-			if(c == null) { Debug.Assert(false); return false; }
+        internal static bool IsRtlMoveChildsRequired(Control c)
+        {
+            if (c == null) { Debug.Assert(false); return false; }
 
-			return ((c is GroupBox) || (c is Panel));
-		}
+            return ((c is GroupBox) || (c is Panel));
+        }
 
-		private static void RtlMoveChildControls(Control cParent)
-		{
-			int nParentWidth = cParent.Size.Width;
+        private static void RtlMoveChildControls(Control cParent)
+        {
+            var nParentWidth = cParent.Size.Width;
 
-			foreach(Control c in cParent.Controls)
-			{
-				DockStyle ds = c.Dock;
-				if(ds == DockStyle.Left)
-					c.Dock = DockStyle.Right;
-				else if(ds == DockStyle.Right)
-					c.Dock = DockStyle.Left;
-				else
-				{
-					Point ptCur = c.Location;
-					c.Location = new Point(nParentWidth - c.Size.Width - ptCur.X, ptCur.Y);
-				}
-			}
-		}
+            foreach (Control c in cParent.Controls)
+            {
+                DockStyle ds = c.Dock;
+                if (ds == DockStyle.Left)
+                    c.Dock = DockStyle.Right;
+                else if (ds == DockStyle.Right)
+                    c.Dock = DockStyle.Left;
+                else
+                {
+                    Point ptCur = c.Location;
+                    c.Location = new Point(nParentWidth - c.Size.Width - ptCur.X, ptCur.Y);
+                }
+            }
+        }
 
-		/* private static readonly string[] g_vRtlMirrorItemNames = new string[] { };
+        /* private static readonly string[] g_vRtlMirrorItemNames = new string[] { };
 		private static void RtlApplyToToolStripItems(ToolStripItemCollection tsic)
 		{
 			foreach(ToolStripItem tsi in tsic)
@@ -297,30 +297,30 @@ namespace KeePassLib.Translation
 			}
 		} */
 
-		public void ApplyTo(string strTableName, ToolStripItemCollection tsic)
-		{
-			if(tsic == null) throw new ArgumentNullException("tsic");
+        public void ApplyTo(string strTableName, ToolStripItemCollection tsic)
+        {
+            if (tsic == null) throw new ArgumentNullException("tsic");
 
-			KPStringTable kpst = null;
-			foreach(KPStringTable kpstEnum in m_vStringTables)
-			{
-				if(kpstEnum.Name == strTableName)
-				{
-					kpst = kpstEnum;
-					break;
-				}
-			}
+            KPStringTable kpst = null;
+            foreach (KPStringTable kpstEnum in m_vStringTables)
+            {
+                if (kpstEnum.Name == strTableName)
+                {
+                    kpst = kpstEnum;
+                    break;
+                }
+            }
 
-			if(kpst != null) kpst.ApplyTo(tsic);
-		}
+            if (kpst != null) kpst.ApplyTo(tsic);
+        }
 #endif
 
-		internal bool IsFor(string strIso6391Code)
-		{
-			if(strIso6391Code == null) { Debug.Assert(false); return false; }
+        internal bool IsFor(string strIso6391Code)
+        {
+            if (strIso6391Code == null) { Debug.Assert(false); return false; }
 
-			return string.Equals(strIso6391Code, m_props.Iso6391Code,
-				StrUtil.CaseIgnoreCmp);
-		}
-	}
+            return string.Equals(strIso6391Code, m_props.Iso6391Code,
+                StrUtil.CaseIgnoreCmp);
+        }
+    }
 }

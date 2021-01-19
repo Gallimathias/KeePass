@@ -7,4 +7,9 @@
     <ApplicationIcon>Resources\KeePass.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\KeePassLib\KeePassLib.csproj" />
+    <ProjectReference Include="..\..\KeePass\KeePass.csproj" />
+  </ItemGroup>
+
 </Project>

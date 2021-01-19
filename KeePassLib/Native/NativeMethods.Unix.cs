@@ -30,115 +30,117 @@ using System.Windows.Forms;
 
 namespace KeePassLib.Native
 {
-	internal static partial class NativeMethods
-	{
+    internal static partial class NativeMethods
+    {
 #if (!KeePassLibSD && !KeePassUAP)
-		[StructLayout(LayoutKind.Sequential)]
-		private struct XClassHint
-		{
-			public IntPtr res_name;
-			public IntPtr res_class;
-		}
+        [StructLayout(LayoutKind.Sequential)]
+        private struct XClassHint
+        {
+            public IntPtr res_name;
+            public IntPtr res_class;
+        }
 
-		[DllImport("libX11")]
-		private static extern int XSetClassHint(IntPtr display, IntPtr window, IntPtr class_hints);
+        [DllImport("libX11")]
+        private static extern int XSetClassHint(IntPtr display, IntPtr window, IntPtr class_hints);
 
-		private static Type m_tXplatUIX11 = null;
-		private static Type GetXplatUIX11Type(bool bThrowOnError)
-		{
-			if(m_tXplatUIX11 == null)
-			{
-				// CheckState is in System.Windows.Forms
-				string strTypeCS = typeof(CheckState).AssemblyQualifiedName;
-				string strTypeX11 = strTypeCS.Replace("CheckState", "XplatUIX11");
-				m_tXplatUIX11 = Type.GetType(strTypeX11, bThrowOnError, true);
-			}
+        private static Type m_tXplatUIX11 = null;
+        private static Type GetXplatUIX11Type(bool bThrowOnError)
+        {
+            if (m_tXplatUIX11 == null)
+            {
+                // CheckState is in System.Windows.Forms
+                var strTypeCS = typeof(CheckState).AssemblyQualifiedName;
+                var strTypeX11 = strTypeCS.Replace("CheckState", "XplatUIX11");
+                m_tXplatUIX11 = Type.GetType(strTypeX11, bThrowOnError, true);
+            }
 
-			return m_tXplatUIX11;
-		}
+            return m_tXplatUIX11;
+        }
 
-		private static Type m_tHwnd = null;
-		private static Type GetHwndType(bool bThrowOnError)
-		{
-			if(m_tHwnd == null)
-			{
-				// CheckState is in System.Windows.Forms
-				string strTypeCS = typeof(CheckState).AssemblyQualifiedName;
-				string strTypeHwnd = strTypeCS.Replace("CheckState", "Hwnd");
-				m_tHwnd = Type.GetType(strTypeHwnd, bThrowOnError, true);
-			}
+        private static Type m_tHwnd = null;
+        private static Type GetHwndType(bool bThrowOnError)
+        {
+            if (m_tHwnd == null)
+            {
+                // CheckState is in System.Windows.Forms
+                var strTypeCS = typeof(CheckState).AssemblyQualifiedName;
+                var strTypeHwnd = strTypeCS.Replace("CheckState", "Hwnd");
+                m_tHwnd = Type.GetType(strTypeHwnd, bThrowOnError, true);
+            }
 
-			return m_tHwnd;
-		}
+            return m_tHwnd;
+        }
 
-		internal static void SetWmClass(Form f, string strName, string strClass)
-		{
-			if(f == null) { Debug.Assert(false); return; }
+        internal static void SetWmClass(Form f, string strName, string strClass)
+        {
+            if (f == null) { Debug.Assert(false); return; }
 
-			// The following crashes under Mac OS X (SIGSEGV in native code,
-			// not just an exception), thus skip it when we're on Mac OS X;
-			// https://sourceforge.net/projects/keepass/forums/forum/329221/topic/5860588
-			if(NativeLib.GetPlatformID() == PlatformID.MacOSX) return;
+            // The following crashes under Mac OS X (SIGSEGV in native code,
+            // not just an exception), thus skip it when we're on Mac OS X;
+            // https://sourceforge.net/projects/keepass/forums/forum/329221/topic/5860588
+            if (NativeLib.GetPlatformID() == PlatformID.MacOSX) return;
 
-			try
-			{
-				Type tXplatUIX11 = GetXplatUIX11Type(true);
-				FieldInfo fiDisplayHandle = tXplatUIX11.GetField("DisplayHandle",
-					BindingFlags.NonPublic | BindingFlags.Static);
-				IntPtr hDisplay = (IntPtr)fiDisplayHandle.GetValue(null);
+            try
+            {
+                Type tXplatUIX11 = GetXplatUIX11Type(true);
+                FieldInfo fiDisplayHandle = tXplatUIX11.GetField("DisplayHandle",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                var hDisplay = (IntPtr)fiDisplayHandle.GetValue(null);
 
-				Type tHwnd = GetHwndType(true);
-				MethodInfo miObjectFromHandle = tHwnd.GetMethod("ObjectFromHandle",
-					BindingFlags.Public | BindingFlags.Static);
-				object oHwnd = miObjectFromHandle.Invoke(null, new object[] { f.Handle });
+                Type tHwnd = GetHwndType(true);
+                MethodInfo miObjectFromHandle = tHwnd.GetMethod("ObjectFromHandle",
+                    BindingFlags.Public | BindingFlags.Static);
+                var oHwnd = miObjectFromHandle.Invoke(null, new object[] { f.Handle });
 
-				FieldInfo fiWholeWindow = tHwnd.GetField("whole_window",
-					BindingFlags.NonPublic | BindingFlags.Instance);
-				IntPtr hWindow = (IntPtr)fiWholeWindow.GetValue(oHwnd);
+                FieldInfo fiWholeWindow = tHwnd.GetField("whole_window",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                var hWindow = (IntPtr)fiWholeWindow.GetValue(oHwnd);
 
-				XClassHint xch = new XClassHint();
-				xch.res_name = Marshal.StringToCoTaskMemAnsi(strName ?? string.Empty);
-				xch.res_class = Marshal.StringToCoTaskMemAnsi(strClass ?? string.Empty);
-				IntPtr pXch = Marshal.AllocCoTaskMem(Marshal.SizeOf(xch));
-				Marshal.StructureToPtr(xch, pXch, false);
+                var xch = new XClassHint
+                {
+                    res_name = Marshal.StringToCoTaskMemAnsi(strName ?? string.Empty),
+                    res_class = Marshal.StringToCoTaskMemAnsi(strClass ?? string.Empty)
+                };
+                IntPtr pXch = Marshal.AllocCoTaskMem(Marshal.SizeOf(xch));
+                Marshal.StructureToPtr(xch, pXch, false);
 
-				XSetClassHint(hDisplay, hWindow, pXch);
+                XSetClassHint(hDisplay, hWindow, pXch);
 
-				Marshal.FreeCoTaskMem(pXch);
-				Marshal.FreeCoTaskMem(xch.res_name);
-				Marshal.FreeCoTaskMem(xch.res_class);
-			}
-			catch(Exception) { Debug.Assert(false); }
-		}
+                Marshal.FreeCoTaskMem(pXch);
+                Marshal.FreeCoTaskMem(xch.res_name);
+                Marshal.FreeCoTaskMem(xch.res_class);
+            }
+            catch (Exception) { Debug.Assert(false); }
+        }
 #endif
 
-		// =============================================================
-		// LibGCrypt 1.8.1
+        // =============================================================
+        // LibGCrypt 1.8.1
 
-		private const string LibGCrypt = "libgcrypt.so.20";
+        private const string LibGCrypt = "libgcrypt.so.20";
 
-		internal const int GCRY_CIPHER_AES256 = 9;
-		internal const int GCRY_CIPHER_MODE_ECB = 1;
+        internal const int GCRY_CIPHER_AES256 = 9;
+        internal const int GCRY_CIPHER_MODE_ECB = 1;
 
-		[DllImport(LibGCrypt)]
-		internal static extern IntPtr gcry_check_version(IntPtr lpReqVersion);
+        [DllImport(LibGCrypt)]
+        internal static extern IntPtr gcry_check_version(IntPtr lpReqVersion);
 
-		[DllImport(LibGCrypt)]
-		internal static extern uint gcry_cipher_open(ref IntPtr ph, int nAlgo,
-			int nMode, uint uFlags);
+        [DllImport(LibGCrypt)]
+        internal static extern uint gcry_cipher_open(ref IntPtr ph, int nAlgo,
+            int nMode, uint uFlags);
 
-		[DllImport(LibGCrypt)]
-		internal static extern void gcry_cipher_close(IntPtr h);
+        [DllImport(LibGCrypt)]
+        internal static extern void gcry_cipher_close(IntPtr h);
 
-		[DllImport(LibGCrypt)]
-		internal static extern uint gcry_cipher_setkey(IntPtr h, IntPtr pbKey,
-			IntPtr cbKey); // cbKey is size_t
+        [DllImport(LibGCrypt)]
+        internal static extern uint gcry_cipher_setkey(IntPtr h, IntPtr pbKey,
+            IntPtr cbKey); // cbKey is size_t
 
-		[DllImport(LibGCrypt)]
-		internal static extern uint gcry_cipher_encrypt(IntPtr h, IntPtr pbOut,
-			IntPtr cbOut, IntPtr pbIn, IntPtr cbIn); // cb* are size_t
+        [DllImport(LibGCrypt)]
+        internal static extern uint gcry_cipher_encrypt(IntPtr h, IntPtr pbOut,
+            IntPtr cbOut, IntPtr pbIn, IntPtr cbIn); // cb* are size_t
 
-		/* internal static IntPtr Utf8ZFromString(string str)
+        /* internal static IntPtr Utf8ZFromString(string str)
 		{
 			byte[] pb = StrUtil.Utf8.GetBytes(str ?? string.Empty);
 
@@ -174,7 +176,7 @@ namespace KeePassLib.Native
 			if(p != IntPtr.Zero) Marshal.FreeCoTaskMem(p);
 		} */
 
-		/* // =============================================================
+        /* // =============================================================
 		// LibGLib 2
 
 		private const string LibGLib = "libglib-2.0.so.0";
@@ -212,5 +214,5 @@ namespace KeePassLib.Native
 
 		[DllImport(LibGtk)]
 		internal static extern void gtk_clipboard_store(IntPtr hClipboard); */
-	}
+    }
 }
