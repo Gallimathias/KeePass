@@ -29,11 +29,11 @@ using System.Text.RegularExpressions;
 #if !KeePassUAP
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 #endif
 
 using KeePassLib.Resources;
 using KeePassLib.Utility;
+using System.Windows.Forms;
 
 namespace KeePassLib.Native
 {

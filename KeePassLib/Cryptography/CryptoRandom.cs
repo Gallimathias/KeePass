@@ -27,13 +27,13 @@ using System.IO;
 #if !KeePassUAP
 using System.Drawing;
 using System.Security.Cryptography;
-using System.Windows.Forms;
 #endif
 
 using KeePassLib.Delegates;
 using KeePassLib.Native;
 using KeePassLib.Security;
 using KeePassLib.Utility;
+using System.Windows.Forms;
 
 namespace KeePassLib.Cryptography
 {
