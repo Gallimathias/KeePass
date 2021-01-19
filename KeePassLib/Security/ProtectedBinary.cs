@@ -80,10 +80,6 @@ namespace KeePassLib.Security
 			ExtCrypt
 		}
 
-		// ProtectedMemory is supported only on Windows 2000 SP3 and higher
-#if !KeePassLibSD
-		private static bool? g_obProtectedMemorySupported = null;
-#endif
 		private static bool ProtectedMemorySupported => false; //.NET 5.0 no longer Support ProtectedMemory
 
 		private static long g_lCurID = 0;

@@ -400,7 +400,7 @@ namespace KeePass.UI
 				if(img == null)
 				{
 					Debug.Assert(false);
-					img = UIUtil.CreateColorBitmap24(nWidth, nHeight, Color.White);
+					img = CreateColorBitmap24(nWidth, nHeight, Color.White);
 				}
 
 				if((img.Width != nWidth) || (img.Height != nHeight))
@@ -2629,7 +2629,7 @@ namespace KeePass.UI
 		{
 			if(ico == null) { Debug.Assert(false); return null; }
 
-			MemoryStream ms = new MemoryStream();
+			using MemoryStream ms = new ();
 			try
 			{
 				ico.Save(ms);
@@ -2638,7 +2638,6 @@ namespace KeePass.UI
 				return GfxUtil.LoadImage(pb); // Extracts best image from ICO
 			}
 			catch { Debug.Assert(false); }
-			finally { ms.Close(); }
 
 			return null;
 		}
