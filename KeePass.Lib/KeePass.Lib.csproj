@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <AssemblyOriginatorKeyFile>KeePass.Lib.pfx</AssemblyOriginatorKeyFile>
-    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>warnings</Nullable>
   </PropertyGroup>
 
