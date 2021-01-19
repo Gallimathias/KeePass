@@ -71,25 +71,21 @@ namespace KeePassLib.Cryptography.KeyDerivation
 			public ulong[] Mem = null;
 		}
 
-		private sealed class Argon2ThreadInfo
+		private sealed class Argon2ThreadInfo : IDisposable
 		{
 			public Argon2Ctx Context = null;
-			public ManualResetEvent Finished = new ManualResetEvent(false);
+			public ManualResetEvent Finished = new(false);
 
 			public ulong Pass = 0;
 			public ulong Lane = 0;
 			public ulong Slice = 0;
 			public ulong Index = 0;
 
-			public void Release()
-			{
-				if(this.Finished != null)
-				{
-					this.Finished.Close();
-					this.Finished = null;
-				}
-				else { Debug.Assert(false); }
-			}
+            public void Dispose()
+            {
+				Finished.Dispose();
+
+			}          
 		}
 
 		private byte[] Argon2Transform(byte[] pbMsg, byte[] pbSalt, uint uParallel,
@@ -126,7 +122,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 				));
 			ctx.Mem = new ulong[ctx.MemoryBlocks * NbBlockSizeInQW];
 
-			Blake2b h = new Blake2b();
+			using Blake2b h = new Blake2b();
 
 			// Initial hash
 			Debug.Assert(h.HashSize == (NbPreHashDigestLength * 8));
@@ -157,7 +153,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 			h.TransformBlock(pbAssocData, 0, pbAssocData.Length, pbAssocData, 0);
 			h.TransformFinalBlock(MemUtil.EmptyByteArray, 0, 0);
 			byte[] pbH0 = h.Hash;
-			Debug.Assert(pbH0.Length == 64);
+			Debug.Assert(pbH0?.Length == 64);
 
 			byte[] pbBlockHash = new byte[NbPreHashSeedLength];
 			Array.Copy(pbH0, pbBlockHash, pbH0.Length);
@@ -170,8 +166,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 
 			byte[] pbOut = FinalHash(ctx, cbOut, h);
 
-			h.Clear();
-			MemUtil.ZeroArray<ulong>(ctx.Mem);
+			MemUtil.ZeroArray(ctx.Mem);
 			return pbOut;
 		}
 
@@ -238,16 +233,15 @@ namespace KeePassLib.Cryptography.KeyDerivation
 
 			if(cbOut <= 64)
 			{
-				Blake2b hOut = ((cbOut == 64) ? h : new Blake2b(cbOut));
+				using Blake2b hOut = ((cbOut == 64) ? h : new Blake2b(cbOut));
 				if(cbOut == 64) hOut.Initialize();
 
 				hOut.TransformBlock(pbOutLen, 0, pbOutLen.Length, pbOutLen, 0);
 				hOut.TransformBlock(pbIn, 0, cbIn, pbIn, 0);
 				hOut.TransformFinalBlock(MemUtil.EmptyByteArray, 0, 0);
 
-				Array.Copy(hOut.Hash, pbOut, cbOut);
+				Array.Copy(hOut.Hash!, pbOut, cbOut);
 
-				if(cbOut < 64) hOut.Clear();
 				return;
 			}
 
@@ -257,7 +251,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 			h.TransformFinalBlock(MemUtil.EmptyByteArray, 0, 0);
 
 			byte[] pbOutBuffer = new byte[64];
-			Array.Copy(h.Hash, pbOutBuffer, pbOutBuffer.Length);
+			Array.Copy(h.Hash!, pbOutBuffer, pbOutBuffer.Length);
 
 			int ibOut = 64 / 2;
 			Array.Copy(pbOutBuffer, pbOut, ibOut);
@@ -463,6 +457,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 				{
 					for(int l = 0; l < np; ++l)
 					{
+						//TODO: Disposable list
 						Argon2ThreadInfo ti = new Argon2ThreadInfo();
 						ti.Context = ctx;
 
@@ -482,7 +477,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 					for(int l = 0; l < np; ++l)
 					{
 						v[l].Finished.WaitOne();
-						v[l].Release();
+						v[l].Dispose();
 					}
 				}
 			}
@@ -546,7 +541,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 						ulong iMod = i % NbAddressesInBlock;
 						if(iMod == 0)
 							NextAddresses(pbAddrInputZero, pbR, pbTmp);
-						uPseudoRand = pbAddrInputZero[iMod];
+						uPseudoRand = pbAddrInputZero![iMod];
 					}
 					else uPseudoRand = ctx.Mem[uPrev * NbBlockSizeInQW];
 
@@ -569,9 +564,9 @@ namespace KeePassLib.Cryptography.KeyDerivation
 					++uPrev;
 				}
 
-				MemUtil.ZeroArray<ulong>(pbR);
-				MemUtil.ZeroArray<ulong>(pbTmp);
-				if(pbAddrInputZero != null) MemUtil.ZeroArray<ulong>(pbAddrInputZero);
+				MemUtil.ZeroArray(pbR);
+				MemUtil.ZeroArray(pbTmp);
+				if(pbAddrInputZero != null) MemUtil.ZeroArray(pbAddrInputZero);
 			}
 			catch(Exception) { Debug.Assert(false); }
 
@@ -674,7 +669,7 @@ namespace KeePassLib.Cryptography.KeyDerivation
 			byte[] pbOut = new byte[cbOut];
 			Blake2bLong(pbOut, cbOut, pbBlockHashBytes, (int)NbBlockSize, h);
 
-			MemUtil.ZeroArray<ulong>(pqBlockHash);
+			MemUtil.ZeroArray(pqBlockHash);
 			MemUtil.ZeroByteArray(pbBlockHashBytes);
 			return pbOut;
 		}

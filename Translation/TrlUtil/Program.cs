@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -87,22 +88,21 @@ namespace TrlUtil
 		{
 			if(strCmd == "convert_resx")
 			{
-				StreamWriter swOut = new StreamWriter(strFile + ".lng.xml",
+				using StreamWriter swOut = new StreamWriter(strFile + ".lng.xml",
 					false, new UTF8Encoding(false));
 
 				XmlDocument xmlIn = XmlUtilEx.CreateXmlDocument();
 				xmlIn.Load(strFile);
 
-				foreach(XmlNode xmlChild in xmlIn.DocumentElement.ChildNodes)
+				foreach(XmlNode xmlChild in xmlIn.DocumentElement?.ChildNodes as IEnumerable<XmlNode> ?? Enumerable.Empty<XmlNode>())
 				{
 					if(xmlChild.Name != "data") continue;
 
-					swOut.Write("<Data Name=\"" + xmlChild.Attributes["name"].Value +
-						"\">\r\n\t<Value>" + xmlChild.SelectSingleNode("value").InnerXml +
+					swOut.Write("<Data Name=\"" + xmlChild.Attributes!["name"]?.Value +
+						"\">\r\n\t<Value>" + xmlChild.SelectSingleNode("value")?.InnerXml +
 						"</Value>\r\n</Data>\r\n");
 				}
 
-				swOut.Close();
 			}
 			/* else if(strCmd == "compress")
 			{
@@ -123,7 +123,7 @@ namespace TrlUtil
 
 				foreach(XmlNode xmlTable in xmlIn.DocumentElement.SelectNodes("StringTable"))
 				{
-					StreamWriter swOut = new StreamWriter(xmlTable.Attributes["Name"].Value +
+					using StreamWriter swOut = new StreamWriter(xmlTable.Attributes!["Name"]?.Value +
 						".Generated.cs", false, new UTF8Encoding(false));
 
 					swOut.WriteLine("// This is a generated file!");
@@ -195,10 +195,13 @@ namespace TrlUtil
 					swOut.WriteLine("\t\t\treturn m_vKeyNames;");
 					swOut.WriteLine("\t\t}");
 
-					foreach(XmlNode xmlData in xmlTable.SelectNodes("Data"))
+					foreach(XmlNode xmlData in xmlTable?.SelectNodes("Data") as IEnumerable<XmlNode> ?? Enumerable.Empty<XmlNode>())
 					{
-						string strName = xmlData.Attributes["Name"].Value;
-						string strValue = xmlData.SelectSingleNode("Value").InnerText;
+						if (xmlData is null)
+							continue;
+
+						string strName = xmlData.Attributes!["Name"]?.Value ?? "";
+						string strValue = xmlData.SelectSingleNode("Value")?.InnerText ?? "";
 						if(strValue.Contains("\""))
 						{
 							// Console.WriteLine(strValue);

@@ -49,7 +49,7 @@ namespace KeePassLib.Native
             if (m_tXplatUIX11 == null)
             {
                 // CheckState is in System.Windows.Forms
-                var strTypeCS = typeof(CheckState).AssemblyQualifiedName;
+                var strTypeCS = typeof(CheckState).AssemblyQualifiedName!;
                 var strTypeX11 = strTypeCS.Replace("CheckState", "XplatUIX11");
                 m_tXplatUIX11 = Type.GetType(strTypeX11, bThrowOnError, true);
             }
@@ -63,7 +63,7 @@ namespace KeePassLib.Native
             if (m_tHwnd == null)
             {
                 // CheckState is in System.Windows.Forms
-                var strTypeCS = typeof(CheckState).AssemblyQualifiedName;
+                var strTypeCS = typeof(CheckState).AssemblyQualifiedName!;
                 var strTypeHwnd = strTypeCS.Replace("CheckState", "Hwnd");
                 m_tHwnd = Type.GetType(strTypeHwnd, bThrowOnError, true);
             }
@@ -85,16 +85,16 @@ namespace KeePassLib.Native
                 Type tXplatUIX11 = GetXplatUIX11Type(true);
                 FieldInfo fiDisplayHandle = tXplatUIX11.GetField("DisplayHandle",
                     BindingFlags.NonPublic | BindingFlags.Static);
-                var hDisplay = (IntPtr)fiDisplayHandle.GetValue(null);
+                var hDisplay = (IntPtr)(fiDisplayHandle?.GetValue(null) ?? IntPtr.Zero);
 
                 Type tHwnd = GetHwndType(true);
                 MethodInfo miObjectFromHandle = tHwnd.GetMethod("ObjectFromHandle",
                     BindingFlags.Public | BindingFlags.Static);
-                var oHwnd = miObjectFromHandle.Invoke(null, new object[] { f.Handle });
+                var oHwnd = miObjectFromHandle?.Invoke(null, new object[] { f.Handle });
 
                 FieldInfo fiWholeWindow = tHwnd.GetField("whole_window",
                     BindingFlags.NonPublic | BindingFlags.Instance);
-                var hWindow = (IntPtr)fiWholeWindow.GetValue(oHwnd);
+                var hWindow = (IntPtr)(fiWholeWindow?.GetValue(oHwnd) ?? IntPtr.Zero);
 
                 var xch = new XClassHint
                 {
