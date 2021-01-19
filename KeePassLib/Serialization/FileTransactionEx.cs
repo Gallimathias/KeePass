@@ -230,8 +230,8 @@ namespace KeePassLib.Serialization
 					otCreation = File.GetCreationTimeUtc(m_iocBase.Path);
 					sStat = SimpleStat.Get(m_iocBase.Path);
 #if !KeePassUAP
-					// May throw with Mono
-					FileSecurity sec = File.GetAccessControl(m_iocBase.Path, acs);
+					// May throw with Mono					
+					FileSecurity sec = new (m_iocBase.Path, acs);
 					if(sec != null) pbSec = sec.GetSecurityDescriptorBinaryForm();
 #endif
 				}
@@ -274,10 +274,8 @@ namespace KeePassLib.Serialization
 				// https://msdn.microsoft.com/en-us/library/system.io.file.setaccesscontrol.aspx
 				if((pbSec != null) && (pbSec.Length != 0))
 				{
-					FileSecurity sec = new FileSecurity();
+					FileSecurity sec = new FileSecurity(m_iocBase.Path, acs);
 					sec.SetSecurityDescriptorBinaryForm(pbSec, acs);
-
-					File.SetAccessControl(m_iocBase.Path, sec);
 				}
 #endif
 			}
