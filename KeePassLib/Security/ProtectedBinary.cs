@@ -29,6 +29,7 @@ using KeePassLib.Cryptography;
 using KeePassLib.Cryptography.Cipher;
 using KeePassLib.Native;
 using KeePassLib.Utility;
+using System.Security;
 
 #if KeePassLibSD
 using KeePassLibSD;
@@ -83,47 +84,7 @@ namespace KeePassLib.Security
 #if !KeePassLibSD
 		private static bool? g_obProtectedMemorySupported = null;
 #endif
-		private static bool ProtectedMemorySupported
-		{
-			get
-			{
-#if KeePassLibSD
-				return false;
-#else
-				bool? ob = g_obProtectedMemorySupported;
-				if(ob.HasValue) return ob.Value;
-
-				// Mono does not implement any encryption for ProtectedMemory
-				// on Linux (Mono uses DPAPI on Windows);
-				// https://sourceforge.net/p/keepass/feature-requests/1907/
-				if(NativeLib.IsUnix())
-				{
-					g_obProtectedMemorySupported = false;
-					return false;
-				}
-
-				ob = false;
-				try // Test whether ProtectedMemory is supported
-				{
-					// BlockSize * 3 in order to test encryption for multiple
-					// blocks, but not introduce a power of 2 as factor
-					byte[] pb = new byte[ProtectedBinary.BlockSize * 3];
-					for(int i = 0; i < pb.Length; ++i) pb[i] = (byte)i;
-
-					ProtectedMemory.Protect(pb, MemoryProtectionScope.SameProcess);
-
-					for(int i = 0; i < pb.Length; ++i)
-					{
-						if(pb[i] != (byte)i) { ob = true; break; }
-					}
-				}
-				catch(Exception) { } // Windows 98 / ME
-
-				g_obProtectedMemorySupported = ob;
-				return ob.Value;
-#endif
-			}
-		}
+		private static bool ProtectedMemorySupported => false; //.NET 5.0 no longer Support ProtectedMemory
 
 		private static long g_lCurID = 0;
 		private long m_lID;
@@ -270,7 +231,7 @@ namespace KeePassLib.Security
 
 			if(ProtectedBinary.ProtectedMemorySupported)
 			{
-				ProtectedMemory.Protect(m_pbData, MemoryProtectionScope.SameProcess);
+				//ProtectedMemory.Protect(m_pbData, MemoryProtectionScope.SameProcess);
 
 				m_mp = PbMemProt.ProtectedMemory;
 				return;
@@ -298,9 +259,7 @@ namespace KeePassLib.Security
 		{
 			if(m_pbData.Length == 0) return;
 
-			if(m_mp == PbMemProt.ProtectedMemory)
-				ProtectedMemory.Unprotect(m_pbData, MemoryProtectionScope.SameProcess);
-			else if(m_mp == PbMemProt.ChaCha20)
+			if(m_mp == PbMemProt.ChaCha20)
 			{
 				byte[] pbIV = new byte[12];
 				MemUtil.UInt64ToBytesEx((ulong)m_lID, pbIV, 4);
