@@ -2,16 +2,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net40</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>KeePass.ico</ApplicationIcon>
     <AssemblyOriginatorKeyFile>KeePass.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\KeePassLib\KeePassLib.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Security" />
-    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 </Project>
