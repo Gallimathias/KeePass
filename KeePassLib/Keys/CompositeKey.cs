@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-
+using System.Threading.Tasks;
 using KeePassLib.Cryptography;
 using KeePassLib.Cryptography.KeyDerivation;
 using KeePassLib.Interfaces;
@@ -33,325 +33,322 @@ using KeePassLib.Utility;
 
 namespace KeePassLib.Keys
 {
-	/// <summary>
-	/// Represents a key. A key can be build up using several user key data sources
-	/// like a password, a key file, the currently logged on user credentials,
-	/// the current computer ID, etc.
-	/// </summary>
-	public sealed class CompositeKey
-	{
-		private List<IUserKey> m_vUserKeys = new List<IUserKey>();
+    /// <summary>
+    /// Represents a key. A key can be build up using several user key data sources
+    /// like a password, a key file, the currently logged on user credentials,
+    /// the current computer ID, etc.
+    /// </summary>
+    public sealed class CompositeKey
+    {
+        private List<IUserKey> m_vUserKeys = new List<IUserKey>();
 
-		/// <summary>
-		/// List of all user keys contained in the current composite key.
-		/// </summary>
-		public IEnumerable<IUserKey> UserKeys
-		{
-			get { return m_vUserKeys; }
-		}
+        /// <summary>
+        /// List of all user keys contained in the current composite key.
+        /// </summary>
+        public IEnumerable<IUserKey> UserKeys
+        {
+            get { return m_vUserKeys; }
+        }
 
-		public uint UserKeyCount
-		{
-			get { return (uint)m_vUserKeys.Count; }
-		}
+        public uint UserKeyCount
+        {
+            get { return (uint)m_vUserKeys.Count; }
+        }
 
-		/// <summary>
-		/// Construct a new, empty key object.
-		/// </summary>
-		public CompositeKey()
-		{
-		}
+        /// <summary>
+        /// Construct a new, empty key object.
+        /// </summary>
+        public CompositeKey()
+        {
+        }
 
-		// /// <summary>
-		// /// Deconstructor, clears up the key.
-		// /// </summary>
-		// ~CompositeKey()
-		// {
-		//	Clear();
-		// }
+        // /// <summary>
+        // /// Deconstructor, clears up the key.
+        // /// </summary>
+        // ~CompositeKey()
+        // {
+        //	Clear();
+        // }
 
-		// /// <summary>
-		// /// Clears the key. This function also erases all previously stored
-		// /// user key data objects.
-		// /// </summary>
-		// public void Clear()
-		// {
-		//	foreach(IUserKey pKey in m_vUserKeys)
-		//		pKey.Clear();
-		//	m_vUserKeys.Clear();
-		// }
+        // /// <summary>
+        // /// Clears the key. This function also erases all previously stored
+        // /// user key data objects.
+        // /// </summary>
+        // public void Clear()
+        // {
+        //	foreach(IUserKey pKey in m_vUserKeys)
+        //		pKey.Clear();
+        //	m_vUserKeys.Clear();
+        // }
 
-		/// <summary>
-		/// Add a user key.
-		/// </summary>
-		/// <param name="pKey">User key to add.</param>
-		public void AddUserKey(IUserKey pKey)
-		{
-			Debug.Assert(pKey != null); if(pKey == null) throw new ArgumentNullException("pKey");
+        /// <summary>
+        /// Add a user key.
+        /// </summary>
+        /// <param name="pKey">User key to add.</param>
+        public void AddUserKey(IUserKey pKey)
+        {
+            Debug.Assert(pKey != null); if (pKey == null) throw new ArgumentNullException("pKey");
 
-			m_vUserKeys.Add(pKey);
-		}
+            m_vUserKeys.Add(pKey);
+        }
 
-		/// <summary>
-		/// Remove a user key.
-		/// </summary>
-		/// <param name="pKey">User key to remove.</param>
-		/// <returns>Returns <c>true</c> if the key was removed successfully.</returns>
-		public bool RemoveUserKey(IUserKey pKey)
-		{
-			Debug.Assert(pKey != null); if(pKey == null) throw new ArgumentNullException("pKey");
+        /// <summary>
+        /// Remove a user key.
+        /// </summary>
+        /// <param name="pKey">User key to remove.</param>
+        /// <returns>Returns <c>true</c> if the key was removed successfully.</returns>
+        public bool RemoveUserKey(IUserKey pKey)
+        {
+            Debug.Assert(pKey != null); if (pKey == null) throw new ArgumentNullException("pKey");
 
-			Debug.Assert(m_vUserKeys.IndexOf(pKey) >= 0);
-			return m_vUserKeys.Remove(pKey);
-		}
+            Debug.Assert(m_vUserKeys.IndexOf(pKey) >= 0);
+            return m_vUserKeys.Remove(pKey);
+        }
 
-		/// <summary>
-		/// Test whether the composite key contains a specific type of
-		/// user keys (password, key file, ...). If at least one user
-		/// key of that type is present, the function returns <c>true</c>.
-		/// </summary>
-		/// <param name="tUserKeyType">User key type.</param>
-		/// <returns>Returns <c>true</c>, if the composite key contains
-		/// a user key of the specified type.</returns>
-		public bool ContainsType(Type tUserKeyType)
-		{
-			Debug.Assert(tUserKeyType != null);
-			if(tUserKeyType == null) throw new ArgumentNullException("tUserKeyType");
+        /// <summary>
+        /// Test whether the composite key contains a specific type of
+        /// user keys (password, key file, ...). If at least one user
+        /// key of that type is present, the function returns <c>true</c>.
+        /// </summary>
+        /// <param name="tUserKeyType">User key type.</param>
+        /// <returns>Returns <c>true</c>, if the composite key contains
+        /// a user key of the specified type.</returns>
+        public bool ContainsType(Type tUserKeyType)
+        {
+            Debug.Assert(tUserKeyType != null);
+            if (tUserKeyType == null) throw new ArgumentNullException("tUserKeyType");
 
-			foreach(IUserKey pKey in m_vUserKeys)
-			{
-				if(pKey == null) { Debug.Assert(false); continue; }
+            foreach (IUserKey pKey in m_vUserKeys)
+            {
+                if (pKey == null) { Debug.Assert(false); continue; }
 
 #if KeePassUAP
 				if(pKey.GetType() == tUserKeyType)
 					return true;
 #else
-				if(tUserKeyType.IsInstanceOfType(pKey))
-					return true;
+                if (tUserKeyType.IsInstanceOfType(pKey))
+                    return true;
 #endif
-			}
+            }
 
-			return false;
-		}
+            return false;
+        }
 
-		/// <summary>
-		/// Get the first user key of a specified type.
-		/// </summary>
-		/// <param name="tUserKeyType">Type of the user key to get.</param>
-		/// <returns>Returns the first user key of the specified type
-		/// or <c>null</c> if no key of that type is found.</returns>
-		public IUserKey GetUserKey(Type tUserKeyType)
-		{
-			Debug.Assert(tUserKeyType != null);
-			if(tUserKeyType == null) throw new ArgumentNullException("tUserKeyType");
+        /// <summary>
+        /// Get the first user key of a specified type.
+        /// </summary>
+        /// <param name="tUserKeyType">Type of the user key to get.</param>
+        /// <returns>Returns the first user key of the specified type
+        /// or <c>null</c> if no key of that type is found.</returns>
+        public IUserKey GetUserKey(Type tUserKeyType)
+        {
+            Debug.Assert(tUserKeyType != null);
+            if (tUserKeyType == null) throw new ArgumentNullException("tUserKeyType");
 
-			foreach(IUserKey pKey in m_vUserKeys)
-			{
-				if(pKey == null) { Debug.Assert(false); continue; }
+            foreach (IUserKey pKey in m_vUserKeys)
+            {
+                if (pKey == null) { Debug.Assert(false); continue; }
 
 #if KeePassUAP
 				if(pKey.GetType() == tUserKeyType)
 					return pKey;
 #else
-				if(tUserKeyType.IsInstanceOfType(pKey))
-					return pKey;
+                if (tUserKeyType.IsInstanceOfType(pKey))
+                    return pKey;
 #endif
-			}
+            }
 
-			return null;
-		}
+            return null;
+        }
 
-		/// <summary>
-		/// Creates the composite key from the supplied user key sources (password,
-		/// key file, user account, computer ID, etc.).
-		/// </summary>
-		private byte[] CreateRawCompositeKey32()
-		{
-			ValidateUserKeys();
+        /// <summary>
+        /// Creates the composite key from the supplied user key sources (password,
+        /// key file, user account, computer ID, etc.).
+        /// </summary>
+        private byte[] CreateRawCompositeKey32()
+        {
+            ValidateUserKeys();
 
-			List<byte[]> lData = new List<byte[]>();
-			int cbData = 0;
-			foreach(IUserKey pKey in m_vUserKeys)
-			{
-				ProtectedBinary b = pKey.KeyData;
-				if(b != null)
-				{
-					byte[] pbKeyData = b.ReadData();
-					lData.Add(pbKeyData);
-					cbData += pbKeyData.Length;
-				}
-			}
+            List<byte[]> lData = new List<byte[]>();
+            int cbData = 0;
+            foreach (IUserKey pKey in m_vUserKeys)
+            {
+                ProtectedBinary b = pKey.KeyData;
+                if (b != null)
+                {
+                    byte[] pbKeyData = b.ReadData();
+                    lData.Add(pbKeyData);
+                    cbData += pbKeyData.Length;
+                }
+            }
 
-			byte[] pbAllData = new byte[cbData];
-			int p = 0;
-			foreach(byte[] pbData in lData)
-			{
-				Array.Copy(pbData, 0, pbAllData, p, pbData.Length);
-				p += pbData.Length;
-				MemUtil.ZeroByteArray(pbData);
-			}
-			Debug.Assert(p == cbData);
+            byte[] pbAllData = new byte[cbData];
+            int p = 0;
+            foreach (byte[] pbData in lData)
+            {
+                Array.Copy(pbData, 0, pbAllData, p, pbData.Length);
+                p += pbData.Length;
+                MemUtil.ZeroByteArray(pbData);
+            }
+            Debug.Assert(p == cbData);
 
-			byte[] pbHash = CryptoUtil.HashSha256(pbAllData);
-			MemUtil.ZeroByteArray(pbAllData);
-			return pbHash;
-		}
+            byte[] pbHash = CryptoUtil.HashSha256(pbAllData);
+            MemUtil.ZeroByteArray(pbAllData);
+            return pbHash;
+        }
 
-		public bool EqualsValue(CompositeKey ckOther)
-		{
-			if(ckOther == null) throw new ArgumentNullException("ckOther");
+        public bool EqualsValue(CompositeKey ckOther)
+        {
+            if (ckOther == null) throw new ArgumentNullException("ckOther");
 
-			bool bEqual;
-			byte[] pbThis = CreateRawCompositeKey32();
-			try
-			{
-				byte[] pbOther = ckOther.CreateRawCompositeKey32();
-				bEqual = MemUtil.ArraysEqual(pbThis, pbOther);
-				MemUtil.ZeroByteArray(pbOther);
-			}
-			finally { MemUtil.ZeroByteArray(pbThis); }
+            bool bEqual;
+            byte[] pbThis = CreateRawCompositeKey32();
+            try
+            {
+                byte[] pbOther = ckOther.CreateRawCompositeKey32();
+                bEqual = MemUtil.ArraysEqual(pbThis, pbOther);
+                MemUtil.ZeroByteArray(pbOther);
+            }
+            finally { MemUtil.ZeroByteArray(pbThis); }
 
-			return bEqual;
-		}
+            return bEqual;
+        }
 
-		[Obsolete]
-		public ProtectedBinary GenerateKey32(byte[] pbKeySeed32, ulong uNumRounds)
-		{
-			Debug.Assert(pbKeySeed32 != null);
-			if(pbKeySeed32 == null) throw new ArgumentNullException("pbKeySeed32");
-			Debug.Assert(pbKeySeed32.Length == 32);
-			if(pbKeySeed32.Length != 32) throw new ArgumentException("pbKeySeed32");
+        [Obsolete]
+        public ProtectedBinary GenerateKey32(byte[] pbKeySeed32, ulong uNumRounds)
+        {
+            Debug.Assert(pbKeySeed32 != null);
+            if (pbKeySeed32 == null) throw new ArgumentNullException("pbKeySeed32");
+            Debug.Assert(pbKeySeed32.Length == 32);
+            if (pbKeySeed32.Length != 32) throw new ArgumentException("pbKeySeed32");
 
-			AesKdf kdf = new AesKdf();
-			KdfParameters p = kdf.GetDefaultParameters();
-			p.SetUInt64(AesKdf.ParamRounds, uNumRounds);
-			p.SetByteArray(AesKdf.ParamSeed, pbKeySeed32);
+            AesKdf kdf = new AesKdf();
+            KdfParameters p = kdf.GetDefaultParameters();
+            p.SetUInt64(AesKdf.ParamRounds, uNumRounds);
+            p.SetByteArray(AesKdf.ParamSeed, pbKeySeed32);
 
-			return GenerateKey32(p);
-		}
+            return GenerateKey32(p);
+        }
 
-		/// <summary>
-		/// Generate a 32-byte (256-bit) key from the composite key.
-		/// </summary>
-		public ProtectedBinary GenerateKey32(KdfParameters p)
-		{
-			if(p == null) { Debug.Assert(false); throw new ArgumentNullException("p"); }
+        /// <summary>
+        /// Generate a 32-byte (256-bit) key from the composite key.
+        /// </summary>
+        public ProtectedBinary GenerateKey32(KdfParameters p)
+        {
+            if (p == null) { Debug.Assert(false); throw new ArgumentNullException("p"); }
 
-			byte[] pbRaw32 = null, pbTrf32 = null;
-			ProtectedBinary pbRet = null;
+            byte[] pbRaw32 = null, pbTrf32 = null;
+            ProtectedBinary pbRet = null;
 
-			try
-			{
-				pbRaw32 = CreateRawCompositeKey32();
-				if((pbRaw32 == null) || (pbRaw32.Length != 32))
-					{ Debug.Assert(false); return null; }
+            try
+            {
+                pbRaw32 = CreateRawCompositeKey32();
+                if ((pbRaw32 == null) || (pbRaw32.Length != 32))
+                { Debug.Assert(false); return null; }
 
-				KdfEngine kdf = KdfPool.Get(p.KdfUuid);
-				if(kdf == null) // CryptographicExceptions are translated to "file corrupted"
-					throw new Exception(KLRes.UnknownKdf + MessageService.NewParagraph +
-						KLRes.FileNewVerOrPlgReq + MessageService.NewParagraph +
-						"UUID: " + p.KdfUuid.ToHexString() + ".");
+                KdfEngine kdf = KdfPool.Get(p.KdfUuid);
+                if (kdf == null) // CryptographicExceptions are translated to "file corrupted"
+                    throw new Exception(KLRes.UnknownKdf + MessageService.NewParagraph +
+                        KLRes.FileNewVerOrPlgReq + MessageService.NewParagraph +
+                        "UUID: " + p.KdfUuid.ToHexString() + ".");
 
-				pbTrf32 = kdf.Transform(pbRaw32, p);
-				if(pbTrf32 == null) { Debug.Assert(false); return null; }
-				if(pbTrf32.Length != 32)
-				{
-					Debug.Assert(false);
-					pbTrf32 = CryptoUtil.HashSha256(pbTrf32);
-				}
+                pbTrf32 = kdf.Transform(pbRaw32, p);
+                if (pbTrf32 == null) { Debug.Assert(false); return null; }
+                if (pbTrf32.Length != 32)
+                {
+                    Debug.Assert(false);
+                    pbTrf32 = CryptoUtil.HashSha256(pbTrf32);
+                }
 
-				pbRet = new ProtectedBinary(true, pbTrf32);
-			}
-			finally
-			{
-				if(pbRaw32 != null) MemUtil.ZeroByteArray(pbRaw32);
-				if(pbTrf32 != null) MemUtil.ZeroByteArray(pbTrf32);
-			}
+                pbRet = new ProtectedBinary(true, pbTrf32);
+            }
+            finally
+            {
+                if (pbRaw32 != null) MemUtil.ZeroByteArray(pbRaw32);
+                if (pbTrf32 != null) MemUtil.ZeroByteArray(pbTrf32);
+            }
 
-			return pbRet;
-		}
+            return pbRet;
+        }
 
-		private sealed class CkGkTaskInfo
-		{
-			public volatile ProtectedBinary Key = null;
-			public volatile string Error = null;
-		}
+        private sealed class CkGkTaskInfo
+        {
+            public volatile ProtectedBinary Key = null;
+            public volatile string Error = null;
+        }
 
-		internal ProtectedBinary GenerateKey32Ex(KdfParameters p, IStatusLogger sl)
-		{
-			if(sl == null) return GenerateKey32(p);
+        internal ProtectedBinary GenerateKey32Ex(KdfParameters p, IStatusLogger sl)
+        {
+            if (sl == null) return GenerateKey32(p);
 
-			CkGkTaskInfo ti = new CkGkTaskInfo();
+            CkGkTaskInfo ti = new CkGkTaskInfo();
 
-			ThreadStart f = delegate()
-			{
-				if(ti == null) { Debug.Assert(false); return; }
+            void f(CancellationToken token)
+            {
+                token.ThrowIfCancellationRequested();
 
-				try { ti.Key = GenerateKey32(p); }
-				catch(ThreadAbortException exAbort)
-				{
-					ti.Error = ((exAbort != null) ? exAbort.Message : null);
-					Thread.ResetAbort();
-				}
-				catch(Exception ex)
-				{
-					Debug.Assert(false);
-					ti.Error = ((ex != null) ? ex.Message : null);
-				}
-			};
+                if (ti == null) { Debug.Assert(false); return; }
 
-			Thread th = new Thread(f);
-			th.Start();
+                try { ti.Key = GenerateKey32(p); }
+                catch (Exception ex)
+                {
+                    Debug.Assert(false);
+                    ti.Error = ((ex != null) ? ex.Message : null);
+                }
+            }
 
-			Debug.Assert(PwDefs.UIUpdateDelay >= 2);
-			while(!th.Join(PwDefs.UIUpdateDelay / 2))
-			{
-				if(!sl.ContinueWork())
-				{
-					try { th.Abort(); }
-					catch(Exception) { Debug.Assert(false); }
+            using var source = new CancellationTokenSource();
+            var th = Task.Run(() => f(source.Token), source.Token);
 
-					throw new OperationCanceledException();
-				}
-			}
+            Debug.Assert(PwDefs.UIUpdateDelay >= 2);
+            while (!th.Wait(PwDefs.UIUpdateDelay / 2))
+            {
+                if (!sl.ContinueWork())
+                {
+                    try { source.Cancel(); }
+                    catch (Exception) { Debug.Assert(false); }
 
-			if(!string.IsNullOrEmpty(ti.Error)) throw new Exception(ti.Error);
+                    throw new OperationCanceledException();
+                }
+            }
 
-			Debug.Assert(ti.Key != null);
-			return ti.Key;
-		}
+            if (!string.IsNullOrEmpty(ti.Error)) throw new Exception(ti.Error);
 
-		private void ValidateUserKeys()
-		{
-			int nAccounts = 0;
+            Debug.Assert(ti.Key != null);
+            return ti.Key;
+        }
 
-			foreach(IUserKey uKey in m_vUserKeys)
-			{
-				if(uKey is KcpUserAccount)
-					++nAccounts;
-			}
+        private void ValidateUserKeys()
+        {
+            int nAccounts = 0;
 
-			if(nAccounts >= 2)
-			{
-				Debug.Assert(false);
-				throw new InvalidOperationException();
-			}
-		}
-	}
+            foreach (IUserKey uKey in m_vUserKeys)
+            {
+                if (uKey is KcpUserAccount)
+                    ++nAccounts;
+            }
 
-	public sealed class InvalidCompositeKeyException : Exception
-	{
-		public override string Message
-		{
-			get
-			{
-				return (KLRes.InvalidCompositeKey + MessageService.NewParagraph +
-					KLRes.InvalidCompositeKeyHint);
-			}
-		}
+            if (nAccounts >= 2)
+            {
+                Debug.Assert(false);
+                throw new InvalidOperationException();
+            }
+        }
+    }
 
-		public InvalidCompositeKeyException()
-		{
-		}
-	}
+    public sealed class InvalidCompositeKeyException : Exception
+    {
+        public override string Message
+        {
+            get
+            {
+                return (KLRes.InvalidCompositeKey + MessageService.NewParagraph +
+                    KLRes.InvalidCompositeKeyHint);
+            }
+        }
+
+        public InvalidCompositeKeyException()
+        {
+        }
+    }
 }

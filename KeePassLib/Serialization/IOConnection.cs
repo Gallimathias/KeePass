@@ -508,7 +508,7 @@ namespace KeePassLib.Serialization
 
 			try
 			{
-				SecurityProtocolType spt = (SecurityProtocolType.Ssl3 |
+				SecurityProtocolType spt = (SecurityProtocolType.SystemDefault |
 					SecurityProtocolType.Tls);
 
 				// The flags Tls11 and Tls12 in SecurityProtocolType have been

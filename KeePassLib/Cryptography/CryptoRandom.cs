@@ -27,13 +27,13 @@ using System.IO;
 #if !KeePassUAP
 using System.Drawing;
 using System.Security.Cryptography;
-using System.Windows.Forms;
 #endif
 
 using KeePassLib.Delegates;
 using KeePassLib.Native;
 using KeePassLib.Security;
 using KeePassLib.Utility;
+using System.Windows.Forms;
 
 namespace KeePassLib.Cryptography
 {
@@ -42,16 +42,16 @@ namespace KeePassLib.Cryptography
     /// The returned values are unpredictable and cannot be reproduced.
     /// <c>CryptoRandom</c> is a singleton class.
     /// </summary>
-    public sealed class CryptoRandom
+    public sealed class CryptoRandom : IDisposable
     {
-        private ProtectedBinary m_pbEntropyPool = new ProtectedBinary(
+        private ProtectedBinary m_pbEntropyPool = new(
             true, new byte[64]);
-        private readonly RNGCryptoServiceProvider m_rng = new RNGCryptoServiceProvider();
+        private readonly RNGCryptoServiceProvider m_rng = new();
         private ulong m_uCounter;
         private ulong m_uGeneratedBytesCount = 0;
 
-        private static readonly object g_oSyncRoot = new object();
-        private readonly object m_oSyncRoot = new object();
+        private static readonly object g_oSyncRoot = new();
+        private readonly object m_oSyncRoot = new();
 
         private static CryptoRandom g_pInstance = null;
         public static CryptoRandom Instance
@@ -157,33 +157,33 @@ namespace KeePassLib.Cryptography
 
         private byte[] GetSystemEntropy()
         {
-            var h = new SHA512Managed();
+            using var h = new SHA512Managed();
             var pb4 = new byte[4];
             var pb8 = new byte[8];
 
-            GAction<byte[], bool> f = delegate (byte[] pbValue, bool bClearValue)
+            void f(byte[] pbValue, bool bClearValue)
             {
                 if (pbValue == null) { Debug.Assert(false); return; }
                 if (pbValue.Length == 0) return;
                 h.TransformBlock(pbValue, 0, pbValue.Length, pbValue, 0);
                 if (bClearValue) MemUtil.ZeroByteArray(pbValue);
-            };
-            Action<int> fI32 = delegate (int iValue)
+            }
+            void fI32(int iValue)
             {
                 MemUtil.Int32ToBytesEx(iValue, pb4, 0);
                 f(pb4, false);
-            };
-            Action<long> fI64 = delegate (long lValue)
+            }
+            void fI64(long lValue)
             {
                 MemUtil.Int64ToBytesEx(lValue, pb8, 0);
                 f(pb8, false);
-            };
-            Action<string> fStr = delegate (string strValue)
+            }
+            void fStr(string strValue)
             {
                 if (strValue == null) { Debug.Assert(false); return; }
                 if (strValue.Length == 0) return;
                 f(StrUtil.Utf8.GetBytes(strValue), false);
-            };
+            }
 
             fI32(Environment.TickCount);
             fI64(DateTime.UtcNow.ToBinary());
@@ -233,25 +233,23 @@ namespace KeePassLib.Cryptography
 #if KeePassUAP
 				f(DiagnosticsExt.GetProcessEntropy(), true);
 #elif !KeePassLibSD
-                using (var p = Process.GetCurrentProcess())
-                {
-                    fI64(p.Handle.ToInt64());
-                    fI32(p.HandleCount);
-                    fI32(p.Id);
-                    fI64(p.NonpagedSystemMemorySize64);
-                    fI64(p.PagedMemorySize64);
-                    fI64(p.PagedSystemMemorySize64);
-                    fI64(p.PeakPagedMemorySize64);
-                    fI64(p.PeakVirtualMemorySize64);
-                    fI64(p.PeakWorkingSet64);
-                    fI64(p.PrivateMemorySize64);
-                    fI64(p.StartTime.ToBinary());
-                    fI64(p.VirtualMemorySize64);
-                    fI64(p.WorkingSet64);
+                using var p = Process.GetCurrentProcess();
+                fI64(p.Handle.ToInt64());
+                fI32(p.HandleCount);
+                fI32(p.Id);
+                fI64(p.NonpagedSystemMemorySize64);
+                fI64(p.PagedMemorySize64);
+                fI64(p.PagedSystemMemorySize64);
+                fI64(p.PeakPagedMemorySize64);
+                fI64(p.PeakVirtualMemorySize64);
+                fI64(p.PeakWorkingSet64);
+                fI64(p.PrivateMemorySize64);
+                fI64(p.StartTime.ToBinary());
+                fI64(p.VirtualMemorySize64);
+                fI64(p.WorkingSet64);
 
-                    // Not supported in Mono 1.2.6:
-                    // fI32(p.SessionId);
-                }
+                // Not supported in Mono 1.2.6:
+                // fI32(p.SessionId);
 #endif
             }
             catch (Exception) { Debug.Assert(NativeLib.IsUnix()); }
@@ -381,5 +379,7 @@ namespace KeePassLib.Cryptography
 
             return new Random(s32);
         }
+
+        public void Dispose() => m_rng?.Dispose();
     }
 }

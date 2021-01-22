@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using System.Threading.Tasks;
 
 #if !KeePassUAP
 using System.Windows.Forms;
@@ -44,7 +45,7 @@ namespace KeePassLib.Utility
         private const string AppXDoTool = "xdotool";
 
         private static readonly Dictionary<uint, bool> g_dForceReq = new Dictionary<uint, bool>();
-        private static Thread g_thFixClip = null;
+        private static Task g_thFixClip = null;
         // private static Predicate<IntPtr> g_fOwnWindow = null;
 
 #if DEBUG_BREAKONFAIL
@@ -256,9 +257,9 @@ namespace KeePassLib.Utility
             {
                 try
                 {
-                    var ts = new ThreadStart(MonoWorkarounds.FixClipThread);
-                    g_thFixClip = new Thread(ts);
+                    g_thFixClip = new Task(FixClipThread, CancellationToken.None, TaskCreationOptions.LongRunning);
                     g_thFixClip.Start();
+                    
                 }
                 catch (Exception) { Debug.Assert(false); }
             }
@@ -276,7 +277,7 @@ namespace KeePassLib.Utility
         {
             if (g_thFixClip != null)
             {
-                try { g_thFixClip.Abort(); }
+                try { g_thFixClip.Dispose(); }
                 catch (Exception) { Debug.Assert(false); }
 
                 g_thFixClip = null;

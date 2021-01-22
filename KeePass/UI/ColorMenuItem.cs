@@ -26,7 +26,7 @@ using System.Windows.Forms;
 
 namespace KeePass.UI
 {
-	public sealed class ColorMenuItem : MenuItem
+	public sealed class ColorMenuItem : ToolStripMenuItem
 	{
 		private Color m_clr;
 		private int m_qSize;
@@ -41,27 +41,27 @@ namespace KeePass.UI
 			m_clr = clr;
 			m_qSize = qSize;
 
-			Debug.Assert(this.CanRaiseEvents);
-			this.ShowShortcut = false;
-			this.OwnerDraw = true;
+			Debug.Assert(CanRaiseEvents);
 		}
 
-		protected override void OnDrawItem(DrawItemEventArgs e)
+
+        protected override void OnPaint(PaintEventArgs e)
 		{
 			// base.OnDrawItem(e);
 
 			Graphics g = e.Graphics;
-			Rectangle rectBounds = e.Bounds;
+			Rectangle rectBounds = e.ClipRectangle;
 			Rectangle rectFill = new Rectangle(rectBounds.Left + 2,
 				rectBounds.Top + 2, rectBounds.Width - 4, rectBounds.Height - 4);
 
-			bool bFocused = (((e.State & DrawItemState.Focus) != DrawItemState.None) ||
-				((e.State & DrawItemState.Selected) != DrawItemState.None));
+			//bool bFocused = (((State & DrawItemState.Focus) != DrawItemState.None) ||
+			//	((e.State & DrawItemState.Selected) != DrawItemState.None));
 
 			// e.DrawBackground();
 			// e.DrawFocusRectangle();
-			using(SolidBrush sbBack = new SolidBrush(bFocused ?
-				SystemColors.Highlight : SystemColors.Menu))
+			//using(SolidBrush sbBack = new SolidBrush(bFocused ?
+			//	SystemColors.Highlight : SystemColors.Menu))
+			using (SolidBrush sbBack = new SolidBrush(SystemColors.Menu))
 			{
 				g.FillRectangle(sbBack, rectBounds);
 			}
@@ -72,12 +72,12 @@ namespace KeePass.UI
 			}
 		}
 
-		protected override void OnMeasureItem(MeasureItemEventArgs e)
-		{
-			// base.OnMeasureItem(e);
+		//protected override void OnMeasureItem(MeasureItemEventArgs e)
+		//{
+		//	// base.OnMeasureItem(e);
 
-			e.ItemWidth = m_qSize;
-			e.ItemHeight = m_qSize;
-		}
+		//	e.ItemWidth = m_qSize;
+		//	e.ItemHeight = m_qSize;
+		//}
 	}
 }

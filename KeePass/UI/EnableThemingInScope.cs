@@ -105,12 +105,7 @@ namespace KeePass.UI
 			{
 				if(m_nhCtx.HasValue) return true;
 
-				string strAsmLoc;
-				FileIOPermission p = new FileIOPermission(PermissionState.None);
-				p.AllFiles = FileIOPermissionAccess.PathDiscovery;
-				p.Assert();
-				try { strAsmLoc = typeof(object).Assembly.Location; }
-				finally { CodeAccessPermission.RevertAssert(); }
+				string strAsmLoc = typeof(object).Assembly.Location;
 				if(string.IsNullOrEmpty(strAsmLoc)) { Debug.Assert(false); return false; }
 
 				string strInstDir = Path.GetDirectoryName(strAsmLoc);

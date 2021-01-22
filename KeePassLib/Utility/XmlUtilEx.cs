@@ -55,15 +55,9 @@ namespace KeePassLib.Utility
 			xrs.IgnoreProcessingInstructions = true;
 			xrs.IgnoreWhitespace = true;
 
-#if KeePassUAP
-			xrs.DtdProcessing = DtdProcessing.Prohibit;
-#else
-			// Also see PrepMonoDev.sh script
-			xrs.ProhibitDtd = true; // Obsolete in .NET 4, but still there
-			// xrs.DtdProcessing = DtdProcessing.Prohibit; // .NET 4 only
-#endif
+            xrs.DtdProcessing = DtdProcessing.Prohibit;
 
-			xrs.ValidationType = ValidationType.None;
+            xrs.ValidationType = ValidationType.None;
 			xrs.XmlResolver = null;
 
 			return xrs;
