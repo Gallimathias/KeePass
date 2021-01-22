@@ -14,6 +14,6 @@ Also, it has to be said that on Github the code is more visible than on SourceFo
 
 In general I use Git Flow therefore
 
-* master = my published version of the fork
+* productive = my published version of the fork, at the moment a fork of the origin code. see reichl branch
 * reichl = the unchanged code officially published by Dominik Reichl
-* develop = current development
+* stable = my current development branch
